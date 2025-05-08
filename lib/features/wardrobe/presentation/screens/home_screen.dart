@@ -178,11 +178,16 @@ class HomeScreen extends StatelessWidget {
                 AppConstants.smallBorderRadius,
               ),
             ),
-            child: Image.asset(
-              imagePath,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                AppConstants.smallBorderRadius,
+              ),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -264,7 +269,10 @@ class HomeScreen extends StatelessWidget {
                     AppConstants.smallBorderRadius,
                   ),
                 ),
-                child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.smallBorderRadius,
+                  ),
                   child: Image.asset(
                     imagePath,
                     fit: BoxFit.cover,
