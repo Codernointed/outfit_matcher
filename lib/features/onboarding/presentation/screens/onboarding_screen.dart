@@ -88,21 +88,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   _OnboardingPage(
                     icon: Icons.camera_alt,
                     title: 'Capture Your Clothes',
-                    imagePath: 'assets/images/create_wardrobe1.jpeg',
+                    imagePath: 'assets/images/create_wardrobe1.png',
                     description:
                         'Take photos of your clothing items or upload them from your gallery to build your virtual closet.',
                   ),
                   _OnboardingPage(
                     icon: Icons.grid_view,
                     title: 'Build Your Wardrobe',
-                    imagePath: 'assets/images/build_your_wardrobe2.jpeg',
+                    imagePath: 'assets/images/build_your_wardrobe2.png',
                     description:
                         'Organize your items by category, color, and occasion to create your personalized digital closet.',
                   ),
                   _OnboardingPage(
                     icon: Icons.auto_awesome,
                     title: 'Get Smart Suggestions',
-                    imagePath: 'assets/images/get_outfit_suggestions.jpeg',
+                    imagePath: 'assets/images/get_outfit_suggestions.png',
                     description:
                         'Our AI will analyze your items and suggest perfect outfit combinations based on color and style.',
                   ),

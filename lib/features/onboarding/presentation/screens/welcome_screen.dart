@@ -56,25 +56,25 @@ class WelcomeScreen extends StatelessWidget {
                     // Top-left item - rotated slightly left
                     Transform.rotate(
                       angle: -0.05, // Small counter-clockwise rotation
-                      child: _buildGridItem('assets/images/top_left.jpeg'),
+                      child: _buildGridItem('assets/images/top_left.png'),
                     ),
 
                     // Top-right item - rotated slightly right
                     Transform.rotate(
                       angle: 0.07, // Small clockwise rotation
-                      child: _buildGridItem('assets/images/top_right.jpeg'),
+                      child: _buildGridItem('assets/images/top_right.png'),
                     ),
 
                     // Bottom-left item - rotated slightly right
                     Transform.rotate(
                       angle: 0.03, // Very slight clockwise rotation
-                      child: _buildGridItem('assets/images/bottom_left.jpeg'),
+                      child: _buildGridItem('assets/images/bottom_left.png'),
                     ),
 
                     // Bottom-right item - rotated slightly left
                     Transform.rotate(
                       angle: -0.08, // Counter-clockwise rotation
-                      child: _buildGridItem('assets/images/bottom_right.jpeg'),
+                      child: _buildGridItem('assets/images/bottom_right.png'),
                     ),
                   ],
                 ),
