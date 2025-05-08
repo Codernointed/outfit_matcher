@@ -142,7 +142,12 @@ class HomeScreen extends StatelessWidget {
                   'Office Ready',
                 ];
 
-                return _buildOutfitCard(context, outfitNames[index], '3 items');
+                return _buildOutfitCard(
+                  context,
+                  outfitNames[index],
+                  '3 items',
+                  'assets/images/casual_outfit.jpeg',
+                );
               },
             ),
           ],
@@ -232,7 +237,12 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// Build a card for an outfit suggestion
-  Widget _buildOutfitCard(BuildContext context, String name, String itemCount) {
+  Widget _buildOutfitCard(
+    BuildContext context,
+    String name,
+    String itemCount,
+    String imagePath,
+  ) {
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
@@ -254,8 +264,13 @@ class HomeScreen extends StatelessWidget {
                     AppConstants.smallBorderRadius,
                   ),
                 ),
-                child: const Center(
-                  child: Icon(Icons.image, color: Colors.grey),
+                child: Center(
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
               const SizedBox(width: AppConstants.defaultSpacing),
