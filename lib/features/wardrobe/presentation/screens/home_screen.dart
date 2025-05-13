@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
 
 /// Home screen showing recent items and outfit suggestions
 class HomeScreen extends StatelessWidget {
@@ -36,10 +36,10 @@ class HomeScreen extends StatelessWidget {
               ),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // Navigate to add item screen
+                  // Navigate to upload options screen
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const AddItemScreen(),
+                      builder: (context) => const UploadOptionsScreen(),
                     ),
                   );
                 },

@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:outfit_matcher/core/utils/permission_handler_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;
@@ -13,6 +14,9 @@ Future<void> setupServiceLocator() async {
   // Repositories
 
   // Services
+  getIt.registerLazySingleton<PermissionHandlerService>(
+    () => PermissionHandlerService(),
+  );
 
   // Controllers
 

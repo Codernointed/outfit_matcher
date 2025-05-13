@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:outfit_matcher/core/constants/app_constants.dart';
 import 'package:outfit_matcher/features/onboarding/presentation/screens/welcome_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/main_screen.dart';
+import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:outfit_matcher/core/di/service_locator.dart';
 
@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   /// Check if this is the first launch and navigate accordingly
   Future<void> _checkFirstLaunch() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
 
@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (onboardingCompleted) {
       // User has already completed onboarding, go to home
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
       // First time user, go to welcome screen
@@ -46,25 +46,44 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // App logo
-            Icon(Icons.checkroom, size: 100, color: Colors.white),
-            const SizedBox(height: 24),
+    // Define rose-pink color
+    const rosePink = Color(0xFFF4C2C2);
 
-            // App name
-            Text(
-              AppConstants.appName,
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [rosePink, Colors.white],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // App logo
+              Icon(
+                Icons.checkroom,
+                size: 100,
+                color: Theme.of(context).primaryColorDark,
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // App name
+              Text(
+                AppConstants.appName,
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: Theme.of(context).primaryColorDark,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 48),
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.pinkAccent),
+              ),
+            ],
+          ),
         ),
       ),
     );

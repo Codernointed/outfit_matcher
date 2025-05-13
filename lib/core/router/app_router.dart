@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:outfit_matcher/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:outfit_matcher/features/onboarding/presentation/screens/splash_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/home_screen.dart';
+// import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart'; // No longer used for parameter-less route
+import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/main_screen.dart';
 import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/outfit_suggestions_screen.dart';
@@ -16,7 +16,7 @@ class AppRouter {
   static const String onboarding = '/onboarding';
   static const String main = '/main';
   static const String home = '/main/home';
-  static const String addItem = '/add-item';
+  // static const String addItem = '/add-item'; // Removed as AddItemScreen now requires parameters
   static const String itemDetails = '/item-details';
   static const String outfitSuggestions = '/outfit-suggestions';
 
@@ -27,7 +27,8 @@ class AppRouter {
       splash: (context) => const SplashScreen(),
       onboarding: (context) => const OnboardingScreen(),
       main: (context) => const MainScreen(),
-      addItem: (context) => const AddItemScreen(),
+      home: (context) => const HomeScreen(),
+      // addItem: (context) => const AddItemScreen(), // Removed: AddItemScreen requires imagePath
       // Routes requiring parameters are not included here
     };
   }
@@ -42,8 +43,11 @@ class AppRouter {
   static void navigateToMain(BuildContext context) =>
       Navigator.of(context).pushReplacementNamed(main);
 
-  static void navigateToAddItem(BuildContext context) =>
-      Navigator.of(context).pushNamed(addItem);
+  static void navigateToHome(BuildContext context) =>
+      Navigator.of(context).pushReplacementNamed(home);
+
+  // static void navigateToAddItem(BuildContext context) =>
+  //     Navigator.of(context).pushNamed(addItem); // Removed as AddItemScreen now requires parameters and direct navigation via this method is invalid
 
   static void navigateToItemDetails(BuildContext context, String imagePath) =>
       Navigator.of(context).push(

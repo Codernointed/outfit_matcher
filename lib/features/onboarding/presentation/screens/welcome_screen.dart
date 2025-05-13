@@ -51,7 +51,6 @@ class WelcomeScreen extends StatelessWidget {
                   childAspectRatio: 1.0,
                   mainAxisSpacing: 16.0,
                   crossAxisSpacing: 16.0,
-
                   children: [
                     // Top-left item - rotated slightly left
                     Transform.rotate(

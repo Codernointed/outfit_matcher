@@ -3,6 +3,7 @@ import 'package:outfit_matcher/core/constants/app_constants.dart';
 import 'package:outfit_matcher/features/profile/presentation/screens/profile_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/home_screen.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
 
 /// Main screen with bottom navigation
 class MainScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
     _screens = [
       const HomeScreen(),
       const Center(child: Text('Closet Screen - Coming Soon')),
-      const AddItemScreen(),
+      const UploadOptionsScreen(),
       const ProfileScreen(),
     ];
   }

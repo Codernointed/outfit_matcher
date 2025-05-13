@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:outfit_matcher/core/constants/app_constants.dart';
 import 'package:outfit_matcher/core/theme/app_theme.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/main_screen.dart';
+import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:outfit_matcher/core/di/service_locator.dart';
 
@@ -37,7 +37,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     // Navigate to main screen
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const MainScreen()),
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
   }
 
