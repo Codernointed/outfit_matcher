@@ -34,7 +34,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (onboardingCompleted) {
       // User has already completed onboarding, go to home
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(builder: (context) =>  HomeScreen()),
       );
     } else {
       // First time user, go to welcome screen

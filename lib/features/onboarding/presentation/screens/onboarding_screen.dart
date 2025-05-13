@@ -37,7 +37,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     // Navigate to main screen
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => HomeScreen()),
     );
   }
 

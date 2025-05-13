@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/closet_screen.dart'; // Import ClosetScreen
+// TODO: Import ProfileScreen when created
+// import 'package:outfit_matcher/features/profile/presentation/screens/profile_screen.dart';
+
+// Provider for the current selected index of the BottomNavigationBar
+final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
 
   void _navigateUploadOptions(BuildContext context) {
     Navigator.of(context).push(
@@ -11,37 +17,41 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // State for BottomNavigationBar index (will be managed by a Riverpod provider later)
-  // For now, a placeholder state or hardcoded index for active tab.
-  // Let's assume a simple int for now, default to 0 (Home)
-  // int _currentIndex = 0; // This would require HomeScreen to be StatefulWidget
+  // List of main screens for IndexedStack
+  final List<Widget> _mainScreens = [
+    const MainContentHomeScreen(), // Placeholder for actual home content screen
+    const ClosetScreen(),
+    // UploadOptionsScreen is navigated to, not a persistent tab view
+    const Center(
+      child: Text('Profile Screen - Coming Soon'),
+    ), // Placeholder for ProfileScreen
+  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    // Placeholder for managing current index, ideally via Riverpod
-    const int currentIndex = 0; // Home selected by default
+    final currentIndex = ref.watch(bottomNavIndexProvider);
 
+    // The body will now be an IndexedStack to switch between screens
+    // The original ListView content of HomeScreen will become its own widget (MainContentHomeScreen)
     return Scaffold(
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.checkroom, color: theme.colorScheme.primary), // App logo
+            Icon(Icons.checkroom, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
-            const Text('Outfit Matcher'), // App name
+            const Text('Outfit Matcher'),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(
-              Icons.wb_sunny_outlined,
-            ), // Optional Weather Indicator
+            icon: const Icon(Icons.wb_sunny_outlined),
             onPressed: () {
               /* TODO: Implement weather functionality */
             },
           ),
           IconButton(
-            icon: const Icon(Icons.search), // Search Icon
+            icon: const Icon(Icons.search),
             onPressed: () {
               /* TODO: Implement global search */
             },
@@ -50,64 +60,32 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            _buildAddNewItemButton(context),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Recent Items'),
-            _buildRecentItemsList(context),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Outfit Ideas'),
-            _buildOutfitIdeasList(context),
-            const SizedBox(height: 24),
-            _buildSectionTitle(context, 'Style Tips'),
-            _buildStyleTipsPlaceholder(context),
-          ],
-        ),
+      body: IndexedStack(
+        index:
+            currentIndex == 2
+                ? 0
+                : currentIndex, // If 'Add' is tapped, stay on current view (or Home)
+        children: _mainScreens,
       ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked, // Removed
-      // floatingActionButton: FloatingActionButton凶( // Removed
-      //   onPressed: () {
-      //     _navigateUploadOptions(context);
-      //   },
-      //   shape: const CircleBorder(),
-      //   elevation: 2.0,
-      //   child: const Icon(Icons.add, size: 30),
-      // ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
-        ), // Horizontal and bottom padding
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            20,
-          ), // Rounded corners for the bar
+          borderRadius: BorderRadius.circular(20),
           child: BottomNavigationBar(
-            currentIndex: currentIndex, // Use the state variable
+            currentIndex: currentIndex,
             onTap: (index) {
-              // TODO: Update currentIndex state via Riverpod provider
               if (index == 2) {
-                // Assuming 'Add' is at index 2
+                // 'Add' button index
                 _navigateUploadOptions(context);
+              } else {
+                ref.read(bottomNavIndexProvider.notifier).state = index;
               }
-              print('Tapped on index $index');
             },
-            type:
-                BottomNavigationBarType
-                    .fixed, // Reinstated for consistent behavior
-            backgroundColor: const Color(
-              0xFFF4C2C2,
-            ).withOpacity(0.85), // Rose-pink background, slightly transparent
-            selectedItemColor:
-                theme.colorScheme.primary, // Color for selected icon and label
-            unselectedItemColor: Colors.black.withOpacity(
-              0.6,
-            ), // Color for unselected items
-            elevation:
-                0, // Elevation is handled by the container/padding if needed, or set to low like 2-4
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: const Color(0xFFF4C2C2).withOpacity(0.85),
+            selectedItemColor: theme.colorScheme.primary,
+            unselectedItemColor: Colors.black.withOpacity(0.6),
+            elevation: 0,
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
@@ -120,7 +98,6 @@ class HomeScreen extends ConsumerWidget {
                 label: 'Closet',
               ),
               BottomNavigationBarItem(
-                // Reinstated Add item
                 icon: Icon(Icons.add_circle_outline),
                 activeIcon: Icon(Icons.add_circle),
                 label: 'Add',
@@ -136,6 +113,36 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+// This widget now holds the original content of the HomeScreen's body
+class MainContentHomeScreen extends StatelessWidget {
+  const MainContentHomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildAddNewItemButton(context),
+          const SizedBox(height: 24),
+          _buildSectionTitle(context, 'Recent Items'),
+          _buildRecentItemsList(context),
+          const SizedBox(height: 24),
+          _buildSectionTitle(context, 'Outfit Ideas'),
+          _buildOutfitIdeasList(context),
+          const SizedBox(height: 24),
+          _buildSectionTitle(context, 'Style Tips'),
+          _buildStyleTipsPlaceholder(context),
+        ],
+      ),
+    );
+  }
+
+  // Methods copied from the original HomeScreen, they need access to context
+  // or need to be passed context if they remain static or top-level functions.
+  // For simplicity, they are instance methods here needing access to context.
 
   Widget _buildAddNewItemButton(BuildContext context) {
     return ElevatedButton.icon(
@@ -145,7 +152,9 @@ class HomeScreen extends ConsumerWidget {
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       onPressed: () {
-        _navigateUploadOptions(context);
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const UploadOptionsScreen()),
+        );
       },
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
@@ -243,6 +252,4 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
-
-  // _buildBottomAppBar and _buildBottomNavItem are no longer needed
 }
