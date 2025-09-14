@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // TODO: Import AddItemScreen or the relevant next screen
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart';
+import 'package:outfit_matcher/core/utils/gemini_api_service.dart';
 
 class ImagePreviewScreen extends ConsumerWidget {
   final String imagePath;
@@ -53,7 +54,7 @@ class ImagePreviewScreen extends ConsumerWidget {
             ),
             color:
                 Theme.of(context).bottomAppBarTheme.color ??
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+                Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -144,31 +145,77 @@ class _ProcessingScreenState extends State<ProcessingScreen> {
   }
 
   Future<void> _startProcessing() async {
-    for (int i = 0; i < _stages.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      for (int i = 0; i < _stages.length; i++) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (!mounted) return;
+        setState(() {
+          _progress = (i + 1) / _stages.length;
+          _statusMessage = _stages[i];
+        });
+      }
+
       if (!mounted) return;
-      setState(() {
-        _progress = (i + 1) / _stages.length;
-        _statusMessage = _stages[i];
-      });
-    }
-
-    if (!mounted) return;
-    final mockAIResults = {
-      'itemType': 'Top',
-      'primaryColor': 'Blue',
-      'patternType': 'Solid',
-    };
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder:
-            (context) => AddItemScreen(
+      
+      // Use Gemini API for real analysis
+      Map<String, String>? gemini;
+      try {
+        gemini = await GeminiApiService.analyzeClothingItem(File(widget.imagePath));
+      } catch (e) {
+        print('Gemini API error: $e');
+        gemini = null;
+      }
+      
+      if (!mounted) return;
+      
+      if (gemini != null && 
+          gemini['itemType'] != null && 
+          gemini['itemType']!.isNotEmpty &&
+          gemini['primaryColor'] != null && 
+          gemini['primaryColor']!.isNotEmpty &&
+          gemini['patternType'] != null && 
+          gemini['patternType']!.isNotEmpty) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => AddItemScreen(
               imagePath: widget.imagePath,
-              aiResults: mockAIResults,
+              aiResults: gemini,
             ),
-      ),
-    );
+          ),
+        );
+      } else {
+        // Fallback: Navigate to AddItemScreen without AI results
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => AddItemScreen(
+              imagePath: widget.imagePath,
+              aiResults: null, // Let user fill manually
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Processing error: $e');
+      if (!mounted) return;
+      
+      // Show error and navigate back
+      setState(() {
+        _statusMessage = 'Error processing image. Continuing without AI analysis.';
+      });
+      
+      await Future.delayed(const Duration(seconds: 1));
+      if (!mounted) return;
+      
+      // Navigate to AddItemScreen without AI results as fallback
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => AddItemScreen(
+            imagePath: widget.imagePath,
+            aiResults: null,
+          ),
+        ),
+      );
+    }
   }
 
   @override

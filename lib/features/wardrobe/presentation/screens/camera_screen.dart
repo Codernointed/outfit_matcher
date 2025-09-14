@@ -2,9 +2,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/image_preview_screen.dart';
-import 'package:path_provider/path_provider.dart'; // For saving image path
-import 'dart:io'; // For Directory
-import 'package:path/path.dart' as p; // For p.join
+// For saving image path
+// For Directory
+// For p.join
 
 // Provider to hold the list of available cameras
 final availableCamerasProvider = FutureProvider<List<CameraDescription>>((
