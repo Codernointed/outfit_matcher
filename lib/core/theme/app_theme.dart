@@ -54,34 +54,52 @@ class AppTheme {
           color: _textPrimaryColor,
           fontSize: 24,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
         ),
         displayMedium: TextStyle(
           color: _textPrimaryColor,
           fontSize: 22,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
         ),
         displaySmall: TextStyle(
           color: _textPrimaryColor,
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
         ),
-        bodyLarge: TextStyle(color: _textPrimaryColor, fontSize: 16),
-        bodyMedium: TextStyle(color: _textSecondaryColor, fontSize: 14),
-        bodySmall: TextStyle(color: _textSecondaryColor, fontSize: 12),
+        bodyLarge: TextStyle(
+          color: _textPrimaryColor,
+          fontSize: 16,
+          fontFamily: 'Roboto',
+        ),
+        bodyMedium: TextStyle(
+          color: _textSecondaryColor,
+          fontSize: 14,
+          fontFamily: 'Roboto',
+        ),
+        bodySmall: TextStyle(
+          color: _textSecondaryColor,
+          fontSize: 12,
+          fontFamily: 'Roboto',
+        ),
         titleLarge: TextStyle(
           color: _textPrimaryColor,
           fontSize: 18,
           fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
         ),
         titleMedium: TextStyle(
           color: _textPrimaryColor,
           fontSize: 16,
           fontWeight: FontWeight.w600,
+          fontFamily: 'Poppins',
         ),
         titleSmall: TextStyle(
           color: _textPrimaryColor,
           fontSize: 14,
           fontWeight: FontWeight.w600,
+          fontFamily: 'Poppins',
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -90,7 +108,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -99,19 +117,19 @@ class AppTheme {
           minimumSize: const Size(double.infinity, 56),
           side: const BorderSide(color: _primaryColor),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins' ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: _primaryColor,
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: Colors.white,
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       inputDecorationTheme: InputDecorationTheme(
