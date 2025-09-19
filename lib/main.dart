@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:outfit_matcher/core/constants/app_constants.dart';
 import 'package:outfit_matcher/core/di/service_locator.dart';
 import 'package:outfit_matcher/core/theme/app_theme.dart';
@@ -7,6 +8,9 @@ import 'package:outfit_matcher/core/router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
 
   // Initialize dependency injection
   await setupServiceLocator();

@@ -168,6 +168,9 @@ class _OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final availableHeight = screenSize.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom;
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppConstants.horizontalPadding,
@@ -175,29 +178,31 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon
+          // Icon - Reduced size for smaller screens
           Container(
-            width: 120,
-            height: 120,
+            width: screenSize.width < 400 ? 100 : 120,
+            height: screenSize.width < 400 ? 100 : 120,
             decoration: BoxDecoration(
               color: AppTheme.secondaryBackgroundColor,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              size: 60,
+              size: screenSize.width < 400 ? 50 : 60,
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          const SizedBox(height: AppConstants.largeSpacing),
+          const SizedBox(height: AppConstants.defaultSpacing),
 
           // Title
           Text(
             title,
-            style: Theme.of(context).textTheme.displayMedium,
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              fontSize: screenSize.width < 400 ? 28 : null,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppConstants.defaultSpacing),
+          const SizedBox(height: AppConstants.smallSpacing),
 
           // Description
           Text(
@@ -206,34 +211,42 @@ class _OnboardingPage extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
 
-          // Placeholder for image
-          const SizedBox(height: AppConstants.largeSpacing),
-          Container(
-            width: double.infinity,
-            height: 350,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(
-                AppConstants.defaultBorderRadius,
+          // Flexible spacing
+          const SizedBox(height: AppConstants.defaultSpacing),
+
+          // Responsive image container
+          Expanded(
+            flex: 2,
+            child: Container(
+              width: double.infinity,
+              constraints: BoxConstraints(
+                maxHeight: availableHeight * 0.4, // Max 40% of available height
+                minHeight: 200, // Minimum height
+              ),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(
+                  AppConstants.defaultBorderRadius,
+                ),
+              ),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.defaultBorderRadius,
+                  ),
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                ),
               ),
             ),
-            child: Center(
-              child:
-                  imagePath != null
-                      ? ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.defaultBorderRadius,
-                        ),
-                        child: Image.asset(
-                          imagePath,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
-                      )
-                      : const Icon(Icons.image, size: 60, color: Colors.grey),
-            ),
           ),
+
+          // Bottom spacing
+          SizedBox(height: screenSize.width < 400 ? AppConstants.smallSpacing : AppConstants.defaultSpacing),
         ],
       ),
     );

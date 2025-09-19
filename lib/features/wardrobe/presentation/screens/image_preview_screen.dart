@@ -1,13 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// TODO: Import AddItemScreen or the relevant next screen
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/visual_search_screen.dart';
+import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
 
 class ImagePreviewScreen extends ConsumerWidget {
   final String imagePath;
-  const ImagePreviewScreen({super.key, required this.imagePath});
+  final bool fromCamera;
+  
+  const ImagePreviewScreen({
+    super.key, 
+    required this.imagePath,
+    this.fromCamera = false,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +33,10 @@ class ImagePreviewScreen extends ConsumerWidget {
             onPressed: () {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
-                  builder: (context) => ProcessingScreen(imagePath: imagePath),
+                  builder: (context) => ProcessingScreen(
+                    imagePath: imagePath,
+                    fromCamera: fromCamera,
+                  ),
                 ),
               );
             },
@@ -119,143 +127,229 @@ class ImagePreviewScreen extends ConsumerWidget {
   }
 }
 
-class ProcessingScreen extends StatefulWidget {
+class ProcessingScreen extends ConsumerStatefulWidget {
   final String imagePath;
-  const ProcessingScreen({super.key, required this.imagePath});
+  final bool fromCamera;
+  
+  const ProcessingScreen({
+    super.key, 
+    required this.imagePath,
+    this.fromCamera = false,
+  });
 
   @override
-  State<ProcessingScreen> createState() => _ProcessingScreenState();
+  ConsumerState<ProcessingScreen> createState() => _ProcessingScreenState();
 }
 
-class _ProcessingScreenState extends State<ProcessingScreen> {
+class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
   double _progress = 0.0;
   String _statusMessage = 'Initializing...';
-  final List<String> _stages = [
-    'Analyzing colors...',
-    'Identifying patterns...',
-    'Detecting item type...',
-    'Almost there...',
-    'Done!',
+  final List<Map<String, dynamic>> _stages = [
+    {'message': 'Analyzing colors...', 'icon': Icons.color_lens},
+    {'message': 'Identifying patterns...', 'icon': Icons.pattern},
+    {'message': 'Detecting item type...', 'icon': Icons.category},
+    {'message': 'Finding matching styles...', 'icon': Icons.style},
+    {'message': 'Preparing recommendations...', 'icon': Icons.auto_awesome},
+    {'message': 'Done!', 'icon': Icons.check_circle},
   ];
+  
+  // Analysis results
+  Map<String, dynamic>? _analysisResults;
 
   @override
   void initState() {
     super.initState();
-    _startProcessing();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
+    
+    // Start processing after a short delay to allow animation to begin
+    Future.delayed(const Duration(milliseconds: 300), _startProcessing);
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   Future<void> _startProcessing() async {
     try {
+      // Simulate processing stages with progress
       for (int i = 0; i < _stages.length; i++) {
-        await Future.delayed(const Duration(milliseconds: 800));
+        if (i == _stages.length - 1) {
+          // Last stage - perform actual analysis
+          try {
+            final result = await GeminiApiService.analyzeClothingItem(File(widget.imagePath));
+            if (result != null) {
+              _analysisResults = result;
+              debugPrint('Analysis results: $_analysisResults');
+            }
+          } catch (e) {
+            debugPrint('Error analyzing image: $e');
+            if (!mounted) return;
+            _showError('Failed to analyze image. Please try again.');
+            return;
+          }
+        }
+        
         if (!mounted) return;
+        
+        // Update UI for current stage
         setState(() {
           _progress = (i + 1) / _stages.length;
-          _statusMessage = _stages[i];
+          _statusMessage = _stages[i]['message'] as String;
         });
+        
+        // Add variable delay based on stage
+        final delay = i < _stages.length - 1 
+            ? Duration(milliseconds: 500 + (i * 200))
+            : Duration.zero;
+            
+        await Future.delayed(delay);
       }
 
       if (!mounted) return;
       
-      // Use Gemini API for real analysis
-      Map<String, String>? gemini;
-      try {
-        gemini = await GeminiApiService.analyzeClothingItem(File(widget.imagePath));
-      } catch (e) {
-        print('Gemini API error: $e');
-        gemini = null;
-      }
-      
-      if (!mounted) return;
-      
-      if (gemini != null && 
-          gemini['itemType'] != null && 
-          gemini['itemType']!.isNotEmpty &&
-          gemini['primaryColor'] != null && 
-          gemini['primaryColor']!.isNotEmpty &&
-          gemini['patternType'] != null && 
-          gemini['patternType']!.isNotEmpty) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => AddItemScreen(
-              imagePath: widget.imagePath,
-              aiResults: gemini,
-            ),
-          ),
-        );
+      // Navigate to results
+      if (_analysisResults != null) {
+        _navigateToResults();
       } else {
-        // Fallback: Navigate to AddItemScreen without AI results
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => AddItemScreen(
-              imagePath: widget.imagePath,
-              aiResults: null, // Let user fill manually
-            ),
-          ),
-        );
+        _showError('Could not analyze the image. Please try again.');
       }
     } catch (e) {
-      print('Processing error: $e');
       if (!mounted) return;
-      
-      // Show error and navigate back
-      setState(() {
-        _statusMessage = 'Error processing image. Continuing without AI analysis.';
-      });
-      
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-      
-      // Navigate to AddItemScreen without AI results as fallback
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => AddItemScreen(
-            imagePath: widget.imagePath,
-            aiResults: null,
-          ),
-        ),
-      );
+      _showError('An error occurred while processing your image.');
     }
+  }
+
+  void _navigateToResults() {
+    if (!mounted) return;
+    
+    // Convert the analysis results to the expected format for VisualSearchScreen
+    final analysis = _analysisResults!;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => VisualSearchScreen.withDetails(
+          imagePath: widget.imagePath,
+          itemType: analysis['itemType'] ?? 'clothing',
+          primaryColor: analysis['primaryColor'] ?? 'neutral',
+          patternType: analysis['patternType'] ?? 'solid',
+        ),
+      ),
+    );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    ).then((_) => Navigator.pop(context));
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final currentStage = _stages.firstWhere(
+      (stage) => stage['message'] == _statusMessage,
+      orElse: () => _stages.first,
+    );
+    
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Analyzing Your Item',
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
+      appBar: AppBar(
+        title: const Text('Analyzing Your Item'),
+        automaticallyImplyLeading: false,
+        elevation: 0,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Animated illustration
+            SizedBox(
+              width: 200,
+              height: 200,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Background circle
+                  Container(
+                    width: 180,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  
+                  // Progress indicator
+                  CircularProgressIndicator(
+                    value: _progress,
+                    strokeWidth: 4,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.primary,
+                    ),
+                  ),
+                  
+                  // Current stage icon
+                  Icon(
+                    currentStage['icon'] as IconData? ?? Icons.auto_awesome,
+                    size: 64,
+                    color: theme.colorScheme.primary,
+                  ),
+                ],
               ),
-              const SizedBox(height: 40),
-              CircularProgressIndicator(value: _progress, strokeWidth: 6),
-              const SizedBox(height: 20),
-              Text(
-                _statusMessage,
-                style: Theme.of(context).textTheme.titleMedium,
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Status message
+            Text(
+              _statusMessage,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: 200,
-                child: LinearProgressIndicator(
-                  value: _progress,
-                  minHeight: 8,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+              textAlign: TextAlign.center,
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Progress percentage
+            Text(
+              '${(_progress * 100).toInt()}% complete',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodySmall?.color,
               ),
-              const SizedBox(height: 40),
-              Icon(
-                Icons.auto_fix_high,
-                size: 60,
-                color: Theme.of(context).colorScheme.primary,
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Progress bar
+            LinearProgressIndicator(
+              value: _progress,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+              backgroundColor: Colors.grey[200],
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

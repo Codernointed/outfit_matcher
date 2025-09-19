@@ -49,12 +49,15 @@ class AppRouter {
   // static void navigateToAddItem(BuildContext context) =>
   //     Navigator.of(context).pushNamed(addItem); // Removed as AddItemScreen now requires parameters and direct navigation via this method is invalid
 
-  static void navigateToItemDetails(BuildContext context, String imagePath) =>
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => ItemDetailsScreen(imagePath: imagePath),
+  static void navigateToItemDetails(BuildContext context, String imagePath) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ItemDetailsScreen(
+          imagePaths: [imagePath],
         ),
-      );
+      ),
+    );
+  }
 
   static void navigateToOutfitSuggestions(
     BuildContext context,

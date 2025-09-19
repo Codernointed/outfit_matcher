@@ -78,6 +78,96 @@ enum ClothingOccasion {
   beach,
 }
 
+/// Enum for clothing item patterns
+enum ClothingPattern {
+  /// Solid color, no pattern
+  solid,
+
+  /// Striped pattern
+  striped,
+
+  /// Polka dots pattern
+  polka_dot,
+
+  /// Floral pattern
+  floral,
+
+  /// Plaid or checkered pattern
+  plaid,
+
+  /// Animal print pattern
+  animal_print,
+
+  /// Geometric pattern
+  geometric,
+
+  /// Abstract pattern
+  abstract,
+}
+
+/// Enum for clothing materials
+enum ClothingMaterial {
+  /// Cotton fabric
+  cotton,
+
+  /// Wool fabric
+  wool,
+
+  /// Silk fabric
+  silk,
+
+  /// Synthetic fabrics like polyester
+  synthetic,
+
+  /// Denim fabric
+  denim,
+
+  /// Leather material
+  leather,
+
+  /// Linen fabric
+  linen,
+
+  /// Blend of materials
+  blend,
+}
+
+/// Enum for clothing fit types
+enum ClothingFit {
+  /// Slim or tight fit
+  slim,
+
+  /// Regular or standard fit
+  regular,
+
+  /// Loose or relaxed fit
+  loose,
+
+  /// Oversized fit
+  oversized,
+
+  /// Bodycon or fitted
+  fitted,
+}
+
+/// Enum for clothing formality levels
+enum ClothingFormality {
+  /// Very casual, everyday wear
+  very_casual,
+
+  /// Casual wear
+  casual,
+
+  /// Smart casual
+  smart_casual,
+
+  /// Business formal
+  business_formal,
+
+  /// Black tie formal
+  black_tie,
+}
+
 /// Clothing item entity model
 class ClothingItem {
   /// Unique identifier for the item

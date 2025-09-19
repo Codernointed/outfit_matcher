@@ -96,22 +96,43 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   }
 
   Future<void> _takePicture() async {
-    if (_controller == null ||
-        !_controller!.value.isInitialized ||
-        _controller!.value.isTakingPicture) {
-      return;
-    }
     try {
-      final XFile imageFile = await _controller!.takePicture();
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => ImagePreviewScreen(imagePath: imageFile.path),
+      await _initializeControllerFuture;
+      
+      // Ensure camera is ready
+      if (!_controller!.value.isInitialized) {
+        throw Exception('Camera not initialized');
+      }
+
+      // Take the picture
+      final XFile image = await _controller!.takePicture();
+      
+      if (!mounted) return;
+      
+      // Navigate to preview screen with the captured image
+      await Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ImagePreviewScreen(
+            imagePath: image.path,
+            fromCamera: true,
           ),
+        ),
+      );
+    } on CameraException catch (e) {
+      debugPrint('Camera error: ${e.description}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Camera error: ${e.code}')),
         );
       }
     } catch (e) {
-      print('Error taking picture: $e');
+      debugPrint('Error taking picture: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error taking picture')),
+        );
+      }
     }
   }
 
