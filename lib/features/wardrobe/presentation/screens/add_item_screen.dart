@@ -79,6 +79,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize fields from AI results if available
     if (widget.aiResults != null) {
       _itemType = widget.aiResults!['itemType'];
       _primaryColor = widget.aiResults!['primaryColor'];
@@ -100,24 +101,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Item Details'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save_alt_outlined),
-            tooltip: 'Save Item',
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                _formKey.currentState!.save();
-                // TODO: Implement save logic
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Item saved (mock)')),
-                );
-                // Navigate back to previous screen
-                Navigator.of(context).pop();
-              }
-            },
-          ),
-        ],
+        title: const Text('Tell me about this item'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -130,123 +120,103 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      // Image Preview
-                      Center(
-                        child: Container(
-                          height: 200,
-                          width: 200,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[400]!),
-                            borderRadius: BorderRadius.circular(
-                              AppConstants.defaultBorderRadius,
+                      // Hero Image with natural presentation
+                      Container(
+                        height: 280,
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 32),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
                             ),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(
-                              AppConstants.defaultBorderRadius,
-                            ),
-                            child: Image.file(
-                              File(widget.imagePath),
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (context, error, stackTrace) => const Center(
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.file(
+                            File(widget.imagePath),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Center(
                                 child: Icon(
-                                  Icons.error_outline,
-                                  color: Colors.red,
-                                  size: 50,
+                                  Icons.image_outlined,
+                                  color: Colors.grey,
+                                  size: 60,
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
 
-                      // Item Type Dropdown (Example - AI could pre-select this)
-                      _buildDropdownFormField(
-                        label: 'Item Type',
-                        value: _itemType,
-                        items: _itemTypeOptions,
-                        onChanged: (value) => setState(() => _itemType = value),
-                        validator:
-                            (value) =>
-                                value == null ? 'Please select an item type' : null,
+                      // Smart suggestions with natural flow
+                      _buildSmartSuggestionSection(
+                        'What type of item is this?',
+                        _itemTypeOptions,
+                        _itemType,
+                        (value) => setState(() => _itemType = value),
+                        Icons.checkroom_outlined,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
 
-                      // Primary Color Dropdown (Example)
-                      _buildDropdownFormField(
-                        label: 'Primary Color',
-                        value: _primaryColor,
-                        items: _colorOptions,
-                        onChanged: (value) => setState(() => _primaryColor = value),
-                        validator:
-                            (value) => value == null ? 'Please select a color' : null,
+                      _buildSmartSuggestionSection(
+                        'What\'s the main color?',
+                        _colorOptions,
+                        _primaryColor,
+                        (value) => setState(() => _primaryColor = value),
+                        Icons.palette_outlined,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
 
-                      // Pattern Type Dropdown (Example)
-                      _buildDropdownFormField(
-                        label: 'Pattern Type',
-                        value: _patternType,
-                        items: _patternOptions,
-                        onChanged: (value) => setState(() => _patternType = value),
+                      _buildSmartSuggestionSection(
+                        'Any pattern or texture?',
+                        _patternOptions,
+                        _patternType,
+                        (value) => setState(() => _patternType = value),
+                        Icons.texture_outlined,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
-                      // Occasion Tags (Multi-select Chips)
-                      _buildChipSelectionFormField(
-                        label: 'Occasions (Select one or more)',
-                        allOptions: _occasionOptions,
-                        selectedOptions: _selectedOccasions,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (_selectedOccasions.contains(selected)) {
-                              _selectedOccasions.remove(selected);
-                            } else {
-                              _selectedOccasions.add(selected);
-                            }
-                          });
-                        },
+                      // Natural occasion selection
+                      _buildNaturalChipSection(
+                        'When would you wear this?',
+                        _occasionOptions,
+                        _selectedOccasions,
+                        Icons.event_outlined,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
-                      // Season Appropriateness (Multi-select Chips)
-                      _buildChipSelectionFormField(
-                        label: 'Seasons (Select one or more)',
-                        allOptions: _seasonOptions,
-                        selectedOptions: _selectedSeasons,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (_selectedSeasons.contains(selected)) {
-                              _selectedSeasons.remove(selected);
-                            } else {
-                              _selectedSeasons.add(selected);
-                            }
-                          });
-                        },
+                      _buildNaturalChipSection(
+                        'Perfect for which seasons?',
+                        _seasonOptions,
+                        _selectedSeasons,
+                        Icons.wb_sunny_outlined,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Optional details with natural styling
+                      _buildOptionalField(
+                        'Brand or store?',
+                        'e.g., Zara, H&M, vintage...',
+                        Icons.store_outlined,
                       ),
                       const SizedBox(height: 24),
-
-                      // Brand TextFormField
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Brand (Optional)',
-                          border: OutlineInputBorder(),
-                        ),
-                        // onSaved: ...
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Notes (Optional)',
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                        ),
+                      
+                      _buildOptionalField(
+                        'Any special notes?',
+                        'Fit, comfort, styling tips...',
+                        Icons.note_outlined,
                         maxLines: 3,
-                        // onSaved: ...
                       ),
-                      const SizedBox(height: 24), // Add some bottom padding
+                      const SizedBox(height: 100), // Extra space for floating button
                     ],
                   ),
                 ),
@@ -292,68 +262,211 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
   }
 
-  Widget _buildDropdownFormField({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    FormFieldValidator<String>? validator,
-  }) {
-    return DropdownButtonFormField<String>(
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-      ),
-      value: items.contains(value) ? value : null,
-      isExpanded: true,
-      items: items.map((String item) {
-        return DropdownMenuItem<String>(value: item, child: Text(item));
-      }).toList(),
-      onChanged: onChanged,
-      validator: validator,
-    );
-  }
-
-  Widget _buildChipSelectionFormField({
-    required String label,
-    required List<String> allOptions,
-    required Set<String> selectedOptions,
-    required Function(String) onSelected,
-  }) {
+  // Natural suggestion section with conversational feel
+  Widget _buildSmartSuggestionSection(
+    String question,
+    List<String> options,
+    String? selectedValue,
+    ValueChanged<String?> onChanged,
+    IconData icon,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w500,
+        Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                question,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Wrap(
-          spacing: 8.0,
-          runSpacing: 4.0,
-          children: allOptions.map((option) {
-            final isSelected = selectedOptions.contains(option);
-            return FilterChip(
-              label: Text(option),
-              selected: isSelected,
-              onSelected: (bool newValue) {
-                onSelected(option);
-              },
-              checkmarkColor: Theme.of(context).colorScheme.onPrimary,
-              selectedColor: Theme.of(context).colorScheme.primary,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurface,
+          spacing: 12,
+          runSpacing: 8,
+          children: options.map((option) {
+            final isSelected = selectedValue == option;
+            return GestureDetector(
+              onTap: () => onChanged(option),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected 
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: isSelected 
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    color: isSelected 
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
               ),
-              backgroundColor: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
-                  .withValues(alpha: 0.5),
             );
           }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Natural chip selection with conversational feel
+  Widget _buildNaturalChipSection(
+    String question,
+    List<String> options,
+    Set<String> selectedOptions,
+    IconData icon,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                question,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          children: options.map((option) {
+            final isSelected = selectedOptions.contains(option);
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    selectedOptions.remove(option);
+                  } else {
+                    selectedOptions.add(option);
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected 
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: isSelected 
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isSelected) ...[
+                      Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      option,
+                      style: TextStyle(
+                        color: isSelected 
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Optional field with natural styling
+  Widget _buildOptionalField(
+    String question,
+    String hint,
+    IconData icon,
+    {int maxLines = 1}
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                question,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          maxLines: maxLines,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
         ),
       ],
     );
