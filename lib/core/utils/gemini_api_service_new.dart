@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -9,7 +10,7 @@ import 'package:outfit_matcher/core/models/clothing_analysis.dart';
 import 'package:outfit_matcher/core/utils/logger.dart';
 
 class GeminiApiService {
-  static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
+  static final String? _apiKey = dotenv.env['GEMINI_API_KEY'];
   static const String _endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
   /// Enhanced clothing analysis with detailed metadata

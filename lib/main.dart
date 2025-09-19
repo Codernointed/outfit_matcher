@@ -6,7 +6,7 @@ import 'package:outfit_matcher/core/di/service_locator.dart';
 import 'package:outfit_matcher/core/theme/app_theme.dart';
 import 'package:outfit_matcher/core/router/app_router.dart';
 
-void main() async {
+Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load environment variables

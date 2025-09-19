@@ -6,10 +6,10 @@ import '../utils/logger.dart';
 
 class ImageApiService {
   // Free API keys - replace with your own
-  static String get _pexelsApiKey => dotenv.env['PEXELS_API_KEY'] ?? '';
-  // static const String _pexelsApiKey = '';
-  static String get _unsplashAccessKey => dotenv.env['UNSPLASH_API_KEY'] ?? '';
-  // static const String _unsplashAccessKey = '';
+  // static String get _pexelsApiKey => dotenv.env['PEXELS_API_KEY'] ?? '';
+  static final String _pexelsApiKey = dotenv.env['PEXELS_API_KEY']!;
+  // static String get _unsplashAccessKey => dotenv.env['UNSPLASH_API_KEY'] ?? '';
+  static final String _unsplashAccessKey = dotenv.env['UNSPLASH_API_KEY']!;
   
   static const String _pexelsBaseUrl = 'https://api.pexels.com/v1';
   static const String _unsplashBaseUrl = 'https://api.unsplash.com';
