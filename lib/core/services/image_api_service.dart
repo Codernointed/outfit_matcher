@@ -1,12 +1,15 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../models/clothing_analysis.dart';
 import '../utils/logger.dart';
 
 class ImageApiService {
   // Free API keys - replace with your own
-  static const String _pexelsApiKey = 'zprK8hYgCzhzXJqxztb3TncCSFGfSYbGLja8GtGJWUC6lCRofEWFLb8a';
-  static const String _unsplashAccessKey = 'v8smtQB72RnlWq72iQEHcEJs9BXO4gDG9alOwRM1wGo';
+  static String get _pexelsApiKey => dotenv.env['PEXELS_API_KEY'] ?? '';
+  // static const String _pexelsApiKey = '';
+  static String get _unsplashAccessKey => dotenv.env['UNSPLASH_API_KEY'] ?? '';
+  // static const String _unsplashAccessKey = '';
   
   static const String _pexelsBaseUrl = 'https://api.pexels.com/v1';
   static const String _unsplashBaseUrl = 'https://api.unsplash.com';
