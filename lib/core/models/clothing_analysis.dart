@@ -51,6 +51,54 @@ class ClothingAnalysis {
     this.silhouette,
   });
 
+  ClothingAnalysis copyWith({
+    String? id,
+    String? itemType,
+    String? primaryColor,
+    String? patternType,
+    String? style,
+    List<String>? seasons,
+    double? confidence,
+    List<String>? tags,
+    String? brand,
+    String? material,
+    String? neckline,
+    String? sleeveLength,
+    String? fit,
+    bool? isPatterned,
+    String? imagePath,
+    String? formality,
+    String? subcategory,
+    List<String>? colors,
+    String? texture,
+    String? length,
+    String? silhouette,
+  }) {
+    return ClothingAnalysis(
+      id: id ?? this.id,
+      itemType: itemType ?? this.itemType,
+      primaryColor: primaryColor ?? this.primaryColor,
+      patternType: patternType ?? this.patternType,
+      style: style ?? this.style,
+      seasons: seasons ?? this.seasons,
+      confidence: confidence ?? this.confidence,
+      tags: tags ?? this.tags,
+      brand: brand ?? this.brand,
+      material: material ?? this.material,
+      neckline: neckline ?? this.neckline,
+      sleeveLength: sleeveLength ?? this.sleeveLength,
+      fit: fit ?? this.fit,
+      isPatterned: isPatterned ?? this.isPatterned,
+      imagePath: imagePath ?? this.imagePath,
+      formality: formality ?? this.formality,
+      subcategory: subcategory ?? this.subcategory,
+      colors: colors ?? this.colors,
+      texture: texture ?? this.texture,
+      length: length ?? this.length,
+      silhouette: silhouette ?? this.silhouette,
+    );
+  }
+
   @override
   String toString() {
     return 'ClothingAnalysis('

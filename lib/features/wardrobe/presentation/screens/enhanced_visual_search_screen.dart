@@ -6,31 +6,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:outfit_matcher/core/models/clothing_analysis.dart';
+import 'package:outfit_matcher/core/models/saved_outfit.dart';
 import 'package:outfit_matcher/core/services/image_api_service.dart';
+import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
 import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
 import 'package:outfit_matcher/core/utils/gallery_service.dart';
 import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:outfit_matcher/core/di/service_locator.dart';
 import 'package:photo_view/photo_view.dart';
 
 class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {
   final List<ClothingAnalysis> analyses;
   final String? searchQuery;
   final List<String> itemImages;
+  final String? userNotes;
 
   const EnhancedVisualSearchScreen({
     super.key,
     required this.analyses,
     this.searchQuery,
     this.itemImages = const [],
+    this.userNotes,
   });
 
   @override
-  ConsumerState<EnhancedVisualSearchScreen> createState() => _EnhancedVisualSearchScreenState();
+  ConsumerState<EnhancedVisualSearchScreen> createState() =>
+      _EnhancedVisualSearchScreenState();
 }
 
-class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearchScreen>
+class _EnhancedVisualSearchScreenState
+    extends ConsumerState<EnhancedVisualSearchScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  final OutfitStorageService _outfitStorageService =
+      getIt<OutfitStorageService>();
 
   List<OnlineInspiration> _inspirations = [];
   List<MannequinOutfit> _mannequinOutfits = [];
@@ -39,16 +49,20 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
   bool _isGeneratingMannequins = false;
   String _generationStatus = '';
   int _generationProgress = 0;
-  int _totalPoses = 4;
+  int _totalPoses = 6;
 
   @override
   void initState() {
     super.initState();
-    AppLogger.info('🚀 EnhancedVisualSearchScreen initialized', data: {
-      'analyses_count': widget.analyses.length,
-      'item_images_count': widget.itemImages.length,
-      'search_query': widget.searchQuery,
-    });
+    AppLogger.info(
+      '🚀 EnhancedVisualSearchScreen initialized',
+      data: {
+        'analyses_count': widget.analyses.length,
+        'item_images_count': widget.itemImages.length,
+        'search_query': widget.searchQuery,
+        'user_notes_length': widget.userNotes?.length,
+      },
+    );
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
     _loadAllData();
@@ -57,10 +71,13 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
   void _onTabChanged() {
     if (_tabController.indexIsChanging) {
       final tabNames = ['Inspiration', 'Try-On', 'Flat Lay'];
-      AppLogger.info('📱 Tab switched', data: {
-        'tab_index': _tabController.index,
-        'tab_name': tabNames[_tabController.index],
-      });
+      AppLogger.info(
+        '📱 Tab switched',
+        data: {
+          'tab_index': _tabController.index,
+          'tab_name': tabNames[_tabController.index],
+        },
+      );
     }
   }
 
@@ -75,22 +92,34 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
     final startTime = DateTime.now();
 
     try {
-      await Future.wait([
-        _loadFashionInspirations(),
-        _loadMannequinOutfits(),
-      ]);
+      await Future.wait([_loadFashionInspirations(), _loadMannequinOutfits()]);
 
       final duration = DateTime.now().difference(startTime);
-      AppLogger.performance('Visual search data loading', duration, result: 'success');
-      AppLogger.info('✅ All visual search data loaded successfully', data: {
-        'inspirations_count': _inspirations.length,
-        'mannequin_outfits_count': _mannequinOutfits.length,
-        'duration_ms': duration.inMilliseconds,
-      });
+      AppLogger.performance(
+        'Visual search data loading',
+        duration,
+        result: 'success',
+      );
+      AppLogger.info(
+        '✅ All visual search data loaded successfully',
+        data: {
+          'inspirations_count': _inspirations.length,
+          'mannequin_outfits_count': _mannequinOutfits.length,
+          'duration_ms': duration.inMilliseconds,
+        },
+      );
     } catch (e, stackTrace) {
       final duration = DateTime.now().difference(startTime);
-      AppLogger.error('❌ Failed to load visual search data', error: e, stackTrace: stackTrace);
-      AppLogger.performance('Visual search data loading', duration, result: 'error');
+      AppLogger.error(
+        '❌ Failed to load visual search data',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      AppLogger.performance(
+        'Visual search data loading',
+        duration,
+        result: 'error',
+      );
     }
   }
 
@@ -142,79 +171,112 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
   }
 
   Future<List<MannequinOutfit>> _generateMannequinOutfits() async {
-    AppLogger.info('🎨 Starting mannequin generation', data: {
-      'analyses_count': widget.analyses.length,
-      'item_images_count': widget.itemImages.length,
-    });
+    AppLogger.info(
+      '🎨 Starting mannequin generation',
+      data: {
+        'analyses_count': widget.analyses.length,
+        'item_images_count': widget.itemImages.length,
+      },
+    );
 
     final startTime = DateTime.now();
     final outfits = <MannequinOutfit>[];
 
-    if (widget.itemImages.isEmpty) {
-      AppLogger.warning('❌ No item images available for mannequin generation');
+    if (widget.analyses.isEmpty) {
+      AppLogger.warning('❌ No analyses available for mannequin generation');
       return outfits;
     }
 
     try {
-      // Use the new mannequin generation method with progress callbacks
-      final generatedOutfits = await GeminiApiService.generateMannequinOutfits(
-        widget.analyses,
-        onProgress: (status) {
-          if (mounted) {
-            setState(() => _generationStatus = status);
-          }
-        },
-        onProgressUpdate: (completed, total) {
-          if (mounted) {
-            setState(() {
-              _generationProgress = completed;
-              _totalPoses = total;
-            });
-          }
-        },
-      );
+      final generatedOutfits =
+          await GeminiApiService.generateEnhancedMannequinOutfits(
+            widget.analyses,
+            userNotes: widget.userNotes,
+            onProgress: (status) {
+              if (mounted) {
+                setState(() => _generationStatus = status);
+              }
+            },
+            onProgressUpdate: (completed, total) {
+              if (mounted) {
+                setState(() {
+                  _generationProgress = completed;
+                  _totalPoses = total;
+                });
+              }
+            },
+          );
 
       final duration = DateTime.now().difference(startTime);
-      AppLogger.performance('Mannequin generation', duration, result: 'success');
-      AppLogger.info('✅ Generated mannequin outfits successfully', data: {
-        'count': generatedOutfits.length,
-        'duration_ms': duration.inMilliseconds,
-      });
+      AppLogger.performance(
+        'Mannequin generation',
+        duration,
+        result: 'success',
+      );
+      AppLogger.info(
+        '✅ Generated mannequin outfits successfully',
+        data: {
+          'count': generatedOutfits.length,
+          'duration_ms': duration.inMilliseconds,
+        },
+      );
 
       return generatedOutfits;
     } catch (e, stackTrace) {
       final duration = DateTime.now().difference(startTime);
-      AppLogger.error('❌ Error generating mannequin outfits', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Error generating mannequin outfits',
+        error: e,
+        stackTrace: stackTrace,
+      );
       AppLogger.performance('Mannequin generation', duration, result: 'error');
 
-      // Fallback: create mock mannequin outfits
       if (widget.analyses.isNotEmpty) {
-        final analysis = widget.analyses.first;
-        for (int i = 0; i < 4; i++) {
+        final fallbackAnalysis = widget.analyses.first;
+        for (int i = 0; i < 6; i++) {
           final pose = _getPoseForIndex(i);
-          outfits.add(MannequinOutfit(
-            id: 'mannequin_$i',
-            items: [analysis],
-            imageUrl: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=600&fit=crop&crop=center',
-            pose: pose,
-            style: ['casual', 'business', 'trendy', 'elegant'][i],
-            confidence: 0.8,
-          ));
+          outfits.add(
+            MannequinOutfit(
+              id: 'mannequin_$i',
+              items: [fallbackAnalysis],
+              imageUrl:
+                  'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=600&fit=crop&crop=center',
+              pose: pose,
+              style:
+                  [
+                    'casual chic',
+                    'business sharp',
+                    'weekend relaxed',
+                    'evening glam',
+                    'streetwear edge',
+                    'party ready',
+                  ][i],
+              confidence: 0.75,
+              metadata: {
+                'description':
+                    'Fallback mannequin look generated locally due to API issue.',
+              },
+            ),
+          );
         }
       }
 
-      AppLogger.info('✅ Created fallback mannequin outfits', data: {'count': outfits.length});
+      AppLogger.info(
+        '✅ Created fallback mannequin outfits',
+        data: {'count': outfits.length},
+      );
+      return outfits;
     }
-
-    return outfits;
   }
 
   String _getPoseForIndex(int index) {
     const poses = [
-      'standing straight, hands on hips',
+      'front view, hands at sides',
       'walking pose, one foot forward',
-      'casual standing, one hand in pocket',
-      'sitting pose, legs crossed'
+      'three-quarter angle, hand on hip',
+      'seated pose, legs crossed',
+      'dynamic runway stride',
+      'leaning against wall, relaxed pose',
     ];
     return poses[index % poses.length];
   }
@@ -238,7 +300,9 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
           _isGeneratingMannequins = false;
           _generationStatus = '';
           _generationProgress = 0;
-          AppLogger.debug('👗 Loaded ${_mannequinOutfits.length} mannequin outfits');
+          AppLogger.debug(
+            '👗 Loaded ${_mannequinOutfits.length} mannequin outfits',
+          );
         });
       }
     } catch (e) {
@@ -273,18 +337,9 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
           unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
           indicatorColor: theme.colorScheme.primary,
           tabs: const [
-            Tab(
-              icon: Icon(Icons.explore_outlined),
-              text: 'Inspiration',
-            ),
-            Tab(
-              icon: Icon(Icons.person_outline),
-              text: 'Try-On',
-            ),
-            Tab(
-              icon: Icon(Icons.view_comfy_outlined),
-              text: 'Flat Lay',
-            ),
+            Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
+            Tab(icon: Icon(Icons.person_outline), text: 'Try-On'),
+            Tab(icon: Icon(Icons.view_comfy_outlined), text: 'Flat Lay'),
           ],
         ),
       ),
@@ -325,34 +380,46 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          
-          // Progress bar for mannequin generation
           if (_isGeneratingMannequins && _totalPoses > 0) ...[
             Container(
-              width: 200,
-              height: 4,
+              width: 220,
+              height: 5,
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceVariant,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(2.5),
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
-                widthFactor: _generationProgress / _totalPoses,
+                widthFactor:
+                    _totalPoses == 0
+                        ? 0
+                        : (_generationProgress / _totalPoses).clamp(0.0, 1.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(2.5),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              '${_generationProgress} of ${_totalPoses} looks created',
+              '${_generationProgress} of ${_totalPoses} looks crafted',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
+            if (_generationStatus.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                _generationStatus,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ] else ...[
             Text(
               'This may take a moment...',
@@ -373,7 +440,10 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
     }
 
     if (_inspirations.isEmpty) {
-      return _buildEmptyState('No inspiration found', 'Try a different search term');
+      return _buildEmptyState(
+        'No inspiration found',
+        'Try a different search term',
+      );
     }
 
     return Padding(
@@ -418,19 +488,19 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
                 child: CachedNetworkImage(
                   imageUrl: inspiration.imageUrl,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: theme.colorScheme.surface,
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: theme.colorScheme.surface,
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
+                  placeholder:
+                      (context, url) => Container(
+                        color: theme.colorScheme.surface,
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                  errorWidget:
+                      (context, url, error) => Container(
+                        color: theme.colorScheme.surface,
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                      ),
                 ),
               ),
 
@@ -503,143 +573,92 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
 
   Widget _buildTryOnTab() {
     if (_isGeneratingMannequins) {
-      return _buildLoadingIndicator('Creating virtual try-on looks...');
+      return _buildLoadingIndicator('Curating personalized mannequin looks...');
     }
 
     if (_mannequinOutfits.isEmpty) {
       return _buildEmptyState(
-        'No virtual try-ons available',
-        'We couldn\'t generate any virtual try-ons for your item',
+        'No mannequins yet',
+        'Tap refresh to try generating new looks with your items and notes.',
+        actionLabel: 'Regenerate',
+        onAction: _loadMannequinOutfits,
       );
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 0, // Cards have their own bottom margin
-        childAspectRatio: 0.7, // Better aspect ratio for fashion images
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: _mannequinOutfits.length,
       itemBuilder: (context, index) {
-        final outfit = _mannequinOutfits[index];
-        return _buildMannequinCard(outfit);
+        final look = _mannequinOutfits[index];
+        return _buildMannequinCard(look, index + 1);
       },
     );
   }
 
-  Widget _buildMannequinCard(MannequinOutfit outfit) {
+  Widget _buildMannequinCard(MannequinOutfit outfit, int index) {
     final theme = Theme.of(context);
-    final hasValidImage = outfit.imageUrl.isNotEmpty &&
-        (outfit.imageUrl.startsWith('http') || outfit.imageUrl.startsWith('data:'));
+    final description = outfit.metadata?['description'] as String?;
 
-    return GestureDetector(
-      onTap: hasValidImage ? () => _showMannequinDetail(outfit) : null,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+              color: theme.colorScheme.shadow.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Stack(
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Main image - takes full space
               AspectRatio(
-                aspectRatio: 0.7, // Portrait aspect ratio for fashion
-                child: hasValidImage
-                    ? (outfit.imageUrl.startsWith('data:')
-                        ? Image.memory(
-                            _dataUrlToBytes(outfit.imageUrl),
-                            fit: BoxFit.cover,
-                          )
-                        : CachedNetworkImage(
-                            imageUrl: outfit.imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => _buildElegantLoading(),
-                            errorWidget: (context, url, error) => _buildImageError(),
-                          ))
-                    : _isGeneratingMannequins
-                        ? _buildElegantLoading()
-                        : _buildImageError(),
+                aspectRatio: 3 / 4,
+                child: _buildMannequinImage(outfit.imageUrl),
               ),
-
-              // Very subtle download hint - only visible on hover/press
-              if (hasValidImage)
-                Positioned(
-                  bottom: 12,
-                  right: 12,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () => _downloadMannequinImage(outfit),
-                        child: const Icon(
-                          Icons.download_rounded,
-                          color: Colors.white,
-                          size: 16,
-                        ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Look $index: ${_formatStyleLabel(outfit.style)}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                ),
-
-              // Retry overlay for failed generations
-              if (!hasValidImage && !_isGeneratingMannequins)
-                Positioned.fill(
-                  child: Container(
-                    color: theme.colorScheme.surface,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.refresh_rounded,
-                          size: 48,
-                          color: theme.colorScheme.onSurface.withOpacity(0.4),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Tap to retry',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextButton(
-                          onPressed: _retryMannequinGeneration,
-                          style: TextButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: Text(
-                            'Retry',
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Featuring ${outfit.items.map((item) => item.itemType.toLowerCase()).join(', ')}',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
                     ),
-                  ),
+                    if (description != null && description.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        description,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                    if (widget.userNotes != null &&
+                        widget.userNotes!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildUserNotesChip(widget.userNotes!),
+                    ],
+                    const SizedBox(height: 16),
+                    _buildMannequinActions(outfit, index),
+                  ],
                 ),
+              ),
             ],
           ),
         ),
@@ -710,181 +729,48 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
     );
   }
 
-  Widget _buildEmptyState(String title, String message) {
+  Widget _buildEmptyState(
+    String title,
+    String message, {
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 64,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showMannequinDetail(MannequinOutfit outfit) {
-    final theme = Theme.of(context);
-    final hasValidImage = outfit.imageUrl.isNotEmpty &&
-        (outfit.imageUrl.startsWith('http') || outfit.imageUrl.startsWith('data:'));
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      outfit.style?.toUpperCase() ?? 'STYLE',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(
-                      Icons.close_rounded,
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Image
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: onAction,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: hasValidImage
-                      ? (outfit.imageUrl.startsWith('data:')
-                          ? Image.memory(
-                              _dataUrlToBytes(outfit.imageUrl),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                            )
-                          : CachedNetworkImage(
-                              imageUrl: outfit.imageUrl,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              placeholder: (context, url) => _buildElegantLoading(),
-                              errorWidget: (context, url, error) => _buildImageError(),
-                            ))
-                      : _buildImageError(),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            ),
-
-            // Action buttons
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: hasValidImage ? () {
-                        Navigator.of(context).pop();
-                        _downloadMannequinImage(outfit);
-                      } : null,
-                      icon: const Icon(Icons.download_rounded, size: 20),
-                      label: const Text('Save to Gallery'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withOpacity(0.2),
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: IconButton(
-                      onPressed: () {
-                        // Share functionality could go here
-                        Navigator.of(context).pop();
-                      },
-                      icon: Icon(
-                        Icons.share_rounded,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: Text(actionLabel),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -901,9 +787,9 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
 
     try {
       // Show loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Downloading image...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Downloading image...')));
 
       bool success = false;
       final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
@@ -965,7 +851,115 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
     }
   }
 
+  Future<void> _saveOutfit(MannequinOutfit outfit, int index) async {
+    final analysisItems = outfit.items.isEmpty ? widget.analyses : outfit.items;
+    final now = DateTime.now();
+    final savedOutfit = SavedOutfit(
+      id: 'saved_${now.millisecondsSinceEpoch}',
+      title:
+          outfit.style != null
+              ? 'Look $index • ${_formatStyleLabel(outfit.style)}'
+              : 'Look $index',
+      items: analysisItems,
+      mannequinImages: [outfit.imageUrl],
+      notes: widget.userNotes,
+      occasion: outfit.metadata?['occasion'] as String?,
+      style: outfit.style,
+      matchScore: outfit.confidence,
+      createdAt: now,
+    );
 
+    await _outfitStorageService.save(savedOutfit);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Look saved to your wardrobe inspiration')),
+    );
+  }
+
+  void _shareOutfit(MannequinOutfit outfit) {
+    AppLogger.ui(
+      'EnhancedVisualSearch',
+      'ShareLook',
+      data: {'outfit_id': outfit.id, 'style': outfit.style},
+    );
+    // TODO: integrate quick share once platform channels are ready.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Sharing coming soon — saved to your inspiration list for now!',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserNotesChip(String notes) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.note_outlined, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              notes,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatStyleLabel(String? style) {
+    if (style == null || style.isEmpty) return 'Signature Look';
+    return style
+        .split(RegExp(r'[_\-]'))
+        .map(
+          (word) =>
+              word.isEmpty
+                  ? ''
+                  : '${word[0].toUpperCase()}${word.substring(1)}',
+        )
+        .join(' ');
+  }
+
+  Widget _buildMannequinActions(MannequinOutfit outfit, int index) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _saveOutfit(outfit, index),
+            icon: const Icon(Icons.bookmark_add_outlined),
+            label: const Text('Save Look'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        IconButton.filledTonal(
+          onPressed: () => _shareOutfit(outfit),
+          icon: const Icon(Icons.ios_share_outlined),
+          tooltip: 'Share look',
+        ),
+      ],
+    );
+  }
 
   void _retryMannequinGeneration() {
     setState(() {
@@ -991,8 +985,14 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
       }
 
       // Clean the base64 string
-      base64Data = base64Data.replaceAll(RegExp(r'\s+'), ''); // Remove whitespace
-      base64Data = base64Data.replaceAll(RegExp(r'[^A-Za-z0-9+/=]'), ''); // Keep only valid base64 chars
+      base64Data = base64Data.replaceAll(
+        RegExp(r'\s+'),
+        '',
+      ); // Remove whitespace
+      base64Data = base64Data.replaceAll(
+        RegExp(r'[^A-Za-z0-9+/=]'),
+        '',
+      ); // Keep only valid base64 chars
 
       // Ensure proper padding
       while (base64Data.length % 4 != 0) {
@@ -1006,215 +1006,345 @@ class _EnhancedVisualSearchScreenState extends ConsumerState<EnhancedVisualSearc
     }
   }
 
+  Widget _buildMannequinImage(String imageUrl) {
+    final hasValidImage =
+        imageUrl.isNotEmpty &&
+        (imageUrl.startsWith('http') || imageUrl.startsWith('data:'));
+
+    return Stack(
+      children: [
+        // Main image - takes full space
+        AspectRatio(
+          aspectRatio: 3 / 4, // Portrait aspect ratio for fashion
+          child:
+              hasValidImage
+                  ? (imageUrl.startsWith('data:')
+                      ? Image.memory(
+                        _dataUrlToBytes(imageUrl),
+                        fit: BoxFit.cover,
+                      )
+                      : CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => _buildElegantLoading(),
+                        errorWidget:
+                            (context, url, error) => _buildImageError(),
+                      ))
+                  : _isGeneratingMannequins
+                  ? _buildElegantLoading()
+                  : _buildImageError(),
+        ),
+
+        // Very subtle download hint - only visible on hover/press
+        if (hasValidImage)
+          Positioned(
+            bottom: 12,
+            right: 12,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap:
+                      () => _downloadMannequinImage(
+                        MannequinOutfit(
+                          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                          items: [],
+                          imageUrl: imageUrl,
+                        ),
+                      ),
+                  child: const Icon(
+                    Icons.download_rounded,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+        // Retry overlay for failed generations
+        if (!hasValidImage && !_isGeneratingMannequins)
+          Positioned.fill(
+            child: Container(
+              color: Theme.of(context).colorScheme.surface,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.refresh_rounded,
+                    size: 48,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tap to retry',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: _retryMannequinGeneration,
+                    style: TextButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   void _showInspirationDetail(OnlineInspiration inspiration) {
     final theme = Theme.of(context);
 
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(16),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.explore,
-                      color: theme.colorScheme.primary,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (inspiration.title != null)
-                            Text(
-                              inspiration.title!,
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          Text(
-                            inspiration.source,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(0.7),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(
-                        Icons.close,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ),
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(16),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
               ),
-
-              // Image
-              Container(
-                constraints: const BoxConstraints(maxHeight: 300),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: PhotoView(
-                    imageProvider: CachedNetworkImageProvider(inspiration.imageUrl),
-                    minScale: PhotoViewComputedScale.contained,
-                    maxScale: PhotoViewComputedScale.covered * 2,
-                    backgroundDecoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-
-              // Info
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (inspiration.description != null) ...[
-                      Text(
-                        'Description:',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        inspiration.description!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.8),
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Metadata
-                    Row(
+                    child: Row(
                       children: [
+                        Icon(
+                          Icons.explore,
+                          color: theme.colorScheme.primary,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Source',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                  fontWeight: FontWeight.w600,
+                              if (inspiration.title != null)
+                                Text(
+                                  inspiration.title!,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
-                              ),
                               Text(
                                 inspiration.source,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.7),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        if (inspiration.photographer != null)
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Photographer',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                Text(
-                                  inspiration.photographer!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurface.withOpacity(0.8),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Confidence indicator
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.verified,
-                          size: 16,
-                          color: inspiration.confidence > 0.8
-                              ? Colors.green
-                              : inspiration.confidence > 0.6
-                                  ? Colors.orange
-                                  : Colors.red,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Match: ${(inspiration.confidence * 100).toInt()}%',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurface,
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: Icon(
+                            Icons.close,
+                            color: theme.colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Action buttons
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _downloadInspirationImage(inspiration),
-                        icon: const Icon(Icons.download, size: 18),
-                        label: const Text('Download'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: theme.colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                  // Image
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 300),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: PhotoView(
+                        imageProvider: CachedNetworkImageProvider(
+                          inspiration.imageUrl,
+                        ),
+                        minScale: PhotoViewComputedScale.contained,
+                        maxScale: PhotoViewComputedScale.covered * 2,
+                        backgroundDecoration: BoxDecoration(
+                          color: theme.colorScheme.surface,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Close'),
+                  ),
+
+                  // Info
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (inspiration.description != null) ...[
+                          Text(
+                            'Description:',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            inspiration.description!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.8,
+                              ),
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Metadata
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Source',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.6),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    inspiration.source,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (inspiration.photographer != null)
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Photographer',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface
+                                                .withOpacity(0.6),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    Text(
+                                      inspiration.photographer!,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme.colorScheme.onSurface
+                                                .withOpacity(0.8),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Confidence indicator
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.verified,
+                              size: 16,
+                              color:
+                                  inspiration.confidence > 0.8
+                                      ? Colors.green
+                                      : inspiration.confidence > 0.6
+                                      ? Colors.orange
+                                      : Colors.red,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Match: ${(inspiration.confidence * 100).toInt()}%',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Action buttons
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                () => _downloadInspirationImage(inspiration),
+                            icon: const Icon(Icons.download, size: 18),
+                            label: const Text('Download'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: theme.colorScheme.primary,
+                              foregroundColor: theme.colorScheme.onPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Close'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 

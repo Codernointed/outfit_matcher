@@ -7,18 +7,11 @@ import 'package:outfit_matcher/features/wardrobe/domain/entities/clothing_item.d
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:lottie/lottie.dart';
 
-/// Screen for viewing and confirming AI-analyzed clothing item details
 class ItemDetailsScreen extends StatefulWidget {
-  /// List of image paths for the clothing items
   final List<String> imagePaths;
 
-  /// Default constructor
-  const ItemDetailsScreen({
-    required this.imagePaths,
-    super.key,
-  });
+  const ItemDetailsScreen({required this.imagePaths, super.key});
 
-  /// Constructor for single image
   factory ItemDetailsScreen.single({required String imagePath}) {
     return ItemDetailsScreen(imagePaths: [imagePath]);
   }
@@ -27,74 +20,90 @@ class ItemDetailsScreen extends StatefulWidget {
   State<ItemDetailsScreen> createState() => _ItemDetailsScreenState();
 }
 
-class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTickerProviderStateMixin {
+class _ItemEditorState {
+  _ItemEditorState({required this.imagePath})
+    : brandController = TextEditingController(),
+      subcategoryController = TextEditingController();
+
+  final String imagePath;
+  ClothingAnalysis? analysis;
+  ClothingType selectedType = ClothingType.top;
+  ClothingColor selectedColor = ClothingColor.blue;
+  ClothingOccasion selectedOccasion = ClothingOccasion.casual;
+  ClothingPattern selectedPattern = ClothingPattern.solid;
+  ClothingMaterial selectedMaterial = ClothingMaterial.cotton;
+  ClothingFit selectedFit = ClothingFit.regular;
+  ClothingFormality selectedFormality = ClothingFormality.casual;
+  final Set<String> selectedSeasons = <String>{};
+  final TextEditingController brandController;
+  final TextEditingController subcategoryController;
+
+  void dispose() {
+    brandController.dispose();
+    subcategoryController.dispose();
+  }
+}
+
+class _ItemDetailsScreenState extends State<ItemDetailsScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _isAnalyzing = true;
-  ClothingAnalysis? _analysis;
   String? _error;
+  late final PageController _pageController;
+  late final List<_ItemEditorState> _itemStates;
+  late final TextEditingController _globalNotesController;
+  int _currentIndex = 0;
 
-  /// Selected clothing type
-  ClothingType _selectedType = ClothingType.top;
+  _ItemEditorState get _currentState => _itemStates[_currentIndex];
+  bool get _canContinue =>
+      !_isAnalyzing && _itemStates.every((state) => state.analysis != null);
+  List<String> get _imagePaths =>
+      _itemStates.map((state) => state.imagePath).toList(growable: false);
 
-  /// Selected clothing color
-  ClothingColor _selectedColor = ClothingColor.blue;
-
-  /// Selected clothing occasion
-  ClothingOccasion _selectedOccasion = ClothingOccasion.casual;
-
-  /// Selected pattern type
-  ClothingPattern _selectedPattern = ClothingPattern.solid;
-
-  /// Selected material
-  ClothingMaterial _selectedMaterial = ClothingMaterial.cotton;
-
-  /// Selected fit
-  ClothingFit _selectedFit = ClothingFit.regular;
-
-  /// Selected formality level
-  ClothingFormality _selectedFormality = ClothingFormality.casual;
-
-  /// Animation controller for loading animation
   late AnimationController _animationController;
 
-  /// Available options for the UI
   final List<ClothingType> _itemTypeOptions = ClothingType.values.toList();
   final List<ClothingColor> _colorOptions = ClothingColor.values.toList();
-  final List<ClothingOccasion> _occasionOptions = ClothingOccasion.values.toList();
+  final List<ClothingOccasion> _occasionOptions =
+      ClothingOccasion.values.toList();
   final List<ClothingPattern> _patternOptions = ClothingPattern.values.toList();
-  final List<ClothingMaterial> _materialOptions = ClothingMaterial.values.toList();
+  final List<ClothingMaterial> _materialOptions =
+      ClothingMaterial.values.toList();
   final List<ClothingFit> _fitOptions = ClothingFit.values.toList();
-  final List<ClothingFormality> _formalityOptions = ClothingFormality.values.toList();
-  final Set<String> _selectedSeasons = {};
+  final List<ClothingFormality> _formalityOptions =
+      ClothingFormality.values.toList();
   final List<String> _seasonOptions = ['Spring', 'Summer', 'Fall', 'Winter'];
-  final TextEditingController _notesController = TextEditingController();
-  final TextEditingController _brandController = TextEditingController();
-  final TextEditingController _subcategoryController = TextEditingController();
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    _brandController.dispose();
-    _subcategoryController.dispose();
-    _animationController.dispose();
-    super.dispose();
-  }
 
   @override
   void initState() {
     super.initState();
+    _itemStates =
+        widget.imagePaths
+            .map((path) => _ItemEditorState(imagePath: path))
+            .toList();
+    _pageController = PageController();
+    _globalNotesController = TextEditingController();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
-    
-    // Start analysis
-    _analyzeImage();
+    _analyzeImages();
   }
 
-  Future<void> _analyzeImage() async {
+  @override
+  void dispose() {
+    for (final state in _itemStates) {
+      state.dispose();
+    }
+    _pageController.dispose();
+    _globalNotesController.dispose();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _analyzeImages() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = true;
       _isAnalyzing = true;
@@ -102,47 +111,41 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
     });
 
     try {
-      final files = widget.imagePaths.map((path) => File(path)).toList();
+      final files = widget.imagePaths.map(File.new).toList();
       final analyses = await GeminiApiService.analyzeMultipleItems(files);
-      
-      if (mounted) {
-        if (analyses.isNotEmpty) {
-          // For now, we'll use the first analysis, but you could combine them
-          final firstAnalysis = analyses.first;
-          setState(() {
-            _analysis = firstAnalysis;
-            // Update UI with analysis results
-            _selectedType = _mapStringToClothingType(_analysis?.itemType ?? 'top');
-            _selectedColor = _mapStringToClothingColor(_analysis?.primaryColor ?? 'blue');
-            _selectedOccasion = _mapStringToClothingOccasion(_analysis?.style ?? 'casual');
-            _selectedPattern = _mapStringToClothingPattern(_analysis?.patternType ?? 'solid');
-            _selectedMaterial = _mapStringToClothingMaterial(_analysis?.material ?? 'cotton');
-            _selectedFit = _mapStringToClothingFit(_analysis?.fit ?? 'regular');
-            _selectedFormality = _mapStringToClothingFormality(_analysis?.formality ?? 'casual');
-            
-            // Prefill text controllers with analysis data
-            if (_analysis?.brand != null && _analysis!.brand!.isNotEmpty) {
-              _brandController.text = _analysis!.brand!;
-            }
-            if (_analysis?.subcategory != null && _analysis!.subcategory!.isNotEmpty) {
-              _subcategoryController.text = _analysis!.subcategory!;
-            }
-            
-            _isAnalyzing = false;
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _error = 'Could not analyze the images. Please try again.';
-            _isAnalyzing = false;
-            _isLoading = false;
-          });
-        }
+
+      if (!mounted) return;
+
+      if (analyses.isEmpty) {
+        setState(() {
+          _error = 'Could not analyze the images. Please try again.';
+          _isAnalyzing = false;
+          _isLoading = false;
+        });
+        return;
       }
+
+      setState(() {
+        for (var i = 0; i < _itemStates.length; i++) {
+          final state = _itemStates[i];
+          if (i < analyses.length) {
+            final analysis = analyses[i].copyWith(imagePath: state.imagePath);
+            _applyAnalysisToState(state, analysis);
+          }
+        }
+
+        if (_itemStates.isNotEmpty && _itemStates.first.analysis == null) {
+          _itemStates.first.analysis = analyses.first;
+        }
+
+        _isAnalyzing = false;
+        _isLoading = false;
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = 'Error analyzing images. Please check your connection and try again.';
+          _error =
+              'Error analyzing images. Please check your connection and try again.';
           _isAnalyzing = false;
           _isLoading = false;
         });
@@ -150,131 +153,182 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
     }
   }
 
+  void _applyAnalysisToState(
+    _ItemEditorState state,
+    ClothingAnalysis analysis,
+  ) {
+    state.analysis = analysis;
+    state.selectedType = _mapStringToClothingType(analysis.itemType);
+    state.selectedColor = _mapStringToClothingColor(analysis.primaryColor);
+    state.selectedOccasion = _mapStringToClothingOccasion(analysis.style);
+    state.selectedPattern = _mapStringToClothingPattern(analysis.patternType);
+    state.selectedMaterial = _mapStringToClothingMaterial(
+      analysis.material ?? 'cotton',
+    );
+    state.selectedFit = _mapStringToClothingFit(analysis.fit ?? 'regular');
+    state.selectedFormality = _mapStringToClothingFormality(
+      analysis.formality ?? 'casual',
+    );
+    state.selectedSeasons
+      ..clear()
+      ..addAll(analysis.seasons);
+    state.brandController.text = analysis.brand ?? '';
+    state.subcategoryController.text = analysis.subcategory ?? '';
+  }
+
   ClothingType _mapStringToClothingType(String type) {
     return ClothingType.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == type.toLowerCase(),
+      (e) => e.name.toLowerCase() == type.toLowerCase(),
       orElse: () => ClothingType.top,
     );
   }
 
   ClothingColor _mapStringToClothingColor(String color) {
     return ClothingColor.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == color.toLowerCase(),
+      (e) => e.name.toLowerCase() == color.toLowerCase(),
       orElse: () => ClothingColor.blue,
     );
   }
 
   ClothingOccasion _mapStringToClothingOccasion(String occasion) {
     return ClothingOccasion.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == occasion.toLowerCase(),
+      (e) => e.name.toLowerCase() == occasion.toLowerCase(),
       orElse: () => ClothingOccasion.casual,
     );
   }
 
   ClothingPattern _mapStringToClothingPattern(String pattern) {
     return ClothingPattern.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == pattern.toLowerCase(),
+      (e) => e.name.toLowerCase() == pattern.toLowerCase(),
       orElse: () => ClothingPattern.solid,
     );
   }
 
   ClothingMaterial _mapStringToClothingMaterial(String material) {
     return ClothingMaterial.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == material.toLowerCase(),
+      (e) => e.name.toLowerCase() == material.toLowerCase(),
       orElse: () => ClothingMaterial.cotton,
     );
   }
 
   ClothingFit _mapStringToClothingFit(String fit) {
     return ClothingFit.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == fit.toLowerCase(),
+      (e) => e.name.toLowerCase() == fit.toLowerCase(),
       orElse: () => ClothingFit.regular,
     );
   }
 
   ClothingFormality _mapStringToClothingFormality(String formality) {
     return ClothingFormality.values.firstWhere(
-      (e) => e.toString().split('.').last.toLowerCase() == formality.toLowerCase(),
+      (e) => e.name.toLowerCase() == formality.toLowerCase(),
       orElse: () => ClothingFormality.casual,
     );
   }
 
   Future<void> _saveAndContinue() async {
-    if (_analysis == null) return;
-    
-    // Update the analysis with user's changes before proceeding
-    _updateAnalysis();
+    final analyses = _collectAnalyses();
 
-    // Create a more specific search query
-    final searchQuery = _buildSearchQuery();
-    
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => EnhancedVisualSearchScreen(
-            analyses: [_analysis!],
-            searchQuery: searchQuery,
-            itemImages: widget.imagePaths,
+    if (analyses.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('We need at least one analyzed item to continue.'),
           ),
-        ),
-      );
+        );
+      }
+      return;
     }
+
+    final primaryAnalysis = analyses.first;
+    final searchQuery = _buildSearchQuery(primaryAnalysis);
+    final userNotes = _collectUserNotes();
+
+    if (!mounted) return;
+
+    FocusScope.of(context).unfocus();
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (context) => EnhancedVisualSearchScreen(
+              analyses: analyses,
+              searchQuery: searchQuery,
+              itemImages: _imagePaths,
+              userNotes: userNotes,
+            ),
+      ),
+    );
   }
-  
-  String _buildSearchQuery() {
-    final type = _selectedType.toString().split('.').last.toLowerCase();
-    final color = _selectedColor.toString().split('.').last.toLowerCase();
-    final occasion = _selectedOccasion.toString().split('.').last.toLowerCase();
-    
-    // Create a more specific search query based on item type and occasion
+
+  List<ClothingAnalysis> _collectAnalyses() {
+    return _itemStates
+        .map(_buildUpdatedAnalysis)
+        .whereType<ClothingAnalysis>()
+        .toList(growable: false);
+  }
+
+  ClothingAnalysis? _buildUpdatedAnalysis(_ItemEditorState state) {
+    final base = state.analysis;
+    if (base == null) return null;
+
+    return base.copyWith(
+      itemType: state.selectedType.name,
+      primaryColor: state.selectedColor.name,
+      style: state.selectedOccasion.name,
+      patternType: state.selectedPattern.name,
+      material: state.selectedMaterial.name,
+      fit: state.selectedFit.name,
+      formality: state.selectedFormality.name,
+      seasons: state.selectedSeasons.toList(growable: false),
+      brand: _normalizeText(state.brandController.text),
+      subcategory: _normalizeText(state.subcategoryController.text),
+      imagePath: state.imagePath,
+    );
+  }
+
+  String? _collectUserNotes() {
+    final note = _normalizeText(_globalNotesController.text);
+    return note;
+  }
+
+  String? _normalizeText(String? input) {
+    final value = input?.trim();
+    return (value == null || value.isEmpty) ? null : value;
+  }
+
+  String _buildSearchQuery(ClothingAnalysis analysis) {
+    final type = analysis.itemType.toLowerCase();
+    final color = analysis.primaryColor.toLowerCase();
+    final occasion = analysis.style.toLowerCase();
+    final subcategory = (analysis.subcategory ?? '').toLowerCase().trim();
+
     switch (type) {
       case 'top':
-        return '$color $occasion outfit with ${_analysis?.subcategory ?? ''} top';
+        return '$color $occasion outfit with ${subcategory.isEmpty ? 'stylish top' : subcategory}'
+            .trim();
       case 'bottom':
-        return '$color $occasion outfit with ${_analysis?.subcategory ?? ''} bottom';
+        return '$color $occasion outfit featuring ${subcategory.isEmpty ? 'statement bottoms' : subcategory}'
+            .trim();
       case 'dress':
-        return '$color $occasion ${_analysis?.subcategory ?? ''} dress outfit';
+        return '$color $occasion ${subcategory.isEmpty ? 'dress' : subcategory} styling'
+            .trim();
       case 'shoes':
-        return '$color $occasion shoes with ${_analysis?.subcategory ?? ''}';
+      case 'footwear':
+        return '$color $occasion footwear outfit inspiration'.trim();
       case 'accessory':
-        return '$color $occasion ${_analysis?.subcategory ?? 'accessory'} outfit';
+        return '$color $occasion accessory outfit ideas'.trim();
+      case 'outerwear':
+        return '$color $occasion layered look with ${subcategory.isEmpty ? 'outerwear' : subcategory}'
+            .trim();
       default:
-        return '$color $occasion $type outfit';
-    }
-  }
-
-  void _updateAnalysis() {
-    if (_analysis != null) {
-      _analysis = ClothingAnalysis(
-        id: _analysis!.id,
-        itemType: _selectedType.toString().split('.').last,
-        primaryColor: _selectedColor.toString().split('.').last,
-        patternType: _analysis?.patternType ?? '',
-        style: _selectedOccasion.toString().split('.').last,
-        seasons: _analysis?.seasons ?? [],
-        confidence: _analysis?.confidence ?? 0.8,
-        tags: _analysis?.tags ?? [],
-        brand: _analysis?.brand,
-        material: _analysis?.material,
-        neckline: _analysis?.neckline,
-        sleeveLength: _analysis?.sleeveLength,
-        fit: _analysis?.fit,
-        isPatterned: _analysis?.isPatterned ?? false,
-        imagePath: _analysis?.imagePath,
-        formality: _analysis?.formality,
-        subcategory: _analysis?.subcategory,
-        colors: _analysis?.colors,
-        texture: _analysis?.texture,
-        length: _analysis?.length,
-        silhouette: _analysis?.silhouette,
-      );
+        return '$color $occasion $type outfit inspiration'.trim();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tell Me About This Item'),
@@ -285,9 +339,10 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: _isLoading
-          ? _buildLoadingState(theme)
-          : _error != null
+      body:
+          _isLoading
+              ? _buildLoadingState(theme)
+              : _error != null
               ? _buildErrorState(theme)
               : _buildContent(theme),
       bottomNavigationBar: _isLoading ? null : _buildBottomBar(theme),
@@ -301,16 +356,16 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
         children: [
           _isAnalyzing
               ? Lottie.asset(
-                  'assets/animations/clothing_analysis.json',
-                  width: 200,
-                  height: 200,
-                  controller: _animationController,
-                  fit: BoxFit.cover,
-                )
+                'assets/animations/clothing_analysis.json',
+                width: 200,
+                height: 200,
+                controller: _animationController,
+                fit: BoxFit.cover,
+              )
               : const CircularProgressIndicator(),
           const SizedBox(height: 24),
           Text(
-            _isAnalyzing ? 'Analyzing your item...' : 'Loading...',
+            _isAnalyzing ? 'Analyzing your items...' : 'Loading...',
             style: theme.textTheme.titleMedium?.copyWith(
               color: theme.colorScheme.onSurface.withOpacity(0.8),
             ),
@@ -318,7 +373,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
           if (_isAnalyzing) ...[
             const SizedBox(height: 8),
             Text(
-              'Our AI is examining the details of your clothing item',
+              'Our AI is examining each item to understand its vibe and styling potential.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
@@ -337,11 +392,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: theme.colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
             const SizedBox(height: 16),
             Text(
               'Oops! Something went wrong',
@@ -360,7 +411,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _analyzeImage,
+              onPressed: _analyzeImages,
               child: const Text('Try Again'),
             ),
           ],
@@ -375,11 +426,11 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Item images preview
           Container(
             height: 300,
             margin: const EdgeInsets.only(bottom: 24),
             child: PageView.builder(
+              controller: _pageController,
               itemCount: widget.imagePaths.length,
               itemBuilder: (context, index) {
                 return Padding(
@@ -402,44 +453,53 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
                         child: Image.file(
                           File(widget.imagePaths[index]),
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Center(
-                              child: Icon(
-                                Icons.image_outlined,
-                                color: Colors.grey,
-                                size: 60,
+                          errorBuilder:
+                              (context, error, stackTrace) => Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.image_outlined,
+                                    color: Colors.grey,
+                                    size: 60,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
                         ),
                       ),
                     ),
                   ),
                 );
               },
+              onPageChanged: (index) {
+                if (!mounted) return;
+                setState(() => _currentIndex = index);
+              },
             ),
           ),
-          
-          // Image indicators
+
           if (widget.imagePaths.length > 1) ...[
             Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List<Widget>.generate(
                   widget.imagePaths.length,
-                  (index) => Container(
-                    width: 8,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: index == _currentIndex ? 24 : 8,
                     height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: index == 0 
-                          ? theme.colorScheme.primary 
-                          : theme.colorScheme.onSurface.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      color:
+                          index == _currentIndex
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface.withOpacity(0.2),
                     ),
                   ),
                 ),
@@ -448,12 +508,26 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
             const SizedBox(height: 16),
           ],
 
-          // AI Analysis Summary
-          if (_analysis?.confidence != null) ...[
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              'Item ${_currentIndex + 1} of ${widget.imagePaths.length}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          if (_currentState.analysis?.confidence != null) ...[
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
@@ -468,7 +542,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${(_analysis!.confidence * 100).toStringAsFixed(0)}% Confident',
+                        '${((_currentState.analysis!.confidence) * 100).toStringAsFixed(0)}% Confident',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w600,
@@ -482,112 +556,101 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
             const SizedBox(height: 16),
           ],
 
-          // Item type selection
           _buildSmartSuggestionSection(
             'What type of item is this?',
             _itemTypeOptions,
-            _selectedType,
-            (value) => setState(() => _selectedType = value),
+            _currentState.selectedType,
+            (value) => setState(() => _currentState.selectedType = value),
             Icons.checkroom_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Color selection
           _buildSmartSuggestionSection(
             'What\'s the main color?',
             _colorOptions,
-            _selectedColor,
-            (value) => setState(() => _selectedColor = value),
+            _currentState.selectedColor,
+            (value) => setState(() => _currentState.selectedColor = value),
             Icons.palette_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Occasion selection
           _buildSmartSuggestionSection(
             'When would you wear this?',
             _occasionOptions,
-            _selectedOccasion,
-            (value) => setState(() => _selectedOccasion = value),
+            _currentState.selectedOccasion,
+            (value) => setState(() => _currentState.selectedOccasion = value),
             Icons.event_available_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Pattern selection
           _buildSmartSuggestionSection(
             'Any pattern or texture?',
             _patternOptions,
-            _selectedPattern,
-            (value) => setState(() => _selectedPattern = value),
+            _currentState.selectedPattern,
+            (value) => setState(() => _currentState.selectedPattern = value),
             Icons.texture_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Material selection
           _buildSmartSuggestionSection(
             'What\'s the main material?',
             _materialOptions,
-            _selectedMaterial,
-            (value) => setState(() => _selectedMaterial = value),
+            _currentState.selectedMaterial,
+            (value) => setState(() => _currentState.selectedMaterial = value),
             Icons.layers_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Fit selection
           _buildSmartSuggestionSection(
             'How does it fit?',
             _fitOptions,
-            _selectedFit,
-            (value) => setState(() => _selectedFit = value),
+            _currentState.selectedFit,
+            (value) => setState(() => _currentState.selectedFit = value),
             Icons.straighten_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Formality selection
           _buildSmartSuggestionSection(
             'What\'s the formality level?',
             _formalityOptions,
-            _selectedFormality,
-            (value) => setState(() => _selectedFormality = value),
+            _currentState.selectedFormality,
+            (value) => setState(() => _currentState.selectedFormality = value),
             Icons.business_center_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Seasons selection
           _buildNaturalChipSection(
             'Perfect for which seasons?',
             _seasonOptions,
-            _selectedSeasons,
+            _currentState.selectedSeasons,
             Icons.wb_sunny_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Subcategory (optional)
           _buildOptionalField(
             'Specific type or subcategory?',
             'e.g., crew neck t-shirt, skinny jeans, blazer...',
-            _subcategoryController,
+            _currentState.subcategoryController,
             Icons.category_outlined,
           ),
           const SizedBox(height: 24),
 
-          // Brand (optional)
           _buildOptionalField(
             'Brand or store?',
             'e.g., Zara, H&M, vintage...',
-            _brandController,
+            _currentState.brandController,
             Icons.store_outlined,
           ),
           const SizedBox(height: 24),
-          
-          // Notes (optional)
+
           _buildOptionalField(
             'Any special notes?',
             'Fit, comfort, styling tips...',
-            _notesController,
+            _globalNotesController,
             Icons.note_outlined,
             maxLines: 3,
           ),
-          const SizedBox(height: 100), // Space for bottom button
+          const SizedBox(height: 100),
         ],
       ),
     );
@@ -608,7 +671,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
         ],
       ),
       child: ElevatedButton(
-        onPressed: _saveAndContinue,
+        onPressed: _canContinue ? _saveAndContinue : null,
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(56),
           shape: RoundedRectangleBorder(
@@ -616,12 +679,13 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
           ),
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        child: const Text('Find Matching Outfits'),
+        child: Text(
+          _canContinue ? 'Find Matching Outfits' : 'Review Item Details',
+        ),
       ),
     );
   }
 
-  // Smart suggestion section with conversational feel
   Widget _buildSmartSuggestionSection<T>(
     String question,
     List<T> options,
@@ -640,9 +704,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
             Expanded(
               child: Text(
                 question,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -651,44 +715,54 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
         Wrap(
           spacing: 12,
           runSpacing: 8,
-          children: options.map((option) {
-            final isSelected = option == selectedValue;
-            return GestureDetector(
-              onTap: () => onChanged(option),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected 
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected 
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.transparent,
-                    width: 1.5,
+          children:
+              options.map((option) {
+                final isSelected = option == selectedValue;
+                return GestureDetector(
+                  onTap: () => onChanged(option),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      _capitalizeEnum(option.toString().split('.').last),
+                      style: TextStyle(
+                        color:
+                            isSelected
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  _capitalizeEnum(option.toString().split('.').last),
-                  style: TextStyle(
-                    color: isSelected 
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+                );
+              }).toList(),
         ),
       ],
     );
   }
 
-  // Optional field with natural styling
   Widget _buildOptionalField(
     String question,
     String hint,
@@ -706,9 +780,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
             Expanded(
               child: Text(
                 question,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -742,8 +816,13 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
               ),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],
@@ -755,10 +834,12 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
     if (enumString.isEmpty) return enumString;
     // Handle camelCase by adding spaces and capitalizing each word
     final words = enumString.split(RegExp(r'(?=[A-Z])'));
-    return words.map((word) {
-      if (word.isEmpty) return word;
-      return '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}';
-    }).join(' ');
+    return words
+        .map((word) {
+          if (word.isEmpty) return word;
+          return '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}';
+        })
+        .join(' ');
   }
 
   // Natural chip section for multi-select
@@ -778,9 +859,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
             Expanded(
               child: Text(
                 question,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -789,46 +870,57 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> with SingleTicker
         Wrap(
           spacing: 12,
           runSpacing: 8,
-          children: options.map((option) {
-            final isSelected = selectedValues.contains(option);
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  if (isSelected) {
-                    selectedValues.remove(option);
-                  } else {
-                    selectedValues.add(option);
-                  }
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.transparent,
-                    width: 1.5,
+          children:
+              options.map((option) {
+                final isSelected = selectedValues.contains(option);
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (isSelected) {
+                        selectedValues.remove(option);
+                      } else {
+                        selectedValues.add(option);
+                      }
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      option,
+                      style: TextStyle(
+                        color:
+                            isSelected
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context).colorScheme.onSurface,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  option,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onSurface,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+                );
+              }).toList(),
         ),
       ],
     );

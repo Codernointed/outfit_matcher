@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/closet_screen.dart';
+import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
+import 'package:outfit_matcher/core/models/saved_outfit.dart';
+import 'package:outfit_matcher/core/di/service_locator.dart';
 // TODO: Import ProfileScreen when created
 // import 'package:outfit_matcher/features/profile/presentation/screens/profile_screen.dart';
 
@@ -21,9 +26,7 @@ class HomeScreen extends ConsumerWidget {
   final List<Widget> _mainScreens = [
     const MainContentHomeScreen(),
     const ClosetScreen(),
-    const Center(
-      child: Text('Profile Screen - Coming Soon'),
-    ),
+    const Center(child: Text('Profile Screen - Coming Soon')),
   ];
 
   @override
@@ -114,30 +117,75 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class MainContentHomeScreen extends StatelessWidget {
+class MainContentHomeScreen extends ConsumerStatefulWidget {
   const MainContentHomeScreen({super.key});
+
+  @override
+  ConsumerState<MainContentHomeScreen> createState() =>
+      _MainContentHomeScreenState();
+}
+
+class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
+  final OutfitStorageService _outfitStorageService =
+      getIt<OutfitStorageService>();
+  List<SavedOutfit> _recentOutfits = [];
+  bool _isLoadingOutfits = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentOutfits();
+  }
+
+  Future<void> _loadRecentOutfits() async {
+    try {
+      final outfits = await _outfitStorageService.fetchAll();
+      setState(() {
+        _recentOutfits = outfits.take(6).toList(); // Show only 6 most recent
+        _isLoadingOutfits = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingOutfits = false;
+      });
+    }
+  }
+
+  Future<void> _refreshRecentOutfits() async {
+    setState(() {
+      _isLoadingOutfits = true;
+    });
+    await _loadRecentOutfits();
+  }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hero Section
-            _buildHeroSection(context),
-            
-            // Quick Actions
-            _buildQuickActions(context),
-            
-            // Today's Suggestions
-            _buildTodaysSuggestions(context),
-            
-            // Recent Items Preview
-            _buildRecentItemsPreview(context),
-            
-            const SizedBox(height: 32),
-          ],
+      child: RefreshIndicator(
+        onRefresh: _refreshRecentOutfits,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Hero Section
+              _buildHeroSection(context),
+
+              // Quick Actions
+              _buildQuickActions(context),
+
+              // Recent Generations
+              _buildRecentGenerations(context),
+
+              // Today's Suggestions
+              _buildTodaysSuggestions(context),
+
+              // Recent Items Preview
+              _buildRecentItemsPreview(context),
+
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -145,7 +193,7 @@ class MainContentHomeScreen extends StatelessWidget {
 
   Widget _buildHeroSection(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(24),
@@ -187,10 +235,10 @@ class MainContentHomeScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildPrimaryCTA(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: double.infinity,
       height: 60,
@@ -216,17 +264,15 @@ class MainContentHomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const UploadOptionsScreen()),
+              MaterialPageRoute(
+                builder: (context) => const UploadOptionsScreen(),
+              ),
             );
           },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.camera_alt_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
+              Icon(Icons.camera_alt_rounded, color: Colors.white, size: 24),
               const SizedBox(width: 12),
               Text(
                 'Add Item to Wardrobe',
@@ -244,7 +290,7 @@ class MainContentHomeScreen extends StatelessWidget {
 
   Widget _buildQuickActions(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -308,19 +354,22 @@ class MainContentHomeScreen extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildOccasionCard(BuildContext context, String title, IconData icon, Color bgColor, Color iconColor) {
+
+  Widget _buildOccasionCard(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color bgColor,
+    Color iconColor,
+  ) {
     final theme = Theme.of(context);
-    
+
     return Container(
       height: 80,
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: iconColor.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: iconColor.withOpacity(0.2), width: 1),
       ),
       child: Material(
         color: Colors.transparent,
@@ -332,11 +381,7 @@ class MainContentHomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                color: iconColor,
-                size: 28,
-              ),
+              Icon(icon, color: iconColor, size: 28),
               const SizedBox(height: 4),
               Text(
                 title,
@@ -352,9 +397,283 @@ class MainContentHomeScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildRecentGenerations(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Generations',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (_recentOutfits.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    // TODO: Navigate to all saved outfits
+                  },
+                  child: Text(
+                    'View All',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          if (_isLoadingOutfits)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_recentOutfits.isEmpty)
+            _buildEmptyRecentGenerations(context)
+          else
+            SizedBox(
+              height: 180,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _recentOutfits.length,
+                itemBuilder: (context, index) {
+                  return _buildRecentOutfitCard(context, _recentOutfits[index]);
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyRecentGenerations(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.auto_awesome_outlined,
+            size: 48,
+            color: theme.colorScheme.onSurface.withOpacity(0.4),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No saved outfits yet',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Create your first outfit to see it here',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentOutfitCard(BuildContext context, SavedOutfit outfit) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // TODO: Navigate to outfit detail view
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image
+              Expanded(
+                flex: 3,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    color: theme.colorScheme.surfaceContainerHighest,
+                  ),
+                  child:
+                      outfit.mannequinImages.isNotEmpty
+                          ? ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(16),
+                            ),
+                            child: Image.memory(
+                              _dataUrlToBytes(outfit.mannequinImages.first),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              errorBuilder:
+                                  (context, error, stackTrace) =>
+                                      _buildImageError(theme),
+                            ),
+                          )
+                          : _buildImageError(theme),
+                ),
+              ),
+
+              // Content
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        outfit.title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${outfit.items.length} items',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 12,
+                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatDate(outfit.createdAt),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.5,
+                              ),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageError(ThemeData theme) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          size: 32,
+          color: theme.colorScheme.onSurface.withOpacity(0.3),
+        ),
+      ),
+    );
+  }
+
+  Uint8List _dataUrlToBytes(String dataUrl) {
+    try {
+      String base64Data;
+      if (dataUrl.startsWith('data:')) {
+        final parts = dataUrl.split(',');
+        if (parts.length < 2) {
+          throw FormatException('Invalid data URL format');
+        }
+        base64Data = parts[1];
+      } else {
+        base64Data = dataUrl;
+      }
+
+      base64Data = base64Data.replaceAll(RegExp(r'\s+'), '');
+      base64Data = base64Data.replaceAll(RegExp(r'[^A-Za-z0-9+/=]'), '');
+
+      while (base64Data.length % 4 != 0) {
+        base64Data += '=';
+      }
+
+      return base64Decode(base64Data);
+    } catch (e) {
+      return Uint8List(0);
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inDays < 30) {
+      return '${(difference.inDays / 7).floor()}w ago';
+    } else {
+      return '${(difference.inDays / 30).floor()}mo ago';
+    }
+  }
+
   Widget _buildTodaysSuggestions(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -398,7 +717,7 @@ class MainContentHomeScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildOutfitSuggestionCard(BuildContext context, int index) {
     final theme = Theme.of(context);
     final outfitImages = [
@@ -406,17 +725,13 @@ class MainContentHomeScreen extends StatelessWidget {
       'assets/images/business_outfit.jpeg',
       'assets/images/black_dress.jpeg',
     ];
-    final outfitTitles = [
-      'Casual Chic',
-      'Business Ready',
-      'Evening Elegance',
-    ];
+    final outfitTitles = ['Casual Chic', 'Business Ready', 'Evening Elegance'];
     final outfitDescriptions = [
       'Perfect for weekend vibes',
       'Professional and polished',
       'Sophisticated and stylish',
     ];
-    
+
     return Container(
       width: 160,
       margin: EdgeInsets.only(right: index == 2 ? 0 : 16),
@@ -442,7 +757,9 @@ class MainContentHomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: Container(
                   height: 120,
                   width: double.infinity,
@@ -506,7 +823,7 @@ class MainContentHomeScreen extends StatelessWidget {
 
   Widget _buildRecentItemsPreview(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -548,10 +865,7 @@ class MainContentHomeScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.grey.shade200,
-                      width: 1,
-                    ),
+                    border: Border.all(color: Colors.grey.shade200, width: 1),
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -591,5 +905,4 @@ class MainContentHomeScreen extends StatelessWidget {
       ),
     );
   }
-
 }
