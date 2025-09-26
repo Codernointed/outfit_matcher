@@ -105,104 +105,11 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     final showFavoritesOnly = ref.watch(showFavoritesOnlyProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search wardrobe...',
-                  border: InputBorder.none,
-                ),
-                style: theme.textTheme.titleLarge,
-              )
-            : const Text('My Closet'),
-        actions: [
-          if (_isSearching)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () {
-                _searchController.clear();
-                setState(() => _isSearching = false);
-              },
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () => setState(() => _isSearching = true),
-            ),
-          IconButton(
-            icon: Icon(
-              showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
-              color: showFavoritesOnly ? Colors.red : null,
-            ),
-            onPressed: () {
-              ref.read(showFavoritesOnlyProvider.notifier).state = !showFavoritesOnly;
-            },
-          ),
-          PopupMenuButton<SortMode>(
-            icon: const Icon(Icons.sort),
-            onSelected: (mode) {
-              ref.read(sortModeProvider.notifier).state = mode;
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: SortMode.dateAdded,
-                child: Text('Date Added'),
-              ),
-              const PopupMenuItem(
-                value: SortMode.color,
-                child: Text('Color'),
-              ),
-              const PopupMenuItem(
-                value: SortMode.type,
-                child: Text('Type'),
-              ),
-              const PopupMenuItem(
-                value: SortMode.wearCount,
-                child: Text('Wear Count'),
-              ),
-            ],
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.settings),
-            onSelected: (value) {
-              if (value == 'premium_toggle') {
-                _togglePremiumPolishing();
-              }
-            },
-            itemBuilder: (context) {
-              final settings = getIt<AppSettingsService>();
-              final isPremiumEnabled = settings.isPremiumPolishingEnabled;
-              
-              return [
-                PopupMenuItem(
-                  value: 'premium_toggle',
-                  child: Row(
-                    children: [
-                      Icon(
-                        isPremiumEnabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                        color: isPremiumEnabled ? Colors.amber : null,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Premium Polishing'),
-                      const Spacer(),
-                      Switch(
-                        value: isPremiumEnabled,
-                        onChanged: null, // Handled by menu selection
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                    ],
-                  ),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
       body: Column(
         children: [
+          // Custom header
+          _buildCustomHeader(theme, showFavoritesOnly),
+          
           // Category tabs
           _buildCategoryTabs(theme, selectedCategory),
           
@@ -227,6 +134,234 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     );
   }
 
+  Widget _buildCustomHeader(ThemeData theme, bool showFavoritesOnly) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Main header row
+          Row(
+            children: [
+              // Title
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'My Closet',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Your digital wardrobe',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Action buttons
+              Row(
+                children: [
+                  // Search button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: _isSearching 
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        _isSearching ? Icons.close : Icons.search,
+                        color: _isSearching 
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurface,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isSearching = !_isSearching;
+                          if (!_isSearching) {
+                            _searchController.clear();
+                          }
+                        });
+                      },
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 8),
+                  
+                  // Favorites button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: showFavoritesOnly 
+                          ? Colors.red.withOpacity(0.1)
+                          : theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: Icon(
+                        showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
+                        color: showFavoritesOnly ? Colors.red : theme.colorScheme.onSurface,
+                      ),
+                      onPressed: () {
+                        ref.read(showFavoritesOnlyProvider.notifier).state = !showFavoritesOnly;
+                      },
+                    ),
+                  ),
+                  
+                  const SizedBox(width: 8),
+                  
+                  // Settings menu
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.tune,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      onSelected: (value) {
+                        if (value == 'premium_toggle') {
+                          _togglePremiumPolishing();
+                        } else if (value.startsWith('sort_')) {
+                          final sortMode = SortMode.values.firstWhere(
+                            (mode) => 'sort_${mode.name}' == value,
+                          );
+                          ref.read(sortModeProvider.notifier).state = sortMode;
+                        }
+                      },
+                      itemBuilder: (context) {
+                        final settings = getIt<AppSettingsService>();
+                        final isPremiumEnabled = settings.isPremiumPolishingEnabled;
+                        
+                        return [
+                          // Premium polishing toggle
+                          PopupMenuItem(
+                            value: 'premium_toggle',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isPremiumEnabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                                  color: isPremiumEnabled ? Colors.amber : theme.colorScheme.onSurface.withOpacity(0.7),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(child: Text('Premium Polishing')),
+                                Switch(
+                                  value: isPremiumEnabled,
+                                  onChanged: null,
+                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          const PopupMenuDivider(),
+                          
+                          // Sort options
+                          const PopupMenuItem(
+                            enabled: false,
+                            child: Text('Sort by', style: TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                          PopupMenuItem(
+                            value: 'sort_dateAdded',
+                            child: Row(
+                              children: [
+                                Icon(Icons.schedule, size: 20),
+                                const SizedBox(width: 12),
+                                Text('Date Added'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'sort_color',
+                            child: Row(
+                              children: [
+                                Icon(Icons.palette, size: 20),
+                                const SizedBox(width: 12),
+                                Text('Color'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'sort_type',
+                            child: Row(
+                              children: [
+                                Icon(Icons.category, size: 20),
+                                const SizedBox(width: 12),
+                                Text('Type'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'sort_wearCount',
+                            child: Row(
+                              children: [
+                                Icon(Icons.trending_up, size: 20),
+                                const SizedBox(width: 12),
+                                Text('Wear Count'),
+                              ],
+                            ),
+                          ),
+                        ];
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          
+          // Search bar (when active)
+          if (_isSearching) ...[
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search your wardrobe...',
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryTabs(ThemeData theme, String selectedCategory) {
     final categories = [
       {'name': 'All', 'icon': Icons.apps},
@@ -240,7 +375,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     
     return Container(
       height: 40,
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -481,47 +616,129 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     
     String title;
     String message;
+    IconData icon;
     
     if (searchQuery.isNotEmpty) {
       title = 'No items found';
       message = 'Try a different search term or check your spelling.';
+      icon = Icons.search_off;
     } else if (showFavoritesOnly) {
       title = 'No favorites yet';
       message = 'Tap the heart icon on items to add them to your favorites.';
+      icon = Icons.favorite_border;
     } else {
       title = 'Your closet is empty';
       message = 'Start building your digital wardrobe by adding your first item.';
+      icon = Icons.checkroom;
     }
     
-    return Center(
+    return Container(
+      padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            searchQuery.isNotEmpty ? Icons.search_off : Icons.inventory_2_outlined,
-            size: 80,
-            color: Colors.grey,
+          // Beautiful empty state icon
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(60),
+            ),
+            child: Icon(
+              icon,
+              size: 60,
+              color: theme.colorScheme.primary,
+            ),
           ),
-          const SizedBox(height: 16),
+          
+          const SizedBox(height: 24),
+          
+          // Title
           Text(
             title,
             style: theme.textTheme.headlineSmall?.copyWith(
-              color: Colors.grey[700],
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          
+          const SizedBox(height: 12),
+          
+          // Message
           Text(
             message,
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              height: 1.5,
             ),
           ),
+          
+          // Action button for empty closet
           if (searchQuery.isEmpty && !showFavoritesOnly) ...[
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.add),
-              label: const Text('Add Your First Item'),
+            const SizedBox(height: 32),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withOpacity(0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                icon: const Icon(
+                  Icons.add_photo_alternate,
+                  size: 20,
+                ),
+                label: const Text(
+                  'Add Your First Item',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SimpleWardrobeUploadScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Alternative text
+            Text(
+              'or',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            TextButton.icon(
+              icon: const Icon(Icons.camera_alt, size: 18),
+              label: const Text('Take a photo'),
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -529,8 +746,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   ),
                 );
               },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.primary,
+                textStyle: const TextStyle(fontWeight: FontWeight.w500),
               ),
             ),
           ],

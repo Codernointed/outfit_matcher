@@ -316,9 +316,14 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
 
       // Success! Go back to closet and refresh
       if (mounted) {
-        // Invalidate providers to refresh the closet screen
+        // Force refresh all wardrobe providers
+        ref.invalidate(wardrobeStorageProvider);
         ref.invalidate(wardrobeItemsProvider);
         ref.invalidate(filteredWardrobeItemsProvider);
+        
+        // Also refresh the specific providers
+        ref.refresh(wardrobeItemsProvider);
+        ref.refresh(filteredWardrobeItemsProvider);
         
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
