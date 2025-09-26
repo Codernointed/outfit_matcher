@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/closet_screen.dart';
+  // import 'package:outfit_matcher/features/wardrobe/presentation/screens/closet_screen.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
 import 'package:outfit_matcher/core/models/saved_outfit.dart';
 import 'package:outfit_matcher/core/di/service_locator.dart';
@@ -25,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
   // List of main screens for IndexedStack
   final List<Widget> _mainScreens = [
     const MainContentHomeScreen(),
-    const ClosetScreen(),
+    const EnhancedClosetScreen(),
     const Center(child: Text('Profile Screen - Coming Soon')),
   ];
 

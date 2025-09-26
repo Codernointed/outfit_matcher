@@ -1,0 +1,592 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:outfit_matcher/core/models/wardrobe_item.dart';
+import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
+
+/// Beautiful preview sheet for wardrobe items with pairing options
+class WardrobeItemPreviewSheet extends ConsumerStatefulWidget {
+  final WardrobeItem item;
+  final String heroTag;
+
+  const WardrobeItemPreviewSheet({
+    super.key,
+    required this.item,
+    required this.heroTag,
+  });
+
+  @override
+  ConsumerState<WardrobeItemPreviewSheet> createState() => _WardrobeItemPreviewSheetState();
+}
+
+class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSheet>
+    with TickerProviderStateMixin {
+  late AnimationController _slideController;
+  late AnimationController _fadeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    ));
+
+    _slideController.forward();
+    _fadeController.forward();
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Material(
+      color: Colors.black54,
+      child: GestureDetector(
+        onTap: () => _closeSheet(),
+        child: Container(
+          height: screenHeight,
+          child: Stack(
+            children: [
+              // Background blur effect
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  color: Colors.black54,
+                ),
+              ),
+              
+              // Main sheet content
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    height: screenHeight * 0.85,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSheetHandle(theme),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildItemHeader(theme),
+                                const SizedBox(height: 24),
+                                _buildItemImage(theme),
+                                const SizedBox(height: 24),
+                                _buildItemDetails(theme),
+                                const SizedBox(height: 32),
+                                _buildActionButtons(theme),
+                                const SizedBox(height: 24),
+                                _buildQuickStats(theme),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSheetHandle(ThemeData theme) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 8),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(2),
+      ),
+    );
+  }
+
+  Widget _buildItemHeader(ThemeData theme) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.item.analysis.subcategory ?? widget.item.analysis.itemType,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.item.analysis.primaryColor,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        
+        // Favorite button
+        Container(
+          decoration: BoxDecoration(
+            color: widget.item.isFavorite 
+                ? Colors.red.withOpacity(0.1)
+                : theme.colorScheme.surfaceVariant,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            onPressed: () {
+              // TODO: Toggle favorite
+            },
+            icon: Icon(
+              widget.item.isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: widget.item.isFavorite ? Colors.red : theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildItemImage(ThemeData theme) {
+    return Hero(
+      tag: widget.heroTag,
+      child: Container(
+        height: 300,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: _buildImage(),
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    final imagePath = widget.item.displayImagePath;
+    
+    if (imagePath.isNotEmpty && File(imagePath).existsSync()) {
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+      );
+    }
+    
+    return _buildPlaceholder();
+  }
+
+  Widget _buildPlaceholder() {
+    final theme = Theme.of(context);
+    return Container(
+      color: theme.colorScheme.surfaceVariant,
+      child: Center(
+        child: Icon(
+          Icons.checkroom,
+          size: 80,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemDetails(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Details',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        _buildDetailRow(theme, 'Style', widget.item.analysis.style),
+        _buildDetailRow(theme, 'Material', widget.item.analysis.material ?? 'Unknown'),
+        _buildDetailRow(theme, 'Fit', widget.item.analysis.fit ?? 'Regular'),
+        _buildDetailRow(theme, 'Formality', widget.item.analysis.formality ?? 'Casual'),
+        
+        if (widget.item.occasions.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Perfect for',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: widget.item.occasions.map((occasion) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  occasion,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildDetailRow(ThemeData theme, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Get Outfit Ideas',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        // Primary action - Pair This Item
+        _buildActionButton(
+          theme: theme,
+          icon: Icons.auto_awesome,
+          title: 'Pair This Item',
+          subtitle: 'Get perfect matches for this piece',
+          color: theme.colorScheme.primary,
+          onTap: () => _navigateToPairing(PairingMode.pairThisItem),
+          isPrimary: true,
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Secondary actions
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionButton(
+                theme: theme,
+                icon: Icons.shuffle,
+                title: 'Surprise Me',
+                subtitle: 'Random creative looks',
+                color: Colors.purple,
+                onTap: () => _navigateToPairing(PairingMode.surpriseMe),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionButton(
+                theme: theme,
+                icon: Icons.location_on,
+                title: 'Style by Location',
+                subtitle: 'Weather-aware outfits',
+                color: Colors.green,
+                onTap: () => _navigateToPairing(PairingMode.styleByLocation),
+              ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Alternative action - Full suggestions
+        _buildActionButton(
+          theme: theme,
+          icon: Icons.lightbulb_outline,
+          title: 'Get Full Suggestions',
+          subtitle: 'Complete outfit generation experience',
+          color: theme.colorScheme.secondary,
+          onTap: () => _navigateToSuggestions(),
+          isOutlined: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required ThemeData theme,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+    bool isPrimary = false,
+    bool isOutlined = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isPrimary 
+            ? color
+            : isOutlined 
+                ? Colors.transparent
+                : color.withOpacity(0.1),
+        border: isOutlined 
+            ? Border.all(color: color.withOpacity(0.3))
+            : null,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: isPrimary ? [
+          BoxShadow(
+            color: color.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ] : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isPrimary 
+                        ? Colors.white.withOpacity(0.2)
+                        : color.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isPrimary ? Colors.white : color,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: isPrimary 
+                              ? Colors.white.withOpacity(0.8)
+                              : theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: isPrimary 
+                      ? Colors.white.withOpacity(0.7)
+                      : color.withOpacity(0.7),
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickStats(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(theme, 'Worn', '${widget.item.wearCount}x'),
+          _buildStatItem(theme, 'Added', _formatDate(widget.item.createdAt)),
+          _buildStatItem(theme, 'Rating', '${(widget.item.analysis.confidence * 5).toStringAsFixed(1)}⭐'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(ThemeData theme, String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date).inDays;
+    
+    if (difference == 0) return 'Today';
+    if (difference == 1) return 'Yesterday';
+    if (difference < 7) return '${difference}d ago';
+    if (difference < 30) return '${(difference / 7).floor()}w ago';
+    return '${(difference / 30).floor()}mo ago';
+  }
+
+  void _navigateToPairing(PairingMode mode) async {
+    await _closeSheet();
+    
+    if (mounted) {
+      // TODO: Navigate to pairing screen with proper parameters
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${mode.toString().split('.').last} mode - Coming soon!'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _navigateToSuggestions() async {
+    await _closeSheet();
+    
+    if (mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => ItemDetailsScreen(
+            imagePaths: [widget.item.displayImagePath],
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _closeSheet() async {
+    await _slideController.reverse();
+    await _fadeController.reverse();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+}
+
+/// Show the wardrobe item preview sheet
+Future<void> showWardrobeItemPreview(
+  BuildContext context,
+  WardrobeItem item, {
+  String? heroTag,
+}) {
+  return showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: '',
+    transitionDuration: const Duration(milliseconds: 400),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return WardrobeItemPreviewSheet(
+        item: item,
+        heroTag: heroTag ?? 'item_${item.id}',
+      );
+    },
+  );
+}
