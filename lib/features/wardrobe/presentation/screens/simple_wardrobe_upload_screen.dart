@@ -5,9 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:outfit_matcher/core/services/image_processing_service.dart';
+import 'package:outfit_matcher/core/services/app_settings_service.dart';
 import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
 import 'package:outfit_matcher/core/utils/logger.dart';
 import 'package:outfit_matcher/core/di/service_locator.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 
 /// Simple upload screen for adding items to wardrobe (no outfit generation)
 class SimpleWardrobeUploadScreen extends ConsumerStatefulWidget {
@@ -272,16 +274,21 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
         throw Exception('Failed to analyze clothing item');
       }
       
-      setState(() {
-        _processingStatus = 'Enhancing image quality...';
-      });
-
       // Step 2: Process and enhance the image
       final itemId = 'wardrobe_${DateTime.now().millisecondsSinceEpoch}';
+      final settings = getIt<AppSettingsService>();
+      final enablePolishing = settings.isPremiumPolishingEnabled;
+      
+      setState(() {
+        _processingStatus = enablePolishing 
+            ? 'Enhancing image quality...' 
+            : 'Processing image...';
+      });
+      
       final imageResult = await ImageProcessingService.processUploadedImage(
         imageFile: imageFile,
         itemId: itemId,
-        enablePolishing: true, // Always polish for wardrobe items
+        enablePolishing: enablePolishing,
         itemType: analysisResult.itemType,
         color: analysisResult.primaryColor,
       );

@@ -6,6 +6,7 @@ import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
 import 'package:outfit_matcher/core/di/service_locator.dart';
+import 'package:outfit_matcher/core/services/app_settings_service.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/widgets/wardrobe_quick_actions.dart';
@@ -163,6 +164,41 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
               ),
             ],
           ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.settings),
+            onSelected: (value) {
+              if (value == 'premium_toggle') {
+                _togglePremiumPolishing();
+              }
+            },
+            itemBuilder: (context) {
+              final settings = getIt<AppSettingsService>();
+              final isPremiumEnabled = settings.isPremiumPolishingEnabled;
+              
+              return [
+                PopupMenuItem(
+                  value: 'premium_toggle',
+                  child: Row(
+                    children: [
+                      Icon(
+                        isPremiumEnabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
+                        color: isPremiumEnabled ? Colors.amber : null,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('Premium Polishing'),
+                      const Spacer(),
+                      Switch(
+                        value: isPremiumEnabled,
+                        onChanged: null, // Handled by menu selection
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ],
+                  ),
+                ),
+              ];
+            },
+          ),
         ],
       ),
       body: Column(
@@ -192,35 +228,73 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   }
 
   Widget _buildCategoryTabs(ThemeData theme, String selectedCategory) {
-    final categories = ['All', 'Tops', 'Bottoms', 'Dresses', 'Shoes', 'Accessories', 'Outerwear'];
+    final categories = [
+      {'name': 'All', 'icon': Icons.apps},
+      {'name': 'Tops', 'icon': Icons.checkroom},
+      {'name': 'Bottoms', 'icon': Icons.content_cut},
+      {'name': 'Dresses', 'icon': Icons.woman},
+      {'name': 'Shoes', 'icon': Icons.directions_walk},
+      {'name': 'Accessories', 'icon': Icons.watch},
+      {'name': 'Outerwear', 'icon': Icons.ac_unit},
+    ];
     
     return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      height: 40,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
-          final isSelected = category == selectedCategory;
+          final categoryName = category['name'] as String;
+          final categoryIcon = category['icon'] as IconData;
+          final isSelected = categoryName == selectedCategory;
           
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: ChoiceChip(
-              label: Text(category),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  ref.read(selectedCategoryProvider.notifier).state = category;
-                }
-              },
-              selectedColor: theme.colorScheme.primaryContainer,
-              labelStyle: TextStyle(
-                color: isSelected
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () {
+                  ref.read(selectedCategoryProvider.notifier).state = categoryName;
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                        ? theme.colorScheme.primaryContainer
+                        : theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20),
+                    border: isSelected 
+                        ? Border.all(color: theme.colorScheme.primary.withOpacity(0.3))
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        categoryIcon,
+                        size: 18,
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        categoryName,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isSelected
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurface,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           );
@@ -533,5 +607,25 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     }
     
     showWardrobeQuickActions(context, item, position);
+  }
+
+  void _togglePremiumPolishing() async {
+    final settings = getIt<AppSettingsService>();
+    final currentValue = settings.isPremiumPolishingEnabled;
+    await settings.setPremiumPolishing(!currentValue);
+    
+    setState(() {}); // Refresh UI
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          !currentValue 
+              ? '✨ Premium polishing enabled - new uploads will be enhanced!'
+              : '💾 Premium polishing disabled - faster uploads, less storage',
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: !currentValue ? Colors.amber : Colors.grey[700],
+      ),
+    );
   }
 }
