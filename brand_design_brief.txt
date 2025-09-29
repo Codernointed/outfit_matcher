@@ -1,0 +1,82 @@
+OUTFIT MATCHER BRAND DESIGN BRIEF
+Last updated: 2025-09-29
+
+1. CORE COLOR PALETTE (from `lib/core/theme/app_theme.dart`)
+- Primary Pink: #FF4D6D — signature action color for buttons, chips, highlights. Energetic, feminine, modern.
+- Primary Pink (Soft Secondary Tone): #FF4D6D at 80% opacity — used for secondary accents and hover states.
+- Background Whisper White: #FCFCFC — default scaffold background, keeps screens bright and airy.
+- Secondary Blush Background: #FFF0F3 — subtle panels, cards, mood backgrounds.
+- Surface Pure White: #FFFFFF — cards, modals, sheets.
+- Text Ink: #1A1A2C — primary typography color, high contrast.
+- Text Mist: #8A8A8F — secondary text, helper copy, placeholders.
+- Divider Cloud: #EEEEEE — separators and borders.
+- Error Red: #FF0000 — form validation, destructive actions.
+- Suggested Success Accent: #4CAF50 — recommended for positive toasts (not yet hard-coded).
+
+2. TYPOGRAPHY SYSTEM
+Primary font family: "Poppins" (headings, buttons, titles) — bold, confident, fashion-forward.
+Supporting body font: "Roboto" (paragraphs, captions) — clean, highly legible.
+
+Defined styles:
+- displayLarge: Poppins 24px, bold, primary text color.
+- displayMedium: Poppins 22px, bold.
+- displaySmall: Poppins 20px, bold.
+- titleLarge: Poppins 18px, bold.
+- titleMedium: Poppins 16px, semi-bold.
+- titleSmall: Poppins 14px, semi-bold.
+- bodyLarge: Roboto 16px, regular, primary text color.
+- bodyMedium: Roboto 14px, regular, secondary text color.
+- bodySmall: Roboto 12px, regular, secondary text color.
+
+3. COMPONENT STYLING
+Buttons:
+- Elevated buttons: full-width, 56px height, Poppins 16px semi-bold, primary pink background, white text, 8px radius.
+- Outlined buttons: same dimensions, primary pink border + text, transparent fill.
+- Text buttons: primary pink text, minimal padding, same typography.
+
+Cards:
+- Surface white, elevation 2, shadow alpha ≈10%, 12px corner radius.
+
+Input fields:
+- Filled white, 16px padding, 8px radius.
+- Focused border: primary pink stroke.
+- Error border: red stroke.
+- Placeholder text: Text Mist (#8A8A8F).
+
+Bottom navigation:
+- Background white, selected item primary pink, unselected Text Mist, all labels visible, elevation 8.
+
+Dividers:
+- #EEEEEE, 1px thickness, 1px spacing.
+
+Snackbars & feedback:
+- Use primary pink for celebratory states, charcoal neutrals for warnings; tone is encouraging and premium.
+
+4. BRAND PERSONALITY NOTES
+- Voice: Premium stylist + caring wingman. Empathetic, aspirational, approachable.
+- Visual feel: Minimal, airy, luxurious yet friendly.
+- Iconography: Rounded Material icons with optional bespoke fashion illustrations.
+- Photography: Soft lighting, inclusive body types, wardrobe vignettes, pastel backdrops.
+- Motion: Smooth, graceful transitions; micro-animations emphasize outfit reveals.
+
+5. DIGITAL & MARKETING GUIDELINES
+- Hero scenes: mannequin or user silhouette styled in vibrant wardrobe pieces.
+- Social media: Anchor posts in Primary Pink (#FF4D6D) paired with neutral whites/blush gradients.
+- Email: Headers in Poppins bold, CTAs using elevated button specs.
+- App store assets: Spotlight AI stylist story; pair pink with soft beige (#F8EDEB) or cool gray (#F4F5F7).
+- Logo direction: Modern hanger or wardrobe monogram with pink accent, wordmark in deep navy (#1A1A2C).
+
+6. FUTURE BRAND EXPANSIONS (SUGGESTED)
+- Secondary accent palette: muted lavender (#CDB4DB), warm coral (#FFB3C6), soft teal (#80CED7) for campaigns.
+- Dark mode concept: background #12121A, retain primary pink for CTAs, shift text to #F8F9FF.
+- Pattern library: subtle fabric textures, dotted gradients, or overlapping clothing silhouettes in blush tones.
+
+7. ASSET DELIVERY CHECKLIST FOR DESIGNER
+- Color swatches (HEX & RGB) for primary, background, text, dividers, error, suggested accents.
+- Typography specs (licensing for Poppins & Roboto, web and app formats).
+- Component blueprints: buttons, cards, inputs, bottom nav, modal sheets.
+- Iconography direction: Material rounded + bespoke fashion icons.
+- Sample layout references: wardrobe grid, pairing sheet, onboarding hero.
+- Brand voice examples and tone pillars for copywriters and digital agents.
+
+This summary reflects current Flutter theme definitions. Share with branding partners and update whenever `lib/core/theme/app_theme.dart` evolves.
