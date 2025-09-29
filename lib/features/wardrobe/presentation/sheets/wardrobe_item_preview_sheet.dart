@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/sheets/pairing_sheet.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
 
 /// Beautiful preview sheet for wardrobe items with pairing options
@@ -17,10 +18,12 @@ class WardrobeItemPreviewSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<WardrobeItemPreviewSheet> createState() => _WardrobeItemPreviewSheetState();
+  ConsumerState<WardrobeItemPreviewSheet> createState() =>
+      _WardrobeItemPreviewSheetState();
 }
 
-class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSheet>
+class _WardrobeItemPreviewSheetState
+    extends ConsumerState<WardrobeItemPreviewSheet>
     with TickerProviderStateMixin {
   late AnimationController _slideController;
   late AnimationController _fadeController;
@@ -42,18 +45,14 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+    );
 
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _slideController.forward();
     _fadeController.forward();
@@ -82,11 +81,9 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
               // Background blur effect
               FadeTransition(
                 opacity: _fadeAnimation,
-                child: Container(
-                  color: Colors.black54,
-                ),
+                child: Container(color: Colors.black54),
               ),
-              
+
               // Main sheet content
               Align(
                 alignment: Alignment.bottomCenter,
@@ -161,7 +158,8 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.item.analysis.subcategory ?? widget.item.analysis.itemType,
+                widget.item.analysis.subcategory ??
+                    widget.item.analysis.itemType,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -177,13 +175,14 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
             ],
           ),
         ),
-        
+
         // Favorite button
         Container(
           decoration: BoxDecoration(
-            color: widget.item.isFavorite 
-                ? Colors.red.withOpacity(0.1)
-                : theme.colorScheme.surfaceVariant,
+            color:
+                widget.item.isFavorite
+                    ? Colors.red.withOpacity(0.1)
+                    : theme.colorScheme.surfaceVariant,
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
@@ -192,7 +191,10 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
             },
             icon: Icon(
               widget.item.isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: widget.item.isFavorite ? Colors.red : theme.colorScheme.onSurface,
+              color:
+                  widget.item.isFavorite
+                      ? Colors.red
+                      : theme.colorScheme.onSurface,
             ),
           ),
         ),
@@ -224,7 +226,7 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
 
   Widget _buildImage() {
     final imagePath = widget.item.displayImagePath;
-    
+
     if (imagePath.isNotEmpty && File(imagePath).existsSync()) {
       return Image.file(
         File(imagePath),
@@ -232,7 +234,7 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
         errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
       );
     }
-    
+
     return _buildPlaceholder();
   }
 
@@ -261,12 +263,20 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
           ),
         ),
         const SizedBox(height: 16),
-        
+
         _buildDetailRow(theme, 'Style', widget.item.analysis.style),
-        _buildDetailRow(theme, 'Material', widget.item.analysis.material ?? 'Unknown'),
+        _buildDetailRow(
+          theme,
+          'Material',
+          widget.item.analysis.material ?? 'Unknown',
+        ),
         _buildDetailRow(theme, 'Fit', widget.item.analysis.fit ?? 'Regular'),
-        _buildDetailRow(theme, 'Formality', widget.item.analysis.formality ?? 'Casual'),
-        
+        _buildDetailRow(
+          theme,
+          'Formality',
+          widget.item.analysis.formality ?? 'Casual',
+        ),
+
         if (widget.item.occasions.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
@@ -279,22 +289,26 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: widget.item.occasions.map((occasion) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  occasion,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              );
-            }).toList(),
+            children:
+                widget.item.occasions.map((occasion) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      occasion,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
         ],
       ],
@@ -339,7 +353,7 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
           ),
         ),
         const SizedBox(height: 16),
-        
+
         // Primary action - Pair This Item
         _buildActionButton(
           theme: theme,
@@ -350,9 +364,9 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
           onTap: () => _navigateToPairing(PairingMode.pairThisItem),
           isPrimary: true,
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         // Secondary actions
         Row(
           children: [
@@ -379,9 +393,9 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
             ),
           ],
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         // Alternative action - Full suggestions
         _buildActionButton(
           theme: theme,
@@ -408,22 +422,24 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: isPrimary 
-            ? color
-            : isOutlined 
+        color:
+            isPrimary
+                ? color
+                : isOutlined
                 ? Colors.transparent
                 : color.withOpacity(0.1),
-        border: isOutlined 
-            ? Border.all(color: color.withOpacity(0.3))
-            : null,
+        border: isOutlined ? Border.all(color: color.withOpacity(0.3)) : null,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: isPrimary ? [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ] : null,
+        boxShadow:
+            isPrimary
+                ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+                : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -437,9 +453,10 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isPrimary 
-                        ? Colors.white.withOpacity(0.2)
-                        : color.withOpacity(0.2),
+                    color:
+                        isPrimary
+                            ? Colors.white.withOpacity(0.2)
+                            : color.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -456,16 +473,22 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
                       Text(
                         title,
                         style: theme.textTheme.titleSmall?.copyWith(
-                          color: isPrimary ? Colors.white : theme.colorScheme.onSurface,
+                          color:
+                              isPrimary
+                                  ? Colors.white
+                                  : theme.colorScheme.onSurface,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: isPrimary 
-                              ? Colors.white.withOpacity(0.8)
-                              : theme.colorScheme.onSurface.withOpacity(0.7),
+                          color:
+                              isPrimary
+                                  ? Colors.white.withOpacity(0.8)
+                                  : theme.colorScheme.onSurface.withOpacity(
+                                    0.7,
+                                  ),
                         ),
                       ),
                     ],
@@ -473,9 +496,10 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: isPrimary 
-                      ? Colors.white.withOpacity(0.7)
-                      : color.withOpacity(0.7),
+                  color:
+                      isPrimary
+                          ? Colors.white.withOpacity(0.7)
+                          : color.withOpacity(0.7),
                   size: 16,
                 ),
               ],
@@ -498,7 +522,11 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
         children: [
           _buildStatItem(theme, 'Worn', '${widget.item.wearCount}x'),
           _buildStatItem(theme, 'Added', _formatDate(widget.item.createdAt)),
-          _buildStatItem(theme, 'Rating', '${(widget.item.analysis.confidence * 5).toStringAsFixed(1)}⭐'),
+          _buildStatItem(
+            theme,
+            'Rating',
+            '${(widget.item.analysis.confidence * 5).toStringAsFixed(1)}⭐',
+          ),
         ],
       ),
     );
@@ -526,7 +554,7 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Yesterday';
     if (difference < 7) return '${difference}d ago';
@@ -536,27 +564,25 @@ class _WardrobeItemPreviewSheetState extends ConsumerState<WardrobeItemPreviewSh
 
   void _navigateToPairing(PairingMode mode) async {
     await _closeSheet();
-    
-    if (mounted) {
-      // TODO: Navigate to pairing screen with proper parameters
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${mode.toString().split('.').last} mode - Coming soon!'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+
+    if (!mounted) return;
+
+    await showWardrobePairingSheet(
+      context: context,
+      heroItem: widget.item,
+      mode: mode,
+    );
   }
 
   void _navigateToSuggestions() async {
     await _closeSheet();
-    
+
     if (mounted) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (context) => ItemDetailsScreen(
-            imagePaths: [widget.item.displayImagePath],
-          ),
+          builder:
+              (context) =>
+                  ItemDetailsScreen(imagePaths: [widget.item.displayImagePath]),
         ),
       );
     }

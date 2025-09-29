@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/sheets/pairing_sheet.dart';
 // import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 
 /// Quick action item data
@@ -46,7 +47,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   @override
   void initState() {
     super.initState();
-    
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -56,25 +57,18 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeOutBack,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
+    );
 
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _fadeController.forward();
     _scaleController.forward();
-    
+
     // Haptic feedback
     HapticFeedback.mediumImpact();
   }
@@ -90,14 +84,14 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenSize = MediaQuery.of(context).size;
-    
+
     // Calculate menu position
     final menuWidth = 200.0;
     final menuHeight = 280.0;
-    
+
     double left = widget.position.dx - menuWidth / 2;
     double top = widget.position.dy - menuHeight - 20;
-    
+
     // Adjust for screen boundaries
     if (left < 16) left = 16;
     if (left + menuWidth > screenSize.width - 16) {
@@ -135,7 +129,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
 
   Widget _buildQuickActionsMenu(ThemeData theme) {
     final actions = _getQuickActions();
-    
+
     return Container(
       width: 200,
       decoration: BoxDecoration(
@@ -206,12 +200,15 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
               ],
             ),
           ),
-          
+
           // Actions
           Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
-              children: actions.map((action) => _buildActionItem(theme, action)).toList(),
+              children:
+                  actions
+                      .map((action) => _buildActionItem(theme, action))
+                      .toList(),
             ),
           ),
         ],
@@ -222,9 +219,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   Widget _buildActionItem(ThemeData theme, QuickActionItem action) {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -245,11 +240,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                     color: action.color.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    action.icon,
-                    color: action.color,
-                    size: 18,
-                  ),
+                  child: Icon(action.icon, color: action.color, size: 18),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -315,12 +306,11 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   }
 
   void _navigateToPairing(PairingMode mode) {
-    // TODO: Navigate to pairing screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${mode.toString().split('.').last} mode - Coming soon!'),
-        behavior: SnackBarBehavior.floating,
-      ),
+    Navigator.of(context).pop();
+    showWardrobePairingSheet(
+      context: context,
+      heroItem: widget.item,
+      mode: mode,
     );
   }
 
@@ -329,8 +319,8 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          widget.item.isFavorite 
-              ? 'Removed from favorites' 
+          widget.item.isFavorite
+              ? 'Removed from favorites'
               : 'Added to favorites',
         ),
         behavior: SnackBarBehavior.floating,
@@ -351,30 +341,33 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   void _deleteItem() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Item'),
-        content: Text('Are you sure you want to delete this ${widget.item.analysis.itemType.toLowerCase()}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Item'),
+            content: Text(
+              'Are you sure you want to delete this ${widget.item.analysis.itemType.toLowerCase()}?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  // TODO: Implement delete functionality
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Item deleted'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: Implement delete functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Item deleted'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
   }
 }

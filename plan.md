@@ -10,10 +10,11 @@
 - **Image Display**: Fixed sizing issues, images now fill cards perfectly
 - **Gesture System**: Tap for preview, long-press for quick actions (safe implementation)
 - **Real-Time Updates**: Items appear instantly after upload (no hot restart needed)
-- **Premium Polishing Toggle**: Users can disable expensive image processing
+- **Premium Polishing Toggle**: Defaults off, live-switch in settings sheet with confirmation
 - **Custom Header Design**: Removed cluttered app bar, clean "My Closet" interface
 - **Animated Category Tabs**: Beautiful icons and smooth transitions
-- **Settings Integration**: Organized settings menu with premium features
+- **Settings Sheet**: Bottom sheet with premium toggle + sort controls
+- **Pull-to-Refresh**: Native drag-to-refresh reloads wardrobe & cache
 
 #### **2. Core Infrastructure**
 - **AppSettingsService**: Centralized user preferences management
@@ -35,7 +36,7 @@
 - **Wardrobe Storage**: Items saved and displayed correctly
 
 #### **2. Settings & Preferences**
-- **Premium Toggle**: Working but needs refinement
+- **Premium Toggle**: ✅ refined, defaults off, visually toggles before sheet closes
 - **User Preferences**: Basic settings infrastructure in place
 
 ### ❌ **NOT IMPLEMENTED YET**
@@ -47,8 +48,7 @@
 - **Virtual Try-On**: Mannequin generation not implemented
 - **External APIs**: Pexels/Unsplash integration not connected
 
-#### **2. Advanced Features**
-- **Outfit Suggestions**: Core pairing logic exists but not fully implemented
+- **Outfit Suggestions**: Pair This Item + Surprise Me working with mannequin previews; keep iterating on variety
 - **Style Analysis**: Basic categorization only
 - **Social Features**: Not implemented
 - **AR Features**: Not implemented
@@ -1652,6 +1652,92 @@ _buildMannequinPrompt()
 ).
 Background Tasks
 Queue analysis requests with progress UI (use Future.wait batching similar to _loadAllData() in EnhancedVisualSearchScreen). Provide offline fallback suggestions.
+Pair This Item — Plain Language Flow
+Pick the hero piece
+Tap any item inside 
+enhanced_closet_screen.dart
+ and hit Pair This. You’re telling the app, “I want to wear this today.”
+The app reads what it already knows
+From the photo you uploaded, the app has stored the item’s colour, style, season, and occasions in WardrobeItem. No extra typing needed.
+It looks through the rest of your closet
+WardrobePairingService scans every other saved item. It finds tops for bottoms, shoes for dresses, accessories that fit, and skips things already in the outfit.
+It scores the best matches
+The service checks colour harmony, how formal the pieces are, the weather/season tags, and how recently each item was worn. The smartest combinations get the highest scores.
+You get a small set of ready-to-wear outfits
+The pairing sheet shows 2–3 complete looks. Each card lists the items, a short reason (“Matches your work vibe”, “Perfect colour contrast”), and buttons to save or refresh.
+Optional visuals for extra confidence
+Want to see the outfit? Tap the card. It can show a flat lay or call GeminiApiService.generateEnhancedMannequinOutfits() for a mannequin preview.
+Give quick feedback and go
+Like or skip suggestions. That feedback updates pairing history so the next “Pair This” call feels even more like your personal stylist.
+Feedback submitted
+
+
+even as is how the pair this works and how does a surprise me ?
+
+Pairing Modes in Simple Language
+Pair This Item
+You pick a piece
+Tap any saved item inside 
+enhanced_closet_screen.dart
+ and hit Pair This. That tells the app, “I want to build today’s outfit around this one.”
+The app checks your closet
+WardrobePairingService looks at the rest of your wardrobe data (stored through WardrobeItem in lib/features/wardrobe/) to find tops, bottoms, shoes, and accessories that match in colour, occasion, and season.
+It scores what fits best
+The service ranks combinations so you immediately see two or three full outfits that make sense with the hero item.
+You act on the result
+The pairing sheet shows each look with the items it uses, short reasons (“Great for work”, “Colour contrast”), and quick actions like save or swap.
+Surprise Me
+Tell the app you want something fresh
+Choose “Surprise Me” from the same pairing sheet or quick actions in 
+enhanced_closet_screen.dart
+.
+It shuffles intelligently
+WardrobePairingService still checks colour rules, occasion tags, weather, and freshness, but it loosens the filters and adds more variety—so you see combos you might not think of on your own.
+You get new outfit ideas fast
+The app returns a curated set of unexpected, but still wearable, outfits using only clothes already stored in your digital closet.
+Keep what you like
+Tap to refresh for more surprises, or save the looks that feel exciting into the WardrobeLook collection for later.
+Both modes share the same data and services inside lib/features/wardrobe/; they only change how strict or playful the matching logic is.
+
+Feedback submitted
+
+
+This is what I think, I feel like the way you have explained the third is item should be that same functionality for the surprise me but it shouldn't generate 2 to 3, it should generate like 4 to 5 and then the first ones are like the tight, the tight floaters and then as it's going down lower the rank you're losing the floaters you can get as many to, the mini ones can also lose the floaters and add more variety but for the first 2, first 3 should be tighterAnd for the pair this item, it should give you rather the chance to select what you want to wear into it. So if you are using the jeans and then you want to do the pair, it gives you the chance to select maybe a top in your closet. And then it's going to rank it for you. It's going to score you that, oh girl, this dress is not going to match well. So like try and get something which is more of maybe yellow or this. And then maybe if you choose another one, maybe if you don't have that yellow one, you choose another one. Like okay, this is okay. But this one, if you roll up the sleeve or if you tie it this way or if you add a little bit of this, or if you like button, you leave the first one unbuttoned. It gives you that kind of small, small adjustment you can do on it. But basically it makes you choosing the things.So this is basically like a wingman, the guy who is always on your side and then you know always hinting you that oh your bow tie should be a bit up, oh your button should be tight, you should add, you should roll up your sleeve, you should use this color, you should use that color, this is better. If you add a little bit of rizzle dazzle, you get me, that wingman, that girl, that girl who always sleaze with you type shit.@plan.md@README.md 
+
+
+Pairing Behaviors Refined
+Pair This Item — Your Style Wingman
+You choose both pieces. Start the flow from 
+enhanced_closet_screen.dart
+, pick your hero item (say, jeans), and the sheet invites you to tap a matching slot (tops, footwear, accessories). You can browse your wardrobe or search to drop in candidates one by one.
+The engine scores each pick. As soon as you select, WardrobePairingService runs the combo through the style checks in lib/features/wardrobe/: colour balance, occasion fit, season tags, and freshness. You get a clear score and a short reason (example: “Needs a brighter top—something warm like mustard will pop.”).
+Micro-adjustment coach. If the choice is close, the sheet suggests tweaks—roll the sleeves, half-tuck, leave top button open, swap belt colour—pulled from a styling tip bank stored alongside WardrobeItem.notes. Good matches get a green tick; weak matches get a gentle nudge toward better options.
+Lock it in. Once you like the combination, hit Save Look to add it to WardrobeLook for future use.
+Surprise Me — From Polished to Playful
+A quick tap for fresh ideas. Triggered from the same sheet or quick actions. No manual picking; the service assembles outfits for you.
+Five stacked suggestions.
+Top 3 slots: “Tight floaters” — high-scoring looks with strong harmony, minimal risk.
+Bottom 2 slots: “Loose floaters” — lower-ranked mixes that deliberately relax the rules to show unexpected pairings.
+Unlimited refresh. Scroll for more, or pull to reroll. The lower-ranked cards may drop some of the stricter filters (formal balance, wear history) to push experimentation.
+Still your closet. Every outfit is composed only from stored WardrobeItems. You can expand a card for optional mannequin/flat-lay preview, then save or dismiss.
+Implementation Notes (for plan alignment)
+Interactive slot picker for Pair This Item in the pairing sheet UI (top/bottom/shoes/accessory slots with search, filter by category).
+Real-time scoring surfaced via PairingResult.matchScore plus reasonTags, including stylist tips from a new stylingHints table.
+Dual-ranked Surprise Me output by sorting PairingResults by score, then tagging the top three as tight and the remainder as loose.
+Feedback loop keeps learning from saved/dismissed looks, adjusting future rankings.
+This keeps Pair This Item feeling like a best-friend stylist whispering tips while Surprise Me serves a curated mix of safe bets and daring ideas.
+
+Feedback submitted
+Pairing Flow Experience Principles
+- Zero-friction pairing sheet inside `enhanced_closet_screen.dart` — hero item is preselected and interactive slots for top, bottom, shoes, accessories respond instantly with ranked suggestions.
+- Live feedback in plain language: each selection returns a confidence score plus stylist tips from `WardrobeItem.notes` (“Try rolling the sleeves”, “Add a warmer accent”). Poor matches nudge the user toward better shades or silhouettes without blocking progress.
+- One-tap follow-ups: save look, refresh alternatives, or open a mannequin/flat-lay preview without leaving the sheet. Every action aims to resolve within a heartbeat so the flow feels conversational and premium.
+- Personalised tone: surfaces recent favourites and wear history (“You loved this blazer on Tuesday — want to pair it again?”) to make the helper feel like a friendly wingman.
+
+Surprise Me Flow Experience Principles
+- Generates five outfits instantly: the first three are “tight” high-confidence matches, the last two intentionally dial up variety while staying believable.
+- Each card shows match score, tight/loose badge, and micro-reasons so users trust the suggestion before acting.
+- Pull-to-refresh deals a new set in milliseconds with subtle haptics; saving, dismissing, or requesting a mannequin preview all live on the same card to keep the experience effortless.
 Phase Roadmap
 Phase 1 – Wardrobe Foundation
 CRUD for wardrobe items, batch auto-tagging, item details, saved manual looks.

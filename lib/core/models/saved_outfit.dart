@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:outfit_matcher/core/models/clothing_analysis.dart';
+import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 
 /// Represents a user's saved outfit, including the generated mannequins.
 class SavedOutfit {
   final String id;
   final String title;
   final List<ClothingAnalysis> items;
+  final List<String> wardrobeItemIds; // references to WardrobeItem entries
   final List<String> mannequinImages; // base64 or remote URLs
   final String? notes;
   final String? occasion;
@@ -19,6 +21,7 @@ class SavedOutfit {
     required this.title,
     required this.items,
     required this.mannequinImages,
+    this.wardrobeItemIds = const [],
     this.notes,
     this.occasion,
     this.style,
@@ -30,6 +33,7 @@ class SavedOutfit {
     String? id,
     String? title,
     List<ClothingAnalysis>? items,
+    List<String>? wardrobeItemIds,
     List<String>? mannequinImages,
     String? notes,
     String? occasion,
@@ -41,6 +45,7 @@ class SavedOutfit {
       id: id ?? this.id,
       title: title ?? this.title,
       items: items ?? this.items,
+      wardrobeItemIds: wardrobeItemIds ?? this.wardrobeItemIds,
       mannequinImages: mannequinImages ?? this.mannequinImages,
       notes: notes ?? this.notes,
       occasion: occasion ?? this.occasion,
@@ -56,21 +61,25 @@ class SavedOutfit {
       title: json['title'] as String,
       items:
           (json['items'] as List<dynamic>?)
-                  ?.map((e) => ClothingAnalysis.fromJson(
-                        e as Map<String, dynamic>,
-                      ))
-                  .toList() ??
-              const [],
+              ?.map((e) => ClothingAnalysis.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      wardrobeItemIds:
+          (json['wardrobeItemIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       mannequinImages:
           (json['mannequinImages'] as List<dynamic>?)
-                  ?.map((e) => e as String)
-                  .toList() ??
-              const [],
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       notes: json['notes'] as String?,
       occasion: json['occasion'] as String?,
       style: json['style'] as String?,
       matchScore: (json['matchScore'] as num?)?.toDouble(),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.now(),
     );
   }
@@ -80,6 +89,7 @@ class SavedOutfit {
       'id': id,
       'title': title,
       'items': items.map((item) => item.toJson()).toList(),
+      'wardrobeItemIds': wardrobeItemIds,
       'mannequinImages': mannequinImages,
       'notes': notes,
       'occasion': occasion,

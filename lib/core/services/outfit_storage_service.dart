@@ -1,13 +1,23 @@
 import 'dart:convert';
 
-import 'package:outfit_matcher/core/models/saved_outfit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:outfit_matcher/core/models/saved_outfit.dart';
+import 'package:outfit_matcher/core/models/wardrobe_item.dart';
+
+/// Keys for versioned storage (extracted for reuse)
+class OutfitStorageKeys {
+  const OutfitStorageKeys._();
+
+  static const savedOutfits = 'saved_outfits_v1';
+  static const wardrobeItems = 'wardrobe_items_v2';
+  static const wardrobeLooks = 'wardrobe_looks_v2';
+}
 
 /// Lightweight persistence helper that stores generated outfits locally.
 class OutfitStorageService {
   OutfitStorageService(this._preferences);
 
-  static const _savedOutfitsKey = 'saved_outfits_v1';
+  static const _savedOutfitsKey = OutfitStorageKeys.savedOutfits;
 
   final SharedPreferences _preferences;
 

@@ -10,6 +10,7 @@ import 'package:outfit_matcher/core/services/app_settings_service.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/widgets/wardrobe_quick_actions.dart';
+import 'package:outfit_matcher/core/utils/logger.dart';
 
 // Providers for wardrobe state management
 final wardrobeStorageProvider = Provider<EnhancedWardrobeStorageService>((ref) {
@@ -28,7 +29,9 @@ final searchQueryProvider = StateProvider<String>((ref) => '');
 final sortModeProvider = StateProvider<SortMode>((ref) => SortMode.dateAdded);
 final showFavoritesOnlyProvider = StateProvider<bool>((ref) => false);
 
-final filteredWardrobeItemsProvider = FutureProvider<List<WardrobeItem>>((ref) async {
+final filteredWardrobeItemsProvider = FutureProvider<List<WardrobeItem>>((
+  ref,
+) async {
   final storage = ref.watch(wardrobeStorageProvider);
   final selectedCategory = ref.watch(selectedCategoryProvider);
   final searchQuery = ref.watch(searchQueryProvider);
@@ -55,7 +58,9 @@ final filteredWardrobeItemsProvider = FutureProvider<List<WardrobeItem>>((ref) a
       items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       break;
     case SortMode.color:
-      items.sort((a, b) => a.analysis.primaryColor.compareTo(b.analysis.primaryColor));
+      items.sort(
+        (a, b) => a.analysis.primaryColor.compareTo(b.analysis.primaryColor),
+      );
       break;
     case SortMode.type:
       items.sort((a, b) => a.analysis.itemType.compareTo(b.analysis.itemType));
@@ -74,7 +79,8 @@ class EnhancedClosetScreen extends ConsumerStatefulWidget {
   const EnhancedClosetScreen({super.key});
 
   @override
-  ConsumerState<EnhancedClosetScreen> createState() => _EnhancedClosetScreenState();
+  ConsumerState<EnhancedClosetScreen> createState() =>
+      _EnhancedClosetScreenState();
 }
 
 class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
@@ -109,16 +115,37 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
         children: [
           // Custom header
           _buildCustomHeader(theme, showFavoritesOnly),
-          
+
           // Category tabs
           _buildCategoryTabs(theme, selectedCategory),
-          
+
           // Items grid
           Expanded(
             child: filteredItemsAsync.when(
-              data: (items) => _buildItemsGrid(context, items),
+              data: (items) => RefreshIndicator(
+                onRefresh: _handleRefresh,
+                child:
+                    items.isEmpty
+                        ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [
+                            const SizedBox(height: 80),
+                            _buildEmptyState(context),
+                          ],
+                        )
+                        : _buildItemsGrid(context, items),
+              ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => _buildErrorState(context, error),
+              error: (error, stack) => RefreshIndicator(
+                onRefresh: _handleRefresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    const SizedBox(height: 80),
+                    _buildErrorState(context, error),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -126,7 +153,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const SimpleWardrobeUploadScreen()),
+            MaterialPageRoute(
+              builder: (context) => const SimpleWardrobeUploadScreen(),
+            ),
           );
         },
         child: const Icon(Icons.add),
@@ -174,24 +203,28 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   ],
                 ),
               ),
-              
+
               // Action buttons
               Row(
                 children: [
                   // Search button
                   Container(
                     decoration: BoxDecoration(
-                      color: _isSearching 
-                          ? theme.colorScheme.primaryContainer
-                          : theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      color:
+                          _isSearching
+                              ? theme.colorScheme.primaryContainer
+                              : theme.colorScheme.surfaceVariant.withOpacity(
+                                0.5,
+                              ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
                       icon: Icon(
                         _isSearching ? Icons.close : Icons.search,
-                        color: _isSearching 
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface,
+                        color:
+                            _isSearching
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurface,
                       ),
                       onPressed: () {
                         setState(() {
@@ -203,133 +236,58 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       },
                     ),
                   ),
-                  
+
                   const SizedBox(width: 8),
-                  
+
                   // Favorites button
                   Container(
                     decoration: BoxDecoration(
-                      color: showFavoritesOnly 
-                          ? Colors.red.withOpacity(0.1)
-                          : theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      color:
+                          showFavoritesOnly
+                              ? Colors.red.withOpacity(0.1)
+                              : theme.colorScheme.surfaceVariant.withOpacity(
+                                0.5,
+                              ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
                       icon: Icon(
-                        showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
-                        color: showFavoritesOnly ? Colors.red : theme.colorScheme.onSurface,
+                        showFavoritesOnly
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color:
+                            showFavoritesOnly
+                                ? Colors.red
+                                : theme.colorScheme.onSurface,
                       ),
                       onPressed: () {
-                        ref.read(showFavoritesOnlyProvider.notifier).state = !showFavoritesOnly;
+                        ref.read(showFavoritesOnlyProvider.notifier).state =
+                            !showFavoritesOnly;
                       },
                     ),
                   ),
-                  
+
                   const SizedBox(width: 8),
-                  
-                  // Settings menu
+
+                  // Settings button
                   Container(
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: PopupMenuButton<String>(
+                    child: IconButton(
                       icon: Icon(
                         Icons.tune,
                         color: theme.colorScheme.onSurface,
                       ),
-                      onSelected: (value) {
-                        if (value == 'premium_toggle') {
-                          _togglePremiumPolishing();
-                        } else if (value.startsWith('sort_')) {
-                          final sortMode = SortMode.values.firstWhere(
-                            (mode) => 'sort_${mode.name}' == value,
-                          );
-                          ref.read(sortModeProvider.notifier).state = sortMode;
-                        }
-                      },
-                      itemBuilder: (context) {
-                        final settings = getIt<AppSettingsService>();
-                        final isPremiumEnabled = settings.isPremiumPolishingEnabled;
-                        
-                        return [
-                          // Premium polishing toggle
-                          PopupMenuItem(
-                            value: 'premium_toggle',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isPremiumEnabled ? Icons.auto_awesome : Icons.auto_awesome_outlined,
-                                  color: isPremiumEnabled ? Colors.amber : theme.colorScheme.onSurface.withOpacity(0.7),
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(child: Text('Premium Polishing')),
-                                Switch(
-                                  value: isPremiumEnabled,
-                                  onChanged: null,
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                ),
-                              ],
-                            ),
-                          ),
-                          
-                          const PopupMenuDivider(),
-                          
-                          // Sort options
-                          const PopupMenuItem(
-                            enabled: false,
-                            child: Text('Sort by', style: TextStyle(fontWeight: FontWeight.w600)),
-                          ),
-                          PopupMenuItem(
-                            value: 'sort_dateAdded',
-                            child: Row(
-                              children: [
-                                Icon(Icons.schedule, size: 20),
-                                const SizedBox(width: 12),
-                                Text('Date Added'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'sort_color',
-                            child: Row(
-                              children: [
-                                Icon(Icons.palette, size: 20),
-                                const SizedBox(width: 12),
-                                Text('Color'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'sort_type',
-                            child: Row(
-                              children: [
-                                Icon(Icons.category, size: 20),
-                                const SizedBox(width: 12),
-                                Text('Type'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'sort_wearCount',
-                            child: Row(
-                              children: [
-                                Icon(Icons.trending_up, size: 20),
-                                const SizedBox(width: 12),
-                                Text('Wear Count'),
-                              ],
-                            ),
-                          ),
-                        ];
-                      },
+                      onPressed: _showSettingsSheet,
                     ),
                   ),
                 ],
               ),
             ],
           ),
-          
+
           // Search bar (when active)
           if (_isSearching) ...[
             const SizedBox(height: 16),
@@ -351,7 +309,10 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                     color: theme.colorScheme.onSurface.withOpacity(0.7),
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
                 style: theme.textTheme.bodyLarge,
               ),
@@ -372,7 +333,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       {'name': 'Accessories', 'icon': Icons.watch},
       {'name': 'Outerwear', 'icon': Icons.ac_unit},
     ];
-    
+
     return Container(
       height: 40,
       margin: const EdgeInsets.only(bottom: 8),
@@ -385,7 +346,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           final categoryName = category['name'] as String;
           final categoryIcon = category['icon'] as IconData;
           final isSelected = categoryName == selectedCategory;
-          
+
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Material(
@@ -393,19 +354,27 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: () {
-                  ref.read(selectedCategoryProvider.notifier).state = categoryName;
+                  ref.read(selectedCategoryProvider.notifier).state =
+                      categoryName;
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected 
-                        ? theme.colorScheme.primaryContainer
-                        : theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    color:
+                        isSelected
+                            ? theme.colorScheme.primaryContainer
+                            : theme.colorScheme.surfaceVariant.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(20),
-                    border: isSelected 
-                        ? Border.all(color: theme.colorScheme.primary.withOpacity(0.3))
-                        : null,
+                    border:
+                        isSelected
+                            ? Border.all(
+                              color: theme.colorScheme.primary.withOpacity(0.3),
+                            )
+                            : null,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -413,18 +382,21 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       Icon(
                         categoryIcon,
                         size: 18,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                        color:
+                            isSelected
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         categoryName,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.onPrimaryContainer
-                              : theme.colorScheme.onSurface,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color:
+                              isSelected
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurface,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
                         ),
                       ),
                     ],
@@ -445,6 +417,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
     return GridView.builder(
       padding: const EdgeInsets.all(12),
+      physics: const AlwaysScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,
@@ -460,7 +433,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
   Widget _buildItemCard(BuildContext context, WardrobeItem item) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 2,
       clipBehavior: Clip.antiAlias,
@@ -479,7 +452,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                     tag: 'closet_item_${item.id}',
                     child: _buildItemImage(item),
                   ),
-                  
+
                   // Favorite indicator
                   if (item.isFavorite)
                     Positioned(
@@ -498,14 +471,17 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                         ),
                       ),
                     ),
-                  
+
                   // Wear count badge
                   if (item.wearCount > 0)
                     Positioned(
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(8),
@@ -523,7 +499,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                 ],
               ),
             ),
-            
+
             // Item info
             Padding(
               padding: const EdgeInsets.all(8),
@@ -545,25 +521,30 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       color: theme.colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
-                  
+
                   // Occasions chips
                   if (item.occasions.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Wrap(
                       spacing: 4,
-                      children: item.occasions.take(2).map((occasion) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            occasion,
-                            style: theme.textTheme.labelSmall,
-                          ),
-                        );
-                      }).toList(),
+                      children:
+                          item.occasions.take(2).map((occasion) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer
+                                    .withOpacity(0.5),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                occasion,
+                                style: theme.textTheme.labelSmall,
+                              ),
+                            );
+                          }).toList(),
                     ),
                   ],
                 ],
@@ -577,7 +558,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
   Widget _buildItemImage(WardrobeItem item) {
     final imagePath = item.displayImagePath;
-    
+
     if (imagePath.isNotEmpty && File(imagePath).existsSync()) {
       return Container(
         width: double.infinity,
@@ -587,11 +568,12 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
-          errorBuilder: (context, error, stackTrace) => _buildPlaceholderImage(),
+          errorBuilder:
+              (context, error, stackTrace) => _buildPlaceholderImage(),
         ),
       );
     }
-    
+
     return _buildPlaceholderImage();
   }
 
@@ -613,11 +595,11 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     final theme = Theme.of(context);
     final searchQuery = ref.watch(searchQueryProvider);
     final showFavoritesOnly = ref.watch(showFavoritesOnlyProvider);
-    
+
     String title;
     String message;
     IconData icon;
-    
+
     if (searchQuery.isNotEmpty) {
       title = 'No items found';
       message = 'Try a different search term or check your spelling.';
@@ -628,10 +610,11 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       icon = Icons.favorite_border;
     } else {
       title = 'Your closet is empty';
-      message = 'Start building your digital wardrobe by adding your first item.';
+      message =
+          'Start building your digital wardrobe by adding your first item.';
       icon = Icons.checkroom;
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -645,15 +628,11 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
               color: theme.colorScheme.primaryContainer.withOpacity(0.3),
               borderRadius: BorderRadius.circular(60),
             ),
-            child: Icon(
-              icon,
-              size: 60,
-              color: theme.colorScheme.primary,
-            ),
+            child: Icon(icon, size: 60, color: theme.colorScheme.primary),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Title
           Text(
             title,
@@ -663,9 +642,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Message
           Text(
             message,
@@ -675,7 +654,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
               height: 1.5,
             ),
           ),
-          
+
           // Action button for empty closet
           if (searchQuery.isEmpty && !showFavoritesOnly) ...[
             const SizedBox(height: 32),
@@ -697,10 +676,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                 ],
               ),
               child: ElevatedButton.icon(
-                icon: const Icon(
-                  Icons.add_photo_alternate,
-                  size: 20,
-                ),
+                icon: const Icon(Icons.add_photo_alternate, size: 20),
                 label: const Text(
                   'Add Your First Item',
                   style: TextStyle(fontWeight: FontWeight.w600),
@@ -716,41 +692,44 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   backgroundColor: Colors.transparent,
                   foregroundColor: theme.colorScheme.onPrimary,
                   shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
-            // Alternative text
-            Text(
-              'or',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
-              ),
-            ),
-            
-            const SizedBox(height: 8),
-            
-            TextButton.icon(
-              icon: const Icon(Icons.camera_alt, size: 18),
-              label: const Text('Take a photo'),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => const SimpleWardrobeUploadScreen(),
-                  ),
-                );
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.primary,
-                textStyle: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-            ),
+
+            // // Alternative text
+            // Text(
+            //   'or',
+            //   style: theme.textTheme.bodyMedium?.copyWith(
+            //     color: theme.colorScheme.onSurface.withOpacity(0.5),
+            //   ),
+            // ),
+
+            // const SizedBox(height: 8),
+
+            // TextButton.icon(
+            //   icon: const Icon(Icons.camera_alt, size: 18),
+            //   label: const Text('Take a photo'),
+            //   onPressed: () {
+            //     Navigator.of(context).push(
+            //       MaterialPageRoute(
+            //         builder: (context) => const SimpleWardrobeUploadScreen(),
+            //       ),
+            //     );
+            //   },
+            //   style: TextButton.styleFrom(
+            //     foregroundColor: theme.colorScheme.primary,
+            //     textStyle: const TextStyle(fontWeight: FontWeight.w500),
+            //   ),
+            // ),
           ],
         ],
       ),
@@ -759,16 +738,12 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
   Widget _buildErrorState(BuildContext context, Object error) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: theme.colorScheme.error,
-          ),
+          Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
           const SizedBox(height: 16),
           Text(
             'Something went wrong',
@@ -796,23 +771,19 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   }
 
   void _showItemPreview(BuildContext context, WardrobeItem item) {
-    showWardrobeItemPreview(
-      context,
-      item,
-      heroTag: 'closet_item_${item.id}',
-    );
+    showWardrobeItemPreview(context, item, heroTag: 'closet_item_${item.id}');
   }
 
   void _showQuickActions(BuildContext context, WardrobeItem item) {
     // Use a safer approach to get position
     final RenderObject? renderObject = context.findRenderObject();
     Offset position = Offset.zero;
-    
+
     if (renderObject is RenderBox) {
       try {
         position = renderObject.localToGlobal(Offset.zero);
         position = Offset(
-          position.dx + renderObject.size.width / 2, 
+          position.dx + renderObject.size.width / 2,
           position.dy + renderObject.size.height / 2,
         );
       } catch (e) {
@@ -823,27 +794,149 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       // Fallback position
       position = Offset(200, 300);
     }
-    
+
     showWardrobeQuickActions(context, item, position);
   }
 
-  void _togglePremiumPolishing() async {
+  Future<void> _handleRefresh() async {
+    try {
+      final storage = ref.read(wardrobeStorageProvider);
+      await storage.refreshCache();
+      ref.invalidate(wardrobeItemsProvider);
+      ref.invalidate(filteredWardrobeItemsProvider);
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Failed to refresh wardrobe cache',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _showSettingsSheet() async {
     final settings = getIt<AppSettingsService>();
-    final currentValue = settings.isPremiumPolishingEnabled;
-    await settings.setPremiumPolishing(!currentValue);
-    
-    setState(() {}); // Refresh UI
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          !currentValue 
-              ? '✨ Premium polishing enabled - new uploads will be enhanced!'
-              : '💾 Premium polishing disabled - faster uploads, less storage',
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: !currentValue ? Colors.amber : Colors.grey[700],
-      ),
+    bool premiumEnabled = settings.isPremiumPolishingEnabled;
+    SortMode currentSort = ref.read(sortModeProvider);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final theme = Theme.of(sheetContext);
+        return Padding(
+          padding: MediaQuery.of(sheetContext).viewInsets,
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 360),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: StatefulBuilder(
+              builder: (context, setSheetState) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 12),
+                    Container(
+                      width: 42,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    ListTile(
+                      leading: Icon(
+                        premiumEnabled
+                            ? Icons.auto_awesome
+                            : Icons.auto_awesome_outlined,
+                        color: premiumEnabled
+                            ? Colors.amber
+                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                      title: const Text('Premium image polishing'),
+                      subtitle: const Text(
+                        'Hyper-detailed editing for uploads (uses more data)',
+                      ),
+                      trailing: Switch.adaptive(
+                        value: premiumEnabled,
+                        onChanged: (value) async {
+                          setSheetState(() => premiumEnabled = value);
+                          await settings.setPremiumPolishing(value);
+                          if (!mounted) return;
+                          setState(() {});
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value
+                                    ? '✨ Premium polishing enabled - uploads will look couture-ready.'
+                                    : '💾 Premium polishing off - faster uploads, less data.',
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor:
+                                  value ? Colors.amber : Colors.grey[700],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Sort looks by',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    ...SortMode.values.map((mode) {
+                      final isSelected = mode == currentSort;
+                      return ListTile(
+                        leading: Icon(
+                          mode == SortMode.dateAdded
+                              ? Icons.schedule
+                              : mode == SortMode.color
+                                  ? Icons.palette
+                                  : mode == SortMode.type
+                                      ? Icons.category
+                                      : Icons.repeat,
+                        ),
+                        title: Text(_sortLabelForMode(mode)),
+                        trailing: isSelected
+                            ? Icon(Icons.check, color: theme.colorScheme.primary)
+                            : null,
+                        onTap: () {
+                          setSheetState(() => currentSort = mode);
+                          ref.read(sortModeProvider.notifier).state = mode;
+                        },
+                      );
+                    }).toList(),
+                    const SizedBox(height: 12),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  String _sortLabelForMode(SortMode mode) {
+    switch (mode) {
+      case SortMode.dateAdded:
+        return 'Latest added';
+      case SortMode.color:
+        return 'Colour harmony';
+      case SortMode.type:
+        return 'Item type';
+      case SortMode.wearCount:
+        return 'Wear frequency';
+    }
   }
 }

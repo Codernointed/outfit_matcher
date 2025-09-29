@@ -7,7 +7,7 @@ class ClothingAnalysis {
   final List<String> seasons;
   final double confidence;
   final List<String> tags;
-  
+
   // Additional metadata
   final String? brand;
   final String? material;
@@ -16,13 +16,19 @@ class ClothingAnalysis {
   final String? fit; // e.g., "slim", "oversized"
   final bool isPatterned;
   final String? imagePath;
-  
+
   // Style attributes
   final String? formality; // casual, business, formal, party
   final String? subcategory; // blouse, t-shirt, dress shirt, etc.
   final List<String>? colors; // secondary colors
   final String? texture; // smooth, textured, knit, etc.
-  
+
+  // Contextual metadata from AI analysis
+  final List<String>?
+  occasions; // suggested occasions (date night, brunch, work)
+  final List<String>? locations; // indoor, outdoor, beach, cold_weather, etc.
+  final List<String>? styleHints; // quick styling tips from AI
+
   // Fit information
   final String? length; // short, medium, long
   final String? silhouette; // fitted, loose, A-line, etc.
@@ -49,6 +55,9 @@ class ClothingAnalysis {
     this.texture,
     this.length,
     this.silhouette,
+    this.occasions,
+    this.locations,
+    this.styleHints,
   });
 
   ClothingAnalysis copyWith({
@@ -73,6 +82,9 @@ class ClothingAnalysis {
     String? texture,
     String? length,
     String? silhouette,
+    List<String>? occasions,
+    List<String>? locations,
+    List<String>? styleHints,
   }) {
     return ClothingAnalysis(
       id: id ?? this.id,
@@ -96,6 +108,9 @@ class ClothingAnalysis {
       texture: texture ?? this.texture,
       length: length ?? this.length,
       silhouette: silhouette ?? this.silhouette,
+      occasions: occasions ?? this.occasions,
+      locations: locations ?? this.locations,
+      styleHints: styleHints ?? this.styleHints,
     );
   }
 
@@ -127,8 +142,22 @@ class ClothingAnalysis {
       formality: json['formality'],
       subcategory: json['subcategory'],
       imagePath: json['imagePath'],
+      occasions:
+          json['occasions'] != null
+              ? List<String>.from(json['occasions'] as List<dynamic>)
+              : null,
+      locations:
+          json['locations'] != null
+              ? List<String>.from(json['locations'] as List<dynamic>)
+              : null,
+      styleHints:
+          json['styleHints'] != null
+              ? List<String>.from(json['styleHints'] as List<dynamic>)
+              : null,
     );
-    print('✅ ClothingAnalysis created: ${analysis.itemType} (${analysis.primaryColor})');
+    print(
+      '✅ ClothingAnalysis created: ${analysis.itemType} (${analysis.primaryColor})',
+    );
     return analysis;
   }
 
@@ -155,6 +184,9 @@ class ClothingAnalysis {
       'texture': texture,
       'length': length,
       'silhouette': silhouette,
+      'occasions': occasions,
+      'locations': locations,
+      'styleHints': styleHints,
     };
     print('📤 Serializing ClothingAnalysis: $itemType');
     return data;
@@ -187,12 +219,19 @@ class OutfitSuggestion {
   factory OutfitSuggestion.fromJson(Map<String, dynamic> json) {
     return OutfitSuggestion(
       id: json['id'] ?? '',
-      items: (json['items'] as List?)?.map((e) => ClothingAnalysis.fromJson(e)).toList() ?? [],
+      items:
+          (json['items'] as List?)
+              ?.map((e) => ClothingAnalysis.fromJson(e))
+              .toList() ??
+          [],
       matchScore: (json['matchScore'] as num?)?.toDouble() ?? 0.0,
       style: json['style'] ?? '',
       occasion: json['occasion'] ?? '',
       description: json['description'],
-      missingItems: json['missingItems'] != null ? List<String>.from(json['missingItems']) : null,
+      missingItems:
+          json['missingItems'] != null
+              ? List<String>.from(json['missingItems'])
+              : null,
       season: json['season'],
       tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
     );
@@ -339,7 +378,11 @@ class MannequinOutfit {
   factory MannequinOutfit.fromJson(Map<String, dynamic> json) {
     return MannequinOutfit(
       id: json['id'] ?? '',
-      items: (json['items'] as List?)?.map((e) => ClothingAnalysis.fromJson(e)).toList() ?? [],
+      items:
+          (json['items'] as List?)
+              ?.map((e) => ClothingAnalysis.fromJson(e))
+              .toList() ??
+          [],
       imageUrl: json['imageUrl'] ?? '',
       pose: json['pose'],
       style: json['style'],

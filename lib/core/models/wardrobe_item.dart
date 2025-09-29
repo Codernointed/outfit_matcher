@@ -9,6 +9,7 @@ class WardrobeItem {
   final List<String> occasions;
   final List<String> locations;
   final List<String> seasons;
+  final List<String> styleHints;
   final String? userNotes;
   final DateTime createdAt;
   final DateTime? lastWorn;
@@ -24,6 +25,7 @@ class WardrobeItem {
     this.occasions = const [],
     this.locations = const [],
     this.seasons = const [],
+    this.styleHints = const [],
     this.userNotes,
     required this.createdAt,
     this.lastWorn,
@@ -52,6 +54,7 @@ class WardrobeItem {
       occasions: occasions ?? _inferOccasions(analysis),
       locations: locations ?? _inferLocations(analysis),
       seasons: seasons ?? analysis.seasons,
+      styleHints: analysis.styleHints ?? const [],
       userNotes: userNotes,
       createdAt: DateTime.now(),
       tags: tags ?? [],
@@ -76,12 +79,12 @@ class WardrobeItem {
   /// Infer locations from analysis
   static List<String> _inferLocations(ClothingAnalysis analysis) {
     final locations = <String>['indoor'];
-    
+
     // Add outdoor for casual items
     if (analysis.formality?.toLowerCase() == 'casual') {
       locations.add('outdoor');
     }
-    
+
     // Add climate-based locations
     if (analysis.seasons.contains('Summer')) {
       locations.addAll(['hot', 'humid', 'beach']);
@@ -89,7 +92,7 @@ class WardrobeItem {
     if (analysis.seasons.contains('Winter')) {
       locations.addAll(['cold', 'dry']);
     }
-    
+
     return locations;
   }
 
@@ -98,12 +101,16 @@ class WardrobeItem {
 
   /// Check if item matches occasion
   bool matchesOccasion(String occasion) {
-    return occasions.any((o) => o.toLowerCase().contains(occasion.toLowerCase()));
+    return occasions.any(
+      (o) => o.toLowerCase().contains(occasion.toLowerCase()),
+    );
   }
 
   /// Check if item matches location/weather
   bool matchesLocation(String location) {
-    return locations.any((l) => l.toLowerCase().contains(location.toLowerCase()));
+    return locations.any(
+      (l) => l.toLowerCase().contains(location.toLowerCase()),
+    );
   }
 
   /// Check if item matches season
@@ -114,19 +121,19 @@ class WardrobeItem {
   /// Get compatibility score with another item (0.0 to 1.0)
   double getCompatibilityScore(WardrobeItem other) {
     double score = 0.0;
-    
+
     // Color harmony (40% weight)
     score += _getColorHarmonyScore(other) * 0.4;
-    
+
     // Formality match (30% weight)
     score += _getFormalityScore(other) * 0.3;
-    
+
     // Occasion overlap (20% weight)
     score += _getOccasionScore(other) * 0.2;
-    
+
     // Season compatibility (10% weight)
     score += _getSeasonScore(other) * 0.1;
-    
+
     return score.clamp(0.0, 1.0);
   }
 
@@ -141,10 +148,10 @@ class WardrobeItem {
       'brown': ['white', 'green', 'beige', 'cream'],
       'gray': ['white', 'black', 'red', 'blue'],
     };
-    
+
     final myColor = analysis.primaryColor.toLowerCase();
     final otherColor = other.analysis.primaryColor.toLowerCase();
-    
+
     if (myColor == otherColor) return 0.6; // Same color is okay
     if (colorMap[myColor]?.contains(otherColor) == true) return 1.0;
     return 0.3; // Default compatibility
@@ -157,10 +164,11 @@ class WardrobeItem {
       'smart casual': 2,
       'casual': 1,
     };
-    
+
     final myLevel = formalityLevels[analysis.formality?.toLowerCase()] ?? 1;
-    final otherLevel = formalityLevels[other.analysis.formality?.toLowerCase()] ?? 1;
-    
+    final otherLevel =
+        formalityLevels[other.analysis.formality?.toLowerCase()] ?? 1;
+
     final difference = (myLevel - otherLevel).abs();
     return difference <= 1 ? 1.0 : 0.5; // Adjacent levels are compatible
   }
@@ -199,6 +207,7 @@ class WardrobeItem {
       occasions: occasions ?? this.occasions,
       locations: locations ?? this.locations,
       seasons: seasons ?? this.seasons,
+      styleHints: styleHints ?? this.styleHints,
       userNotes: userNotes ?? this.userNotes,
       createdAt: createdAt ?? this.createdAt,
       lastWorn: lastWorn ?? this.lastWorn,
@@ -218,6 +227,7 @@ class WardrobeItem {
       'occasions': occasions,
       'locations': locations,
       'seasons': seasons,
+      'styleHints': styleHints,
       'userNotes': userNotes,
       'createdAt': createdAt.toIso8601String(),
       'lastWorn': lastWorn?.toIso8601String(),
@@ -231,15 +241,21 @@ class WardrobeItem {
   factory WardrobeItem.fromJson(Map<String, dynamic> json) {
     return WardrobeItem(
       id: json['id'] as String,
-      analysis: ClothingAnalysis.fromJson(json['analysis'] as Map<String, dynamic>),
+      analysis: ClothingAnalysis.fromJson(
+        json['analysis'] as Map<String, dynamic>,
+      ),
       originalImagePath: json['originalImagePath'] as String,
       polishedImagePath: json['polishedImagePath'] as String?,
       occasions: List<String>.from(json['occasions'] ?? []),
       locations: List<String>.from(json['locations'] ?? []),
       seasons: List<String>.from(json['seasons'] ?? []),
+      styleHints: List<String>.from(json['styleHints'] ?? []),
       userNotes: json['userNotes'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      lastWorn: json['lastWorn'] != null ? DateTime.parse(json['lastWorn'] as String) : null,
+      lastWorn:
+          json['lastWorn'] != null
+              ? DateTime.parse(json['lastWorn'] as String)
+              : null,
       tags: List<String>.from(json['tags'] ?? []),
       isFavorite: json['isFavorite'] as bool? ?? false,
       wearCount: json['wearCount'] as int? ?? 0,

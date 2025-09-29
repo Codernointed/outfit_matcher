@@ -12,7 +12,7 @@ class AppSettingsService {
   AppSettingsService(this._prefs);
 
   /// Premium image polishing setting
-  bool get isPremiumPolishingEnabled => _prefs.getBool(_premiumPolishingKey) ?? true;
+  bool get isPremiumPolishingEnabled => _prefs.getBool(_premiumPolishingKey) ?? false;
   
   Future<void> setPremiumPolishing(bool enabled) async {
     await _prefs.setBool(_premiumPolishingKey, enabled);
@@ -46,7 +46,7 @@ class AppSettingsService {
 
   /// Reset all settings to defaults
   Future<void> resetToDefaults() async {
-    await _prefs.setBool(_premiumPolishingKey, true);
+    await _prefs.setBool(_premiumPolishingKey, false);
     await _prefs.setBool(_autoSaveKey, true);
     await _prefs.setBool(_notificationsKey, true);
     AppLogger.info('🔄 Settings reset to defaults');

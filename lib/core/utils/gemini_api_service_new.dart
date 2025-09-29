@@ -240,10 +240,15 @@ class GeminiApiService {
             'style': _normalizeStyle(result['style'] ?? 'casual'),
             'fit': result['fit'] ?? 'regular fit',
             'material': result['material'] ?? 'cotton',
-            'seasons': result['seasons'] ?? ['All Seasons'],
+            'seasons': _extractStringList(result['seasons']) ?? ['All Seasons'],
             'formality': result['formality'] ?? 'casual',
             'subcategory': result['subcategory'] ?? '',
-            'confidence': result['confidence'] ?? 0.8,
+            'confidence': (result['confidence'] as num?)?.toDouble() ?? 0.8,
+            'occasions':
+                _extractStringList(result['occasions']) ??
+                _defaultOccasions(result['formality'] as String?),
+            'locations': _extractStringList(result['locations']),
+            'styleHints': _extractStringList(result['styleHints']),
           };
 
           AppLogger.info(
@@ -252,6 +257,9 @@ class GeminiApiService {
               'itemType': processedResult['itemType'],
               'primaryColor': processedResult['primaryColor'],
               'confidence': processedResult['confidence'],
+              'occasions': processedResult['occasions'],
+              'locations': processedResult['locations'],
+              'styleHints': processedResult['styleHints'],
             },
           );
 
@@ -274,6 +282,39 @@ class GeminiApiService {
         stackTrace: stackTrace,
       );
       return null;
+    }
+  }
+
+  static List<String>? _extractStringList(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      return value
+          .where((element) => element != null)
+          .map((element) => element.toString())
+          .where((element) => element.isNotEmpty)
+          .toList();
+    }
+    if (value is String && value.isNotEmpty) {
+      return value
+          .split(',')
+          .map((element) => element.trim())
+          .where((element) => element.isNotEmpty)
+          .toList();
+    }
+    return null;
+  }
+
+  static List<String> _defaultOccasions(String? formality) {
+    switch (formality?.toLowerCase()) {
+      case 'formal':
+        return ['formal', 'evening', 'wedding'];
+      case 'business':
+        return ['work', 'business', 'smart casual'];
+      case 'smart casual':
+        return ['smart casual', 'date', 'brunch'];
+      case 'casual':
+      default:
+        return ['casual', 'weekend', 'everyday'];
     }
   }
 
@@ -496,9 +537,7 @@ class GeminiApiService {
     buffer.writeln(
       'You are a high-fashion stylist creating a photorealistic mannequin look.',
     );
-    buffer.writeln(
-      'show the COMPLETE mannequin from head to toe!',
-    );
+    buffer.writeln('show the COMPLETE mannequin from head to toe!');
     buffer.writeln(
       'NEVER crop out feet, shoes, or footwear - they must be fully visible!',
     );
@@ -554,9 +593,7 @@ class GeminiApiService {
           item.itemType.toLowerCase().contains('footwear'),
     );
     if (hasFootwear) {
-      buffer.writeln(
-        ' FOOTWEAR ALERT: The user uploaded footwear items!',
-      );
+      buffer.writeln(' FOOTWEAR ALERT: The user uploaded footwear items!');
       buffer.writeln(
         ' MANDATORY: The shoes/footwear MUST be the main focus of this image!',
       );
@@ -592,9 +629,7 @@ class GeminiApiService {
     buffer.writeln(
       'Pay special attention to the user\'s styling notes and preferences when creating the outfit.',
     );
-    buffer.writeln(
-      ' Show the COMPLETE outfit with visible footwear !',
-    );
+    buffer.writeln(' Show the COMPLETE outfit with visible footwear !');
     return buffer.toString();
   }
 
