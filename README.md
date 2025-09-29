@@ -266,7 +266,7 @@ flutter run
 
 | Home Screen | Wardrobe | Outfit Suggestions |
 |-------------|----------|-------------------|
-| ![Home](https://via.placeholder.com/200x400/4f46e5/ffffff?text=Home) | ![Wardrobe](https://via.placeholder.com/200x400/7c3aed/ffffff?text=Wardrobe) | ![Suggestions](https://via.placeholder.com/200x400/ec4899/ffffff?text=Suggestions) |
+| ![Home](flutter_13.png) | ![Wardrobe](flutter_25.png) | ![Suggestions](flutter_12.png) |
 
 ---
 
