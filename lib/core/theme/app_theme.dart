@@ -174,6 +174,161 @@ class AppTheme {
     );
   }
 
+  /// Get the dark theme for the app
+  static ThemeData getDarkTheme() {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: _primaryColor,
+        primary: _primaryColor,
+        onPrimary: Colors.white,
+        secondary: _primaryColor.withOpacity(0.8),
+        onSecondary: Colors.white,
+        background: const Color(0xFF0F0F0F),
+        onBackground: Colors.white,
+        surface: const Color(0xFF1A1A1A),
+        onSurface: Colors.white,
+        error: Colors.redAccent,
+        onError: Colors.white,
+        brightness: Brightness.dark,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF0F0F0F),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF1A1A1A),
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          color: Colors.white,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
+        ),
+        displayMedium: TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
+        ),
+        displaySmall: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
+        ),
+        bodyLarge: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontFamily: 'Roboto',
+        ),
+        bodyMedium: TextStyle(
+          color: Color(0xFFB3B3B3),
+          fontSize: 14,
+          fontFamily: 'Roboto',
+        ),
+        bodySmall: TextStyle(
+          color: Color(0xFF8A8A8F),
+          fontSize: 12,
+          fontFamily: 'Roboto',
+        ),
+        titleLarge: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
+        ),
+        titleMedium: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Poppins',
+        ),
+        titleSmall: TextStyle(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Poppins',
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _primaryColor,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _primaryColor,
+          minimumSize: const Size(double.infinity, 56),
+          side: const BorderSide(color: _primaryColor),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins' ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: _primaryColor,
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: 'Poppins'),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: const Color(0xFF1A1A1A),
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF2A2A2A),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: _primaryColor),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+        hintStyle: const TextStyle(color: Color(0xFF8A8A8F), fontSize: 14),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFF1A1A1A),
+        selectedItemColor: _primaryColor,
+        unselectedItemColor: Color(0xFF8A8A8F),
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+      dividerTheme: const DividerThemeData(
+        color: Color(0xFF2A2A2A),
+        thickness: 1,
+        space: 1,
+      ),
+    );
+  }
+
   /// Primary text color
   static Color get textPrimaryColor => _textPrimaryColor;
 

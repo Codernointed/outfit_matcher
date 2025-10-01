@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/core/utils/image_cache_manager.dart';
 
 /// Enhanced storage service for wardrobe items and looks with caching and migrations
 class EnhancedWardrobeStorageService {
@@ -303,13 +303,7 @@ class EnhancedWardrobeStorageService {
       final itemToDelete = items.where((i) => i.id == itemId).firstOrNull;
 
       if (itemToDelete != null) {
-        // Clean up cached images before deleting
-        ImageCacheManager.instance.removeFromCache(itemToDelete.originalImagePath);
-        if (itemToDelete.polishedImagePath != null) {
-          ImageCacheManager.instance.removeFromCache(itemToDelete.polishedImagePath!);
-        }
-
-        // Also clean up the actual files if they exist
+        // Clean up the actual files if they exist
         await _cleanupImageFiles(itemToDelete);
       }
 
@@ -356,6 +350,79 @@ class EnhancedWardrobeStorageService {
     } catch (e) {
       AppLogger.warning('⚠️ Failed to cleanup image files for item ${item.id}', error: e);
       // Don't throw - cleanup failure shouldn't prevent item deletion
+    }
+  }
+
+  /// Batch upload multiple wardrobe items
+  Future<int> batchUploadWardrobeItems(List<File> imageFiles) async {
+    AppLogger.info('🚀 Starting batch upload of ${imageFiles.length} items');
+
+    int successCount = 0;
+    int processedCount = 0;
+
+    try {
+      for (final imageFile in imageFiles) {
+        try {
+          // Process each image (this would typically involve AI analysis)
+          // For now, we'll create a basic wardrobe item
+          final wardrobeItem = await _createWardrobeItemFromFile(imageFile);
+
+          if (wardrobeItem != null) {
+            await saveWardrobeItem(wardrobeItem);
+            successCount++;
+          }
+
+          processedCount++;
+
+          AppLogger.debug('📦 Processed item $processedCount/${imageFiles.length}');
+        } catch (e, stackTrace) {
+          AppLogger.warning(
+            '⚠️ Failed to process item ${processedCount + 1}',
+            error: e,
+            stackTrace: stackTrace,
+          );
+          processedCount++;
+        }
+      }
+
+      AppLogger.info(
+        '✅ Batch upload completed: $successCount/$processedCount items uploaded',
+      );
+      return successCount;
+    } catch (e, stackTrace) {
+      AppLogger.error('❌ Batch upload failed', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Create a wardrobe item from an image file (placeholder implementation)
+  Future<WardrobeItem?> _createWardrobeItemFromFile(File imageFile) async {
+    try {
+      // For now, create a basic wardrobe item with placeholder analysis
+      // In a real implementation, this would call the AI analysis service
+      final analysis = ClothingAnalysis(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        itemType: 'Unknown', // Would be determined by AI
+        primaryColor: 'Unknown', // Would be determined by AI
+        patternType: 'solid',
+        style: 'casual',
+        seasons: ['All Seasons'],
+        confidence: 0.8,
+        tags: [],
+      );
+
+      final wardrobeItem = WardrobeItem(
+        id: 'batch_${DateTime.now().millisecondsSinceEpoch}',
+        analysis: analysis,
+        originalImagePath: imageFile.path,
+        createdAt: DateTime.now(),
+      );
+
+      AppLogger.debug('✅ Created wardrobe item from file: ${imageFile.path}');
+      return wardrobeItem;
+    } catch (e, stackTrace) {
+      AppLogger.error('❌ Failed to create wardrobe item from file', error: e, stackTrace: stackTrace);
+      return null;
     }
   }
 

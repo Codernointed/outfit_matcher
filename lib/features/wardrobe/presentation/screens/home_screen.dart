@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
-import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/wardrobe_search_screen.dart';
 
 /// Home screen showing recent items and outfit suggestions
 class HomeScreen extends StatelessWidget {
@@ -17,7 +19,12 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: Implement search functionality
+              // Navigate to search screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const WardrobeSearchScreen(),
+                ),
+              );
             },
           ),
         ],
@@ -39,7 +46,7 @@ class HomeScreen extends StatelessWidget {
                   // Navigate to upload options screen
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const UploadOptionsScreen(),
+                      builder: (context) => const SimpleWardrobeUploadScreen(),
                     ),
                   );
                 },
@@ -63,7 +70,12 @@ class HomeScreen extends StatelessWidget {
                   ),
                   TextButton(
                     onPressed: () {
-                      // Navigate to closet screen - TODO
+                      // Navigate to closet screen with favorites filter
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const EnhancedClosetScreen(),
+                        ),
+                      );
                     },
                     child: const Text('View All'),
                   ),

@@ -862,10 +862,10 @@ class _EnhancedVisualSearchScreenState
               : 'Look $index',
       items: analysisItems,
       mannequinImages: [outfit.imageUrl],
-      notes: widget.userNotes,
-      occasion: outfit.metadata?['occasion'] as String?,
-      style: outfit.style,
-      matchScore: outfit.confidence,
+      notes: widget.userNotes ?? '',
+      occasion: outfit.metadata?['occasion'] as String? ?? '',
+      style: outfit.style ?? '',
+      matchScore: outfit.confidence ?? 0.0,
       createdAt: now,
     );
 

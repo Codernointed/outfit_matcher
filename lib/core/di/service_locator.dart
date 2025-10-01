@@ -6,7 +6,7 @@ import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/core/services/image_processing_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/utils/image_cache_manager.dart';
-import 'package:vestiq/core/utils/permission_handler_service.dart';
+import 'package:vestiq/core/services/file_based_storage_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;
@@ -31,10 +31,6 @@ Future<void> setupServiceLocator() async {
     ),
   );
   
-  getIt.registerLazySingleton<PermissionHandlerService>(
-    () => PermissionHandlerService(),
-  );
-  
   getIt.registerLazySingleton<AppSettingsService>(
     () => AppSettingsService(sharedPreferences),
   );
@@ -50,6 +46,10 @@ Future<void> setupServiceLocator() async {
 
   getIt.registerLazySingleton<ImageCacheManager>(
     () => ImageCacheManager.instance,
+  );
+
+  getIt.registerLazySingleton<FileBasedStorageService>(
+    () => FileBasedStorageService.instance,
   );
 
   // Controllers
