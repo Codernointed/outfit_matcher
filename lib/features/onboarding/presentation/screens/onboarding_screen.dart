@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/core/theme/app_theme.dart';
-import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/home_screen.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/theme/app_theme.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 
 /// The onboarding screen widget showing the app features to new users
 class OnboardingScreen extends StatefulWidget {

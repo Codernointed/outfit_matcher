@@ -2,15 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
-import 'package:outfit_matcher/core/services/app_settings_service.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/widgets/wardrobe_quick_actions.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/services/app_settings_service.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/widgets/wardrobe_quick_actions.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 // Providers for wardrobe state management
 final wardrobeStorageProvider = Provider<EnhancedWardrobeStorageService>((ref) {

@@ -1,7 +1,7 @@
 import 'dart:math';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for generating outfit pairings from wardrobe items
 class WardrobePairingService {

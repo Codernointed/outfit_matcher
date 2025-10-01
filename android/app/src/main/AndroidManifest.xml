@@ -7,7 +7,7 @@
     <!-- permission for internet -->
     
     <application
-        android:label="outfit_matcher"
+        android:label="Vestiq"
         android:name="${applicationName}"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher">

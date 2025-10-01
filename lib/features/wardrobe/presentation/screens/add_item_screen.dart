@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
 
 /// Screen for adding details to a new clothing item after image selection.
 class AddItemScreen extends StatefulWidget {

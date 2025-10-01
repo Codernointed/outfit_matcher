@@ -1,4 +1,4 @@
-import 'package:outfit_matcher/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
 
 /// Enhanced wardrobe item with rich metadata for premium closet experience
 class WardrobeItem {

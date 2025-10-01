@@ -2,14 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:outfit_matcher/core/services/image_processing_service.dart';
-import 'package:outfit_matcher/core/services/app_settings_service.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/image_processing_service.dart';
+import 'package:vestiq/core/services/app_settings_service.dart';
+import 'package:vestiq/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 
 /// Simple upload screen for adding items to wardrobe (no outfit generation)
 class SimpleWardrobeUploadScreen extends ConsumerStatefulWidget {

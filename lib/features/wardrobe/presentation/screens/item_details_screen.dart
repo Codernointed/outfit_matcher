@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/core/models/clothing_analysis.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
-import 'package:outfit_matcher/features/wardrobe/domain/entities/clothing_item.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/features/wardrobe/domain/entities/clothing_item.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:lottie/lottie.dart';
 
 class ItemDetailsScreen extends StatefulWidget {

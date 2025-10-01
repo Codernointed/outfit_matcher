@@ -4,7 +4,7 @@ class AppConstants {
   const AppConstants._();
 
   /// App name
-  static const String appName = 'Outfit Matcher';
+  static const String appName = 'Vestiq';
 
   /// App version
   static const String appVersion = '1.0.0';

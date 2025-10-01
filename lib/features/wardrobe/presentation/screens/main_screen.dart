@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/features/profile/presentation/screens/profile_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/home_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
+import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/home_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
 
 /// Main screen with bottom navigation
 class MainScreen extends StatefulWidget {

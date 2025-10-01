@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/sheets/pairing_sheet.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/item_details_screen.dart';
 
 /// Beautiful preview sheet for wardrobe items with pairing options
 class WardrobeItemPreviewSheet extends ConsumerStatefulWidget {

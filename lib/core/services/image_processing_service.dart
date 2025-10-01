@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for processing and enhancing clothing item images
 class ImageProcessingService {

@@ -5,14 +5,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:outfit_matcher/core/models/clothing_analysis.dart';
-import 'package:outfit_matcher/core/models/saved_outfit.dart';
-import 'package:outfit_matcher/core/services/image_api_service.dart';
-import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
-import 'package:outfit_matcher/core/utils/gallery_service.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/services/image_api_service.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/core/utils/gallery_service.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 import 'package:photo_view/photo_view.dart';
 
 class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {

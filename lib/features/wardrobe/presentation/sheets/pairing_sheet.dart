@@ -5,12 +5,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import 'package:outfit_matcher/core/di/service_locator.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 Future<void> showWardrobePairingSheet({
   required BuildContext context,

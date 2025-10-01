@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:outfit_matcher/core/models/clothing_analysis.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
 
 /// Represents a user's saved outfit, including the generated mannequins.
 class SavedOutfit {

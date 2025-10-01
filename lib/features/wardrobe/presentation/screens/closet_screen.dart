@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
-// import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart'; // For item tap
+import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
+// import 'package:vestiq/features/wardrobe/presentation/screens/item_details_screen.dart'; // For item tap
 
 // Mock data structure for a clothing item
 class MockClothingItem {

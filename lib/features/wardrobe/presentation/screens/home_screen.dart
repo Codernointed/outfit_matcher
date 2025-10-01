@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
 
 /// Home screen showing recent items and outfit suggestions
 class HomeScreen extends StatelessWidget {

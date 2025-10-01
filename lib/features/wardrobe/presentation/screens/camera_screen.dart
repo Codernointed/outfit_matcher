@@ -1,7 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/image_preview_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/image_preview_screen.dart';
 // For saving image path
 // For Directory
 // For p.join

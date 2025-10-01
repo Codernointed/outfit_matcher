@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Interactive pairing sheet where user manually selects items and gets AI coaching
 Future<void> showInteractivePairingSheet({

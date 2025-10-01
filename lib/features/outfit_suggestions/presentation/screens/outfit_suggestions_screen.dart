@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/features/wardrobe/domain/entities/clothing_item.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/features/wardrobe/domain/entities/clothing_item.dart';
 
 /// Screen for showing outfit suggestions based on a clothing item
 class OutfitSuggestionsScreen extends StatefulWidget {

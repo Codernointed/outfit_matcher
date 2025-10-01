@@ -1,8 +1,8 @@
-# 👗 Outfit Matcher - Your Personal AI Stylist
+# 👗 Vestiq - Your Personal AI Stylist
 
-**Never stress about "what to wear" again.** Outfit Matcher is your intelligent wardrobe companion that learns your style, understands your life, and suggests perfect outfit combinations in seconds.
+**Never stress about "what to wear" again.** Vestiq is your intelligent wardrobe companion that learns your style, understands your life, and suggests perfect outfit combinations in seconds.
 
-![Outfit Matcher Hero](https://via.placeholder.com/800x400/6366f1/ffffff?text=Your+AI+Stylist)
+![Vestiq Hero](https://via.placeholder.com/800x400/6366f1/ffffff?text=Your+AI+Stylist)
 
 ## ✨ What Makes Us Different
 
@@ -19,7 +19,7 @@
 
 This fashion app solves a simple problem: you have clothes but struggle to put them together into outfits that look good and feel appropriate for different occasions.
 
-Instead of staring at your closet for 20 minutes every morning or buying new clothes because you can't figure out how to style what you already own, Outfit Matcher uses AI to suggest outfit combinations from your existing wardrobe.
+Instead of staring at your closet for 20 minutes every morning or buying new clothes because you can't figure out how to style what you already own, Vestiq uses AI to suggest outfit combinations from your existing wardrobe.
 
 Think of it as having a personal stylist who knows exactly what's in your closet and can instantly suggest what goes well together.
 
@@ -166,7 +166,7 @@ The core insight: most people don't need more clothes—they need better ways to
 ## 🚀 Meet Amma's Perfect Day
 
 **7:30 AM - The Morning Rush**
-Amma wakes up late for her client meeting. She opens Outfit Matcher—boom! The app already knows it's 22°C and suggests layering options. Three perfect work outfits appear, scored by "client meeting impressiveness." She picks one, gets accessory suggestions, and walks out confident.
+Amma wakes up late for her client meeting. She opens Vestiq—boom! The app already knows it's 22°C and suggests layering options. Three perfect work outfits appear, scored by "client meeting impressiveness." She picks one, gets accessory suggestions, and walks out confident.
 
 **5:15 PM - From Work to Play**
 Friends invite her for drinks. She snaps her current outfit, and the app instantly suggests transformations—roll up sleeves, swap heels for boots, add that statement necklace. Side-by-side before/after. Done in 2 minutes.
@@ -210,15 +210,12 @@ Planning Saturday's first date. She browses inspiration, saves looks she loves. 
 - **Real-Time Updates**: Instant wardrobe synchronization
 - **Settings & Preferences**: User-controlled premium features
 
-### 🚧 **In Progress**
-- **Upload Flow**: Core functionality working, being polished
-- **Basic AI Analysis**: Clothing recognition operational
-
-### 🔮 **Coming Soon**
-- **Multi-Image Upload**: Batch processing capabilities
-- **Advanced AI Features**: Enhanced Gemini integration
-- **Visual Search**: Browse inspiration with 3-tab interface
-- **Virtual Try-On**: AI-generated mannequin outfits
+### ✅ **Completed Features**
+- **Premium Pairing System**: Intelligent outfit matching with scoring
+- **Pair This Item Mode**: Interactive slot selection with coaching
+- **Surprise Me Mode**: 5 instant outfits (tight/loose ranking)
+- **Single Item Suggestions**: Smart styling tips when starting out
+- **Real-Time Updates**: Instant wardrobe synchronization
 
 ---
 
@@ -248,8 +245,8 @@ Planning Saturday's first date. She browses inspiration, saves looks she loves. 
 
 ### Installation
 ```bash
-git clone https://github.com/yourusername/outfit_matcher.git
-cd outfit_matcher
+git clone https://github.com/codernointed/vestiq.git
+cd vestiq
 flutter pub get
 flutter run
 ```

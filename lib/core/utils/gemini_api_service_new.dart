@@ -4,9 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:outfit_matcher/core/models/clothing_analysis.dart';
-// import 'package:outfit_matcher/core/models/mannequin_outfit.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+// import 'package:vestiq/core/models/mannequin_outfit.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 class GeminiApiService {
   static final String? _apiKey = dotenv.env['GEMINI_API_KEY'];

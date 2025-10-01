@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:outfit_matcher/features/onboarding/presentation/screens/splash_screen.dart';
-// import 'package:outfit_matcher/features/wardrobe/presentation/screens/add_item_screen.dart'; // No longer used for parameter-less route
-import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/home_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/main_screen.dart';
-import 'package:outfit_matcher/features/outfit_suggestions/presentation/screens/outfit_suggestions_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/domain/entities/clothing_item.dart';
+import 'package:vestiq/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:vestiq/features/onboarding/presentation/screens/splash_screen.dart';
+// import 'package:vestiq/features/wardrobe/presentation/screens/add_item_screen.dart'; // No longer used for parameter-less route
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/item_details_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/main_screen.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/outfit_suggestions_screen.dart';
+import 'package:vestiq/features/wardrobe/domain/entities/clothing_item.dart';
 
 /// App navigation helper
 /// Use this class for consistent navigation throughout the app

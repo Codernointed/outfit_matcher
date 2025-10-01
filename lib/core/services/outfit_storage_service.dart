@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:outfit_matcher/core/models/saved_outfit.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
 
 /// Keys for versioned storage (extracted for reuse)
 class OutfitStorageKeys {

@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
 import 'dart:convert';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/upload_options_screen.dart';
-  // import 'package:outfit_matcher/features/wardrobe/presentation/screens/closet_screen.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
-import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
-import 'package:outfit_matcher/core/models/saved_outfit.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
+  // import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 // TODO: Import ProfileScreen when created
-// import 'package:outfit_matcher/features/profile/presentation/screens/profile_screen.dart';
+// import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
 
 // Provider for the current selected index of the BottomNavigationBar
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -64,10 +64,7 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
       ),
       body: IndexedStack(
-        index:
-            currentIndex == 2
-                ? 0
-                : currentIndex, // If 'Add' is tapped, stay on current view (or Home)
+        index: currentIndex,
         children: _mainScreens,
       ),
       bottomNavigationBar: Padding(
@@ -77,15 +74,10 @@ class HomeScreen extends ConsumerWidget {
           child: BottomNavigationBar(
             currentIndex: currentIndex,
             onTap: (index) {
-              if (index == 2) {
-                // 'Add' button index
-                _navigateUploadOptions(context);
-              } else {
-                ref.read(bottomNavIndexProvider.notifier).state = index;
-              }
+              ref.read(bottomNavIndexProvider.notifier).state = index;
             },
             type: BottomNavigationBarType.fixed,
-            backgroundColor: const Color(0xFFF4C2C2).withOpacity(0.85),
+            backgroundColor: const Color(0xFFF4C2C2).withValues(alpha: 0.85),
             selectedItemColor: theme.colorScheme.primary,
             unselectedItemColor: Colors.black.withOpacity(0.6),
             elevation: 0,
@@ -99,11 +91,6 @@ class HomeScreen extends ConsumerWidget {
                 icon: Icon(Icons.checkroom_outlined),
                 activeIcon: Icon(Icons.checkroom),
                 label: 'Closet',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline),
-                activeIcon: Icon(Icons.add_circle),
-                label: 'Add',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),

@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/item_details_screen.dart';
 
 class UploadOptionsScreen extends ConsumerStatefulWidget {
   const UploadOptionsScreen({super.key});

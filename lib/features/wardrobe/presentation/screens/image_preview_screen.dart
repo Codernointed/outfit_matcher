@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:outfit_matcher/features/wardrobe/presentation/screens/visual_search_screen.dart';
-import 'package:outfit_matcher/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/visual_search_screen.dart';
+import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 
 class ImagePreviewScreen extends ConsumerWidget {
   final String imagePath;

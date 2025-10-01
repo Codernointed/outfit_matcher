@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:outfit_matcher/core/models/wardrobe_item.dart';
-import 'package:outfit_matcher/core/models/clothing_analysis.dart';
-import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Enhanced storage service for wardrobe items and looks with caching and migrations
 class EnhancedWardrobeStorageService {

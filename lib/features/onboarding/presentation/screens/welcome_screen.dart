@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 /// Welcome screen with grid of outfit images and get started button
 class WelcomeScreen extends StatelessWidget {

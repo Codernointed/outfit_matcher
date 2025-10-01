@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:outfit_matcher/core/utils/logger.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for managing app settings and preferences
 class AppSettingsService {

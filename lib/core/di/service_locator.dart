@@ -1,11 +1,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:outfit_matcher/core/services/outfit_storage_service.dart';
-import 'package:outfit_matcher/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:outfit_matcher/core/services/app_settings_service.dart';
-import 'package:outfit_matcher/core/services/image_processing_service.dart';
-import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
-import 'package:outfit_matcher/core/utils/permission_handler_service.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/app_settings_service.dart';
+import 'package:vestiq/core/services/image_processing_service.dart';
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/utils/permission_handler_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;

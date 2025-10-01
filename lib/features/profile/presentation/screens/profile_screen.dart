@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/core/utils/reset_utils.dart';
-import 'package:outfit_matcher/features/onboarding/presentation/screens/welcome_screen.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/utils/reset_utils.dart';
+import 'package:vestiq/features/onboarding/presentation/screens/welcome_screen.dart';
 
 /// Profile screen for user settings and information
 class ProfileScreen extends StatelessWidget {

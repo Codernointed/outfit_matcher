@@ -1,5 +1,5 @@
-import 'package:outfit_matcher/core/constants/app_constants.dart';
-import 'package:outfit_matcher/core/di/service_locator.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Utility functions for resetting app state (mainly for development/testing)
