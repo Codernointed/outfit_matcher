@@ -77,43 +77,31 @@ class WardrobePairingService {
 
       onProgress?.call('Creating visual previews...');
 
-      // Enhance top pairings with mannequin images
-      final enhancedPairings = await _enhancePairingsWithImages(
-        pairings.take(3).toList(),
-        mode: mode,
-      );
-
-      // Combine enhanced and regular pairings
-      final finalPairings = [
-        ...enhancedPairings,
-        ...pairings
-            .skip(3)
-            .take(_maxPairingSuggestions - enhancedPairings.length),
-      ];
+      // No automatic mannequin generation - only generate when user requests preview
+      // This ensures fast initial loading and only generates expensive API calls on demand
 
       // If no pairings were generated, create fallback suggestions
-      if (finalPairings.isEmpty) {
+      if (pairings.isEmpty) {
         AppLogger.warning('⚠️ No pairings generated - creating fallback suggestions');
         onProgress?.call('Creating styling suggestions...');
         return _generateFallbackPairings(heroItem, availableItems, mode: mode);
       }
 
       AppLogger.info(
-        '✅ Pairing generation complete',
+        '✅ Pairing generation complete (no auto mannequins)',
         data: {
-          'totalPairings': finalPairings.length,
-          'enhancedPairings': enhancedPairings.length,
+          'totalPairings': pairings.length,
           'mode': mode.toString(),
         },
       );
       analytics?.trackPairingSuccess(
         mode: mode,
         heroItem: heroItem,
-        totalPairings: finalPairings.length,
-        enhancedPairings: enhancedPairings.length,
+        totalPairings: pairings.length,
+        enhancedPairings: 0, // No auto-enhancement
       );
 
-      return finalPairings;
+      return pairings;
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ Pairing generation failed',

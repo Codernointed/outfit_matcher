@@ -41,6 +41,11 @@ class EnhancedWardrobeStorageService {
       await _prefs.setInt(_storageVersionKey, _currentStorageVersion);
       AppLogger.info('✅ Storage migration complete');
     }
+
+    // Force cache refresh on initialization to ensure data is loaded
+    // This fixes hot restart issues where providers reset but storage persists
+    AppLogger.info('🔄 Initializing wardrobe storage service');
+    _invalidateCache();
   }
 
   /// Handle storage migrations
@@ -90,6 +95,36 @@ class EnhancedWardrobeStorageService {
       _cacheTimestampKey,
       _lastCacheUpdate!.toIso8601String(),
     );
+  }
+
+  /// Ensure data is loaded and cached (useful for app initialization)
+  Future<void> ensureDataLoaded() async {
+    try {
+      AppLogger.info('🔍 Ensuring wardrobe data is loaded...');
+
+      // Force refresh cache to load from storage
+      _invalidateCache();
+
+      // Load wardrobe items
+      final items = await getWardrobeItems();
+      AppLogger.info('📦 Loaded ${items.length} wardrobe items from storage');
+
+      // Load wardrobe looks
+      final looks = await getWardrobeLooks();
+      AppLogger.info('📦 Loaded ${looks.length} wardrobe looks from storage');
+
+      // Update cache timestamp
+      await _updateCacheTimestamp();
+
+      AppLogger.info('✅ Wardrobe data loading complete');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Failed to ensure data is loaded',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   // === WARDROBE ITEMS ===

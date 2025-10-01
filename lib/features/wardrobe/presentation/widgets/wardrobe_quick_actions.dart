@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/sheets/pairing_sheet.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 // import 'package:outfit_matcher/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 
 /// Quick action item data
