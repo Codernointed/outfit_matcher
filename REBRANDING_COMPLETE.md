@@ -1,6 +1,6 @@
 # 🎉 Vestiq Rebranding Complete!
 
-## ✅ Successfully Rebranded from "Outfit Matcher" to "Vestiq"
+## ✅ Successfully Rebranded from "vestiq" to "Vestiq"
 
 **Package Name:** `com.codernointed.vestiq`  
 **App Name:** Vestiq  
@@ -16,7 +16,7 @@
 - Updated description to "Vestiq - Your Personal AI Stylist"
 
 ✅ **README.md**
-- Updated all references from "Outfit Matcher" to "Vestiq"
+- Updated all references from "vestiq" to "Vestiq"
 - Updated GitHub clone URL to `github.com/codernointed/vestiq`
 - Refreshed feature list with completed premium features
 
@@ -122,9 +122,9 @@ flutter build ios --release
 | **Package Name** | `outfit_matcher` | `vestiq` |
 | **Android Package** | `com.example.outfit_matcher` | `com.codernointed.vestiq` |
 | **iOS Bundle ID** | (via PRODUCT_BUNDLE_IDENTIFIER) | Updated via Info.plist |
-| **Display Name** | Outfit Matcher | Vestiq |
+| **Display Name** | vestiq | Vestiq |
 | **Main Class** | OutfitMatcherApp | VestiqApp |
-| **App Constant** | 'Outfit Matcher' | 'Vestiq' |
+| **App Constant** | 'vestiq' | 'Vestiq' |
 
 ---
 

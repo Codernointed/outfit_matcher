@@ -1,7 +1,7 @@
 # 🎯 App Flow Architecture - Two Distinct Experiences
 
 ## Overview
-The outfit matcher app now has **two separate, well-defined flows** to avoid confusion and provide clear user experiences.
+The vestiq app now has **two separate, well-defined flows** to avoid confusion and provide clear user experiences.
 
 ---
 

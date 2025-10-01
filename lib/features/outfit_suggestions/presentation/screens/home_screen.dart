@@ -43,7 +43,7 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Icon(Icons.checkroom, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
-            Text('Outfit Matcher', style: theme.textTheme.titleLarge),
+            Text('vestiq', style: theme.textTheme.titleLarge),
           ],
         ),
         actions: [

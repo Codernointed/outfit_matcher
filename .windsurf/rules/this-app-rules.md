@@ -110,7 +110,7 @@ Helps you shop smart by suggesting pieces that fit your existing style.
 
 create that Perfect , premium feel, minimal, To meet the highest standards of UX, be the best UI UX developer ever
 
-# Amma's Style Journey: A Day with the Outfit Matcher App
+# Amma's Style Journey: A Day with the vestiq App
 
 ## Meet Amma
 Amma is a 28-year-old marketing professional who loves fashion but often struggles with decision fatigue. She wants to look stylish without spending hours planning outfits. Her wardrobe is a mix of workwear, casual pieces, and statement items, but she often feels like she's wearing the same combinations.
@@ -119,7 +119,7 @@ Amma is a 28-year-old marketing professional who loves fashion but often struggl
 
 **7:30 AM - Waking Up Late (Again)**
 - Amma hits snooze one too many times and is now rushing to get ready for an important client meeting
-- She opens the Outfit Matcher app, which greets her with today's weather (22°C, partly cloudy) and suggests appropriate layers
+- She opens the vestiq app, which greets her with today's weather (22°C, partly cloudy) and suggests appropriate layers
 
 **App Flow:**
 1. **Home Screen (7:32 AM)**

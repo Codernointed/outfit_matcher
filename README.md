@@ -73,7 +73,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 - **Surprise Me** – Generate random outfit combinations from your full wardrobe.
 - **Style by Weather** – Get outfit suggestions appropriate for your location's weather and climate.
 
-**Why this is different:** Most styling apps show you inspiration that requires buying new clothes. Outfit Matcher only suggests combinations you can actually create today.
+**Why this is different:** Most styling apps show you inspiration that requires buying new clothes. vestiq only suggests combinations you can actually create today.
 
 ### 5. Visual Outfit Previews
 **What it does:** Show you how suggested outfits will look together.
@@ -91,7 +91,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 ### The Daily Use Flow
 
 1. **Morning scenario:** You want to get dressed but don't know what goes together.
-2. **Quick option:** Open Outfit Matcher, tap "Surprise Me," get three outfit suggestions from your closet.
+2. **Quick option:** Open vestiq, tap "Surprise Me," get three outfit suggestions from your closet.
 3. **Specific option:** Upload a photo of the one item you definitely want to wear, ask "What goes with this for work?"
 4. **Visual confirmation:** See how the suggested combination looks in different preview styles.
 5. **Get dressed confidently:** Every suggestion uses clothes you actually own.
@@ -128,7 +128,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 
 ## The Problem It Solves
 
-### Before Outfit Matcher
+### Before vestiq
 
 - Spending 15–45 minutes every morning choosing outfits.
 - Buying new clothes because you can't style existing ones.
@@ -136,7 +136,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 - Relying on the same 3–4 "safe" outfit combinations.
 - Seeing styling inspiration online but not being able to recreate it.
 
-### After Outfit Matcher
+### After vestiq
 
 - Get dressed in 2–5 minutes with confidence.
 - Discover new ways to wear clothes you already own.

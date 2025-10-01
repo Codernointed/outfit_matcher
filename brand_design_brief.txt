@@ -1,4 +1,4 @@
-OUTFIT MATCHER BRAND DESIGN BRIEF
+vestiq BRAND DESIGN BRIEF
 Last updated: 2025-09-29
 
 1. CORE COLOR PALETTE (from `lib/core/theme/app_theme.dart`)
