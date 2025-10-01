@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
-import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/utils/image_cache_manager.dart';
 
 /// Enhanced storage service for wardrobe items and looks with caching and migrations
 class EnhancedWardrobeStorageService {
@@ -295,16 +296,29 @@ class EnhancedWardrobeStorageService {
     await saveWardrobeItem(item);
   }
 
-  /// Delete wardrobe item
+  /// Delete wardrobe item with proper image cleanup
   Future<void> deleteWardrobeItem(String itemId) async {
     try {
       final items = await getWardrobeItems();
+      final itemToDelete = items.where((i) => i.id == itemId).firstOrNull;
+
+      if (itemToDelete != null) {
+        // Clean up cached images before deleting
+        ImageCacheManager.instance.removeFromCache(itemToDelete.originalImagePath);
+        if (itemToDelete.polishedImagePath != null) {
+          ImageCacheManager.instance.removeFromCache(itemToDelete.polishedImagePath!);
+        }
+
+        // Also clean up the actual files if they exist
+        await _cleanupImageFiles(itemToDelete);
+      }
+
       items.removeWhere((i) => i.id == itemId);
 
       await _saveWardrobeItems(items);
       _invalidateCache();
 
-      AppLogger.info('🗑️ Wardrobe item deleted', data: {'id': itemId});
+      AppLogger.info('🗑️ Wardrobe item deleted with image cleanup', data: {'id': itemId});
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ Failed to delete wardrobe item',
@@ -319,6 +333,30 @@ class EnhancedWardrobeStorageService {
   Future<void> _saveWardrobeItems(List<WardrobeItem> items) async {
     final itemsJson = items.map((i) => i.toJson()).toList();
     await _prefs.setString(_wardrobeItemsKey, jsonEncode(itemsJson));
+  }
+
+  /// Clean up actual image files from storage
+  Future<void> _cleanupImageFiles(WardrobeItem item) async {
+    try {
+      // Delete original image file
+      final originalFile = File(item.originalImagePath);
+      if (await originalFile.exists()) {
+        await originalFile.delete();
+        AppLogger.debug('🗑️ Deleted original image file: ${item.originalImagePath}');
+      }
+
+      // Delete polished image file if exists
+      if (item.polishedImagePath != null) {
+        final polishedFile = File(item.polishedImagePath!);
+        if (await polishedFile.exists()) {
+          await polishedFile.delete();
+          AppLogger.debug('🗑️ Deleted polished image file: ${item.polishedImagePath}');
+        }
+      }
+    } catch (e) {
+      AppLogger.warning('⚠️ Failed to cleanup image files for item ${item.id}', error: e);
+      // Don't throw - cleanup failure shouldn't prevent item deletion
+    }
   }
 
   // === WARDROBE LOOKS ===

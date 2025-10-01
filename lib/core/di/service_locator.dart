@@ -5,6 +5,7 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/core/services/image_processing_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/utils/image_cache_manager.dart';
 import 'package:vestiq/core/utils/permission_handler_service.dart';
 
 /// Global GetIt instance for dependency injection
@@ -45,6 +46,10 @@ Future<void> setupServiceLocator() async {
   
   getIt.registerLazySingleton<WardrobePairingService>(
     () => WardrobePairingService(),
+  );
+
+  getIt.registerLazySingleton<ImageCacheManager>(
+    () => ImageCacheManager.instance,
   );
 
   // Controllers

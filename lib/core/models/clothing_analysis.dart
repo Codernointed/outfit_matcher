@@ -1,3 +1,5 @@
+import 'package:vestiq/core/utils/logger.dart';
+
 class ClothingAnalysis {
   final String id;
   final String itemType; // e.g., "blouse", "jeans"
@@ -25,7 +27,7 @@ class ClothingAnalysis {
 
   // Contextual metadata from AI analysis
   final List<String>?
-  occasions; // suggested occasions (date night, brunch, work)
+      occasions; // suggested occasions (date night, brunch, work)
   final List<String>? locations; // indoor, outdoor, beach, cold_weather, etc.
   final List<String>? styleHints; // quick styling tips from AI
 
@@ -120,14 +122,13 @@ class ClothingAnalysis {
         'id: $id, '
         'itemType: $itemType, '
         'primaryColor: $primaryColor, '
-        'patternType: $patternType, '
         'style: $style, '
         'seasons: $seasons, '
         'confidence: $confidence)';
   }
 
   factory ClothingAnalysis.fromJson(Map<String, dynamic> json) {
-    print('📦 Creating ClothingAnalysis from JSON: ${json.keys.join(', ')}');
+    AppLogger.debug('📦 Creating ClothingAnalysis from JSON');
     final analysis = ClothingAnalysis(
       id: json['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
       itemType: json['itemType'] ?? '',
@@ -155,7 +156,7 @@ class ClothingAnalysis {
               ? List<String>.from(json['styleHints'] as List<dynamic>)
               : null,
     );
-    print(
+    AppLogger.debug(
       '✅ ClothingAnalysis created: ${analysis.itemType} (${analysis.primaryColor})',
     );
     return analysis;
@@ -188,7 +189,7 @@ class ClothingAnalysis {
       'locations': locations,
       'styleHints': styleHints,
     };
-    print('📤 Serializing ClothingAnalysis: $itemType');
+    AppLogger.debug('📤 Serializing ClothingAnalysis: $itemType');
     return data;
   }
 }

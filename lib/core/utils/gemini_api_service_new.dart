@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 // import 'package:vestiq/core/models/mannequin_outfit.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/utils/api_rate_limiter.dart';
 
 class GeminiApiService {
   static final String? _apiKey = dotenv.env['GEMINI_API_KEY'];
@@ -176,6 +177,34 @@ class GeminiApiService {
       data: {'file': imageFile.path},
     );
 
+    // Check rate limits
+    if (!await ApiRateLimiter.instance.isRequestAllowed()) {
+      AppLogger.warning('🚦 API rate limit exceeded, waiting...');
+      await ApiRateLimiter.instance.waitForRateLimitReset();
+
+      // Try again after waiting
+      if (!await ApiRateLimiter.instance.isRequestAllowed()) {
+        AppLogger.error('❌ API rate limit still exceeded after waiting');
+        return null;
+      }
+    }
+
+    // Generate cache key
+    final imageBytes = await imageFile.readAsBytes();
+    final imageHash = imageBytes.hashCode.toString();
+    final cacheKey = ApiRateLimiter.instance.generateCacheKey(
+      endpoint: 'analyzeClothingItem',
+      requestBody: null,
+      imageHash: imageHash,
+    );
+
+    // Check cache first
+    final cachedResponse = ApiRateLimiter.instance.getCachedResponse(cacheKey);
+    if (cachedResponse != null) {
+      AppLogger.debug('📦 Using cached analysis result');
+      return jsonDecode(cachedResponse);
+    }
+
     try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
@@ -205,7 +234,7 @@ class GeminiApiService {
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
-      );
+      ).timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
         'Gemini API call',
@@ -251,17 +280,8 @@ class GeminiApiService {
             'styleHints': _extractStringList(result['styleHints']),
           };
 
-          AppLogger.info(
-            '✅ Clothing analysis complete',
-            data: {
-              'itemType': processedResult['itemType'],
-              'primaryColor': processedResult['primaryColor'],
-              'confidence': processedResult['confidence'],
-              'occasions': processedResult['occasions'],
-              'locations': processedResult['locations'],
-              'styleHints': processedResult['styleHints'],
-            },
-          );
+          // Cache the successful response
+          ApiRateLimiter.instance.cacheResponse(cacheKey, jsonEncode(processedResult));
 
           return processedResult;
         } else {
@@ -1210,7 +1230,7 @@ Professional fashion photography style.
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
-      );
+      ).timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
 
       AppLogger.performance(
