@@ -1799,3 +1799,178 @@ After analyzing the entire [lib](cci:7://file:///c:/Users/tran_scend/Documents/P
 **Recommendation:** Focus on making the core user experience functional before adding more advanced features. The current state suggests the app was developed as a proof-of-concept rather than a production application.
 
 **Estimated Time to Fix Critical Issues:** 2-3 weeks of focused development.
+# Complete Monetization & Backend Strategy for vestiq
+
+## 1. Revenue Streams (Multi-tier Approach)
+
+### **Free Tier** (User Acquisition)
+- 5 AI outfit generations per week
+- Basic wardrobe management (up to 30 items)
+- Standard visual search
+- Ads (non-intrusive, fashion-related)
+
+### **vestiq Plus** ($9.99/month or $89/year)
+- Unlimited AI outfit generations
+- Unlimited wardrobe items
+- Priority mannequin generation
+- Advanced analytics (style insights, wear patterns)
+- Calendar integration for event planning
+- Ad-free experience
+- Early access to new features
+
+### **vestiq Pro** ($19.99/month - for fashion enthusiasts)
+- Everything in Plus
+- Personal AI stylist chat
+- Seasonal wardrobe analysis
+- Shopping recommendations with deals
+- Community features (share looks, get votes)
+- Export outfit photos for social media
+
+### **Additional Revenue**
+- **Affiliate commissions** (15-25% cut from shopping links)
+- **Brand partnerships** (sponsored outfit suggestions)
+- **Data licensing** (anonymized trend data to fashion retailers)
+- **Premium catalog access** ($2.99 one-time unlock for style packs)
+
+---
+
+## 2. Backend Architecture (Firebase + Cloud Functions + PostgreSQL)
+
+I'll set up a **hybrid backend** that balances cost, scalability, and data richness:
+
+```
+┌─────────────────┐
+│   Flutter App   │
+│    (vestiq)     │
+└────────┬────────┘
+         │
+    ┌────▼────────────────────────────────────┐
+    │         Firebase Services               │
+    ├─────────────────────────────────────────┤
+    │ • Authentication (phone/email/social)   │
+    │ • Cloud Firestore (realtime sync)       │
+    │ • Cloud Storage (wardrobe images)       │
+    │ • Cloud Functions (API orchestration)   │
+    │ • Firebase Analytics (basic telemetry)  │
+    └────────┬────────────────────────────────┘
+             │
+    ┌────────▼─────────────────────────────────┐
+    │    Custom Backend (Node.js/Python)       │
+    ├──────────────────────────────────────────┤
+    │ • Supabase/PostgreSQL (structured data)  │
+    │ • Event tracking & analytics pipeline    │
+    │ • ML model serving (future)              │
+    │ • Payment processing (Stripe/RevenueCat) │
+    │ • Admin dashboard                        │
+    └──────────────────────────────────────────┘
+```
+
+### **Why This Hybrid Approach?**
+- **Firebase**: Fast development, handles auth/storage/real-time sync easily
+- **Custom Backend**: Gives you full control over analytics, ML pipelines, and data ownership
+- **Cost-effective**: Start with Firebase (generous free tier), scale to custom backend as revenue grows
+
+---
+
+## 3. Data Collection Strategy
+
+### **User Analytics Events to Track**
+```dart
+// Track everything that helps train your model
+- wardrobe_item_added (category, color, style, formality)
+- outfit_generated (mode, items_used, weather, occasion)
+- outfit_saved (confidence_score, user_reaction)
+- outfit_worn (actual_wear_date, event_type)
+- pairing_liked (item_combination, match_score)
+- pairing_rejected (item_combination, reason)
+- search_query (search_term, filters, results_count)
+- style_preference_updated (style_tags, occasions)
+- purchase_intent (clicked_affiliate_link, item_type)
+- session_duration, screen_views, feature_usage
+```
+
+### **ML Training Data Schema**
+```sql
+-- Outfits table (for training pairing models)
+CREATE TABLE outfit_interactions (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  outfit_items JSONB,  -- array of wardrobe items
+  occasion VARCHAR,
+  weather_temp FLOAT,
+  season VARCHAR,
+  user_action VARCHAR,  -- 'saved', 'worn', 'rejected'
+  confidence_score FLOAT,
+  created_at TIMESTAMP
+);
+
+-- Style preferences (for personalization)
+CREATE TABLE user_style_profiles (
+  user_id UUID PRIMARY KEY,
+  preferred_colors JSONB,
+  preferred_styles JSONB,
+  body_type VARCHAR,
+  formality_preference VARCHAR,
+  occasion_frequency JSONB,  -- how often they need work/casual/date outfits
+  updated_at TIMESTAMP
+);
+
+-- Item effectiveness (what combinations work)
+CREATE TABLE item_pairing_performance (
+  item_a_id UUID,
+  item_b_id UUID,
+  co_worn_count INT,
+  avg_confidence_score FLOAT,
+  user_satisfaction_rate FLOAT,
+  occasions JSONB
+);
+```
+
+---
+
+## 4. Implementation Plan (Phased Rollout)
+
+### **Phase 1: MVP Backend (Week 1-2)** ✅ Start Here
+- Set up Firebase project (Auth + Firestore + Storage)
+- Implement subscription management with RevenueCat
+- Add basic analytics (Firebase Analytics + Mixpanel)
+- Create user profile sync
+- Add server-side API call rate limiting
+
+### **Phase 2: Payment & Monetization (Week 3-4)**
+- Integrate Stripe for payments
+- Build paywall UI (show free tier limits)
+- Add affiliate link integration (Amazon, Zalando, ASOS)
+- Implement ad serving (Google AdMob for free tier)
+
+### **Phase 3: Advanced Analytics (Month 2)**
+- Deploy custom analytics server (Supabase or Railway)
+- Build event pipeline (app → Firebase → Postgres)
+- Create admin dashboard (view usage, retention, revenue)
+- A/B testing framework for features
+
+### **Phase 4: Data-Driven Features (Month 3+)**
+- Train lightweight pairing model on user data
+- Implement hybrid approach (Gemini for edge cases, custom model for common pairings)
+- Reduce Gemini API calls by 70% using cached embeddings
+- Launch "Trending Styles" based on aggregate user data
+
+---
+
+## 5. Immediate Action Items
+
+Let me create the foundational files for this system:
+
+1. **Firebase integration service** (handles auth, storage, analytics)
+2. **Subscription service** (manages tiers, limits, paywalls)
+3. **Analytics service** (tracks all user events)
+4. **Backend API models** (data schemas for server)
+5. **Admin dashboard setup guide** (for monitoring)
+
+Should I proceed with implementing these services now? I'll start with:
+- Firebase setup (authentication, Firestore, storage)
+- Analytics tracking infrastructure
+- Subscription/paywall system
+- Backend schema design documents
+
+This gives you immediate control over costs (rate limiting), revenue (subscriptions), and data (analytics pipeline) to fund operations and train your own models.
