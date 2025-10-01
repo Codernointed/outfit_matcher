@@ -521,7 +521,9 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
                 behavior: SnackBarBehavior.floating,
               ),
             );
-            Navigator.of(context).pop();
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
           } : null,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 56),

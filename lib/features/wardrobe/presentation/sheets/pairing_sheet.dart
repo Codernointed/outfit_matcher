@@ -77,6 +77,18 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         items = [widget.heroItem, ...items];
       }
 
+      // Check if only one item exists (just the hero item)
+      if (items.length == 1) {
+        if (!mounted) return;
+        setState(() {
+          _pairings = [];
+          _loading = false;
+          _refreshing = false;
+          _statusMessage = null;
+        });
+        return;
+      }
+
       final pairings = await _pairingService.generatePairings(
         heroItem: widget.heroItem,
         wardrobeItems: items,
@@ -89,7 +101,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
 
       if (!mounted) return;
       setState(() {
-        _pairings = pairings;
+        _pairings = pairings.isNotEmpty ? pairings : const [];
         _selectedIndex = pairings.isNotEmpty ? 0 : 0;
         _loading = false;
         _refreshing = false;
@@ -140,7 +152,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                       _loading
                           ? _buildLoading(theme)
                           : _pairings.isEmpty
-                          ? _buildEmptyState(theme, controller)
+                          ? _buildSingleItemSuggestions(theme, controller)
                           : _buildContent(theme, controller),
                 ),
               ],
@@ -255,7 +267,10 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     );
   }
 
-  Widget _buildEmptyState(ThemeData theme, ScrollController controller) {
+  Widget _buildSingleItemSuggestions(ThemeData theme, ScrollController controller) {
+    final hero = widget.heroItem;
+    final analysis = hero.analysis;
+
     return ListView(
       controller: controller,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -265,23 +280,72 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withAlpha(89), // Deprecated surfaceVariant
+            color: theme.colorScheme.primaryContainer.withAlpha(102),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Add one more piece to unlock pairings',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                children: [
+                  Icon(Icons.lightbulb_outline, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Styling suggestions for your ${analysis.subcategory ?? analysis.itemType.toLowerCase()}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Upload a complementary top, bottom, or accessory and I’ll start building ready-to-wear outfits instantly.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()), // Deprecated withOpacity
+              const SizedBox(height: 16),
+              ..._generateSingleItemSuggestions(hero).map((suggestion) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        suggestion,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface.withAlpha(128),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.add_circle_outline,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Add more items to your wardrobe to get complete outfit pairings',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -289,6 +353,51 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         ),
       ],
     );
+  }
+
+  List<String> _generateSingleItemSuggestions(WardrobeItem item) {
+    final suggestions = <String>[];
+    final itemType = item.analysis.itemType.toLowerCase();
+    final subcategory = item.analysis.subcategory?.toLowerCase() ?? '';
+    final color = item.analysis.primaryColor.toLowerCase();
+    final formality = item.analysis.formality?.toLowerCase() ?? '';
+
+    // Item-specific pairing suggestions
+    if (itemType.contains('top') || subcategory.contains('shirt') || subcategory.contains('blouse')) {
+      suggestions.add('Pair with ${formality == 'formal' ? 'tailored trousers or a pencil skirt' : 'jeans or casual pants'} for a balanced look');
+      suggestions.add('Add ${color.contains('black') || color.contains('white') ? 'colorful' : 'neutral'} bottoms to complement the $color tone');
+      if (subcategory.contains('button')) {
+        suggestions.add('Roll sleeves to the elbow and tuck into high-waisted bottoms for effortless style');
+      }
+    } else if (itemType.contains('bottom') || subcategory.contains('pants') || subcategory.contains('jeans') || subcategory.contains('skirt')) {
+      suggestions.add('Match with a ${formality == 'formal' ? 'crisp button-up or structured blouse' : 'casual tee or relaxed top'}');
+      suggestions.add('Choose ${color.contains('dark') ? 'lighter tops to create contrast' : 'complementary colors for harmony'}');
+      if (subcategory.contains('jeans')) {
+        suggestions.add('Cuff the hem and pair with sneakers for casual vibes, or heels for elevated style');
+      }
+    } else if (itemType.contains('dress')) {
+      suggestions.add('Layer with a denim jacket for casual outings or a blazer for formal events');
+      suggestions.add('Add a belt at the waist to define your silhouette');
+      suggestions.add('Complete with ${formality == 'formal' ? 'heels and minimal jewelry' : 'sneakers or sandals for relaxed elegance'}');
+    } else if (itemType.contains('shoe') || subcategory.contains('sneaker') || subcategory.contains('boot')) {
+      suggestions.add('Build outfits around these shoes - they set the tone for ${formality == 'formal' ? 'polished, professional looks' : 'casual, comfortable styling'}');
+      suggestions.add('Balance the footwear with ${subcategory.contains('sneaker') ? 'streamlined pieces to let them pop' : 'complementary textures and proportions'}');
+    }
+
+    // Color-specific suggestions
+    if (color.contains('black')) {
+      suggestions.add('Black is versatile - pair with any color palette, or go monochrome for sleek sophistication');
+    } else if (color.contains('white') || color.contains('cream')) {
+      suggestions.add('White brightens any outfit - mix with earth tones or bold colors for visual interest');
+    } else if (color.contains('blue')) {
+      suggestions.add('Blue pairs beautifully with neutrals, whites, and warm earth tones');
+    }
+
+    // General styling tips
+    suggestions.add('Consider the occasion - dress it up with structured pieces or down with relaxed fits');
+    suggestions.add('Play with proportions - fitted $itemType works well with looser complementary pieces');
+
+    return suggestions.take(5).toList();
   }
 
   Widget _buildContent(ThemeData theme, ScrollController controller) {
@@ -526,7 +635,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
           ),
           const SizedBox(height: 14),
           _buildItemRow(theme, widget.heroItem, label: 'Hero piece'),
-          ...supporting.map((item) => _buildItemRow(theme, item, label: _slotLabelForItem(item))).toList(),
+          ...supporting.map((item) => _buildItemRow(theme, item, label: _slotLabelForItem(item))),
         ],
       ),
     );

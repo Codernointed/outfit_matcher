@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:outfit_matcher/core/models/wardrobe_item.dart';
 import 'package:outfit_matcher/core/services/wardrobe_pairing_service.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/sheets/pairing_sheet.dart';
+import 'package:outfit_matcher/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 import 'package:outfit_matcher/features/wardrobe/presentation/screens/item_details_screen.dart';
 
 /// Beautiful preview sheet for wardrobe items with pairing options
@@ -361,7 +362,7 @@ class _WardrobeItemPreviewSheetState
           title: 'Pair This Item',
           subtitle: 'Get perfect matches for this piece',
           color: theme.colorScheme.primary,
-          onTap: () => _navigateToPairing(PairingMode.pairThisItem),
+          onTap: () => _navigateToInteractivePairing(),
           isPrimary: true,
         ),
 
@@ -562,6 +563,17 @@ class _WardrobeItemPreviewSheetState
     return '${(difference / 30).floor()}mo ago';
   }
 
+  void _navigateToInteractivePairing() async {
+    await _closeSheet();
+
+    if (!mounted) return;
+
+    await showInteractivePairingSheet(
+      context: context,
+      heroItem: widget.item,
+    );
+  }
+
   void _navigateToPairing(PairingMode mode) async {
     await _closeSheet();
 
@@ -591,7 +603,7 @@ class _WardrobeItemPreviewSheetState
   Future<void> _closeSheet() async {
     await _slideController.reverse();
     await _fadeController.reverse();
-    if (mounted) {
+    if (mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
   }

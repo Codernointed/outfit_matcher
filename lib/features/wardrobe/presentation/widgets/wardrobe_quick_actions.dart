@@ -271,7 +271,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
         icon: Icons.auto_awesome,
         label: 'Pair This Item',
         color: Colors.blue,
-        onTap: () => _navigateToPairing(PairingMode.pairThisItem),
+        onTap: () => _navigateToInteractivePairing(),
       ),
       QuickActionItem(
         icon: Icons.shuffle,
@@ -306,8 +306,22 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
     ];
   }
 
+  void _navigateToInteractivePairing() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    showInteractivePairingSheet(
+      context: context,
+      heroItem: widget.item,
+    );
+  }
+
   void _navigateToPairing(PairingMode mode) {
-    Navigator.of(context).pop();
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
     showWardrobePairingSheet(
       context: context,
       heroItem: widget.item,
@@ -350,12 +364,18 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                },
                 child: const Text('Cancel'),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
                   // TODO: Implement delete functionality
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -388,7 +408,11 @@ void showWardrobeQuickActions(
       return WardrobeQuickActions(
         item: item,
         position: position,
-        onDismiss: () => Navigator.of(context).pop(),
+        onDismiss: () {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        },
       );
     },
   );
