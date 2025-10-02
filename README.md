@@ -2,7 +2,7 @@
 
 **Never stress about "what to wear" again.** Vestiq is your intelligent wardrobe companion that learns your style, understands your life, and suggests perfect outfit combinations in seconds.
 
-![Vestiq Hero](https://via.placeholder.com/800x400/6366f1/ffffff?text=Your+AI+Stylist)
+![Vestiq Hero](assets/images/hero.png)
 
 ## ✨ What Makes Us Different
 
