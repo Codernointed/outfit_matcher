@@ -26,7 +26,7 @@ class AppRouter {
     return {
       splash: (context) => const SplashScreen(),
       onboarding: (context) => const OnboardingScreen(),
-      main: (context) => const MainScreen(),
+      // main: (context) => const MainScreen(),
       home: (context) => HomeScreen(),
       // addItem: (context) => const AddItemScreen(), // Removed: AddItemScreen requires imagePath
       // Routes requiring parameters are not included here

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
-  // import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
+// import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/di/service_locator.dart';
@@ -63,43 +64,29 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: IndexedStack(
-        index: currentIndex,
-        children: _mainScreens,
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BottomNavigationBar(
-            currentIndex: currentIndex,
-            onTap: (index) {
-              ref.read(bottomNavIndexProvider.notifier).state = index;
-            },
-            type: BottomNavigationBarType.fixed,
-            backgroundColor: const Color(0xFFF4C2C2).withValues(alpha: 0.85),
-            selectedItemColor: theme.colorScheme.primary,
-            unselectedItemColor: Colors.black.withOpacity(0.6),
-            elevation: 0,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.checkroom_outlined),
-                activeIcon: Icon(Icons.checkroom),
-                label: 'Closet',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profile',
-              ),
-            ],
+      body: IndexedStack(index: currentIndex, children: _mainScreens),
+      bottomNavigationBar: DynamicIslandNavBar(
+        currentIndex: currentIndex,
+        onTap: (index) {
+          ref.read(bottomNavIndexProvider.notifier).state = index;
+        },
+        items: const [
+          DynamicIslandNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home,
+            label: 'Home',
           ),
-        ),
+          DynamicIslandNavItem(
+            icon: Icons.checkroom_outlined,
+            activeIcon: Icons.checkroom,
+            label: 'Closet',
+          ),
+          DynamicIslandNavItem(
+            icon: Icons.person_outline,
+            activeIcon: Icons.person,
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
@@ -527,22 +514,20 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     ),
                     color: theme.colorScheme.surfaceContainerHighest,
                   ),
-                  child:
-                      outfit.mannequinImages.isNotEmpty
-                          ? ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16),
-                            ),
-                            child: Image.memory(
-                              _dataUrlToBytes(outfit.mannequinImages.first),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder:
-                                  (context, error, stackTrace) =>
-                                      _buildImageError(theme),
-                            ),
-                          )
-                          : _buildImageError(theme),
+                  child: outfit.mannequinImages.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          child: Image.memory(
+                            _dataUrlToBytes(outfit.mannequinImages.first),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildImageError(theme),
+                          ),
+                        )
+                      : _buildImageError(theme),
                 ),
               ),
 
