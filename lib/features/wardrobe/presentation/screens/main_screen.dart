@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/home_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
 
-/// Main screen with bottom navigation
+/// Main screen with premium dynamic island bottom navigation
 class MainScreen extends StatefulWidget {
   /// Default constructor
   const MainScreen({super.key});
@@ -33,33 +34,32 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: DynamicIslandNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+          DynamicIslandNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home,
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.grid_view_outlined),
-            activeIcon: Icon(Icons.grid_view),
+          DynamicIslandNavItem(
+            icon: Icons.checkroom_outlined,
+            activeIcon: Icons.checkroom,
             label: 'Closet',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            activeIcon: Icon(Icons.add_circle),
+          DynamicIslandNavItem(
+            icon: Icons.add_circle_outline,
+            activeIcon: Icons.add_circle,
             label: 'Add',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
+          DynamicIslandNavItem(
+            icon: Icons.person_outline,
+            activeIcon: Icons.person,
             label: 'Profile',
           ),
         ],

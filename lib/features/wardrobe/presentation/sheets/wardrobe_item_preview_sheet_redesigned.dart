@@ -33,6 +33,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.9,

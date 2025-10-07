@@ -207,7 +207,7 @@ class WardrobeItem {
       occasions: occasions ?? this.occasions,
       locations: locations ?? this.locations,
       seasons: seasons ?? this.seasons,
-      styleHints: styleHints ?? styleHints,
+      styleHints: styleHints,
       userNotes: userNotes ?? this.userNotes,
       createdAt: createdAt ?? this.createdAt,
       lastWorn: lastWorn ?? this.lastWorn,

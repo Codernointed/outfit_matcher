@@ -206,10 +206,9 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
           Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
-              children:
-                  actions
-                      .map((action) => _buildActionItem(theme, action))
-                      .toList(),
+              children: actions
+                  .map((action) => _buildActionItem(theme, action))
+                  .toList(),
             ),
           ),
         ],
@@ -271,19 +270,19 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
         icon: Icons.auto_awesome,
         label: 'Pair This Item',
         color: Colors.blue,
-        onTap: () => _navigateToInteractivePairing(),
+        onTap: () => _navigateToPairingInteractive(),
       ),
       QuickActionItem(
         icon: Icons.shuffle,
         label: 'Surprise Me',
         color: Colors.purple,
-        onTap: () => _navigateToPairing(PairingMode.surpriseMe),
+        onTap: () => _navigateToPairingWithMode(PairingMode.surpriseMe),
       ),
       QuickActionItem(
         icon: Icons.location_on,
         label: 'Style by Location',
         color: Colors.green,
-        onTap: () => _navigateToPairing(PairingMode.styleByLocation),
+        onTap: () => _navigateToPairingWithMode(PairingMode.styleByLocation),
       ),
       QuickActionItem(
         icon: widget.item.isFavorite ? Icons.favorite : Icons.favorite_border,
@@ -306,7 +305,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
     ];
   }
 
-  void _navigateToInteractivePairing() {
+  void _navigateToPairingInteractive() {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
@@ -314,10 +313,11 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
     showInteractivePairingSheet(
       context: context,
       heroItem: widget.item,
+      mode: PairingMode.pairThisItem,
     );
   }
 
-  void _navigateToPairing(PairingMode mode) {
+  void _navigateToPairingWithMode(PairingMode mode) {
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
@@ -356,39 +356,38 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   void _deleteItem() {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete Item'),
-            content: Text(
-              'Are you sure you want to delete this ${widget.item.analysis.itemType.toLowerCase()}?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                },
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () {
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                  // TODO: Implement delete functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Item deleted'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Delete'),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Item'),
+        content: Text(
+          'Are you sure you want to delete this ${widget.item.analysis.itemType.toLowerCase()}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Cancel'),
           ),
+          TextButton(
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+              // TODO: Implement delete functionality
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Item deleted'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 }

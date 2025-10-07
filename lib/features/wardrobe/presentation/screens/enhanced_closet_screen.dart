@@ -10,6 +10,7 @@ import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_quick_actions_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
@@ -798,13 +799,20 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   void _navigateToPairing(WardrobeItem heroItem, PairingMode mode) async {
     if (!mounted) return;
 
-    // Use interactive pairing sheet for both Pair This Item and Surprise Me
-    // The pairing service will handle the different logic based on mode
-    showInteractivePairingSheet(
-      context: context,
-      heroItem: heroItem,
-      mode: mode,
-    );
+    // Use interactive pairing for "Pair This Item", regular pairing sheet for others
+    if (mode == PairingMode.pairThisItem) {
+      showInteractivePairingSheet(
+        context: context,
+        heroItem: heroItem,
+        mode: mode,
+      );
+    } else {
+      showWardrobePairingSheet(
+        context: context,
+        heroItem: heroItem,
+        mode: mode,
+      );
+    }
   }
 
   void _navigateToInspiration(WardrobeItem item) async {

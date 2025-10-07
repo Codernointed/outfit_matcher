@@ -431,9 +431,21 @@ class WardrobePairingService {
       }
 
       if (items.length > 1) {
-        final baseScore = isTight ? 0.8 : 0.6;
-        final randomVariation = random.nextDouble() * 0.2;
-        final finalScore = (baseScore + randomVariation).clamp(0.0, 1.0);
+        // Calculate REAL compatibility score between items
+        double totalScore = 0.0;
+        int comparisons = 0;
+        for (int i = 0; i < items.length; i++) {
+          for (int j = i + 1; j < items.length; j++) {
+            totalScore += _getCompatibilityScore(items[i], items[j]);
+            comparisons++;
+          }
+        }
+        final avgScore = comparisons > 0 ? totalScore / comparisons : 0.5;
+
+        // For tight pairings, use real score; for loose, add some variation
+        final finalScore = isTight
+            ? avgScore
+            : (avgScore * 0.85 + random.nextDouble() * 0.15);
 
         pairings.add(
           _createPairing(
@@ -442,7 +454,7 @@ class WardrobePairingService {
                 ? 'Polished ${heroItem.analysis.primaryColor} ${heroItem.analysis.itemType.toLowerCase()} look'
                 : 'Creative surprise combination ${i - 2}',
             PairingMode.surpriseMe,
-            score: finalScore,
+            score: finalScore.clamp(0.0, 1.0),
             stylingTips: _buildStylingTips(
               items,
               heroItem: heroItem,
@@ -754,7 +766,7 @@ class WardrobePairingService {
             'Suitable footwear',
           ],
           'tips': [
-            'Choose items that match the style',
+            'Choose  DONT ',
             'Consider the occasion',
             'Balance colors and textures',
           ],
@@ -866,147 +878,116 @@ class WardrobePairingService {
         sub.contains('cardigan');
   }
 
-  /// Build styling tips for a pairing - item-specific and contextual
+  /// Build styling tips for a pairing - ACTUALLY USEFUL and contextual
   List<String> _buildStylingTips(
     List<WardrobeItem> items, {
     WardrobeItem? heroItem,
     bool playful = false,
   }) {
     final tips = <String>[];
+    if (items.length < 2) return tips; // Need at least 2 items for useful tips
+
     final hero = heroItem ?? items.first;
     final heroColor = hero.analysis.primaryColor.toLowerCase();
     final heroSubcategory = hero.analysis.subcategory?.toLowerCase() ?? '';
 
-    // Analyze the complete outfit for contextual tips
-    final hasBottom = items.any((item) => _isBottom(item));
-    final hasShoes = items.any((item) => _isShoes(item));
+    // Find what items are actually in the outfit
+    final top = items.firstWhere((item) => _isTop(item), orElse: () => hero);
+    final bottom = items.firstWhere(
+      (item) => _isBottom(item),
+      orElse: () => hero,
+    );
+    final shoes = items.firstWhere(
+      (item) => _isShoes(item),
+      orElse: () => hero,
+    );
     final hasAccessories = items.any((item) => _isAccessory(item));
 
-    // Item-specific styling tips based on actual item type
-    if (_isTop(hero)) {
+    // Get colors and details from ACTUAL outfit items
+    final topColor = top != hero
+        ? top.analysis.primaryColor.toLowerCase()
+        : heroColor;
+    final bottomColor = bottom != hero
+        ? bottom.analysis.primaryColor.toLowerCase()
+        : '';
+    final shoesType = shoes != hero
+        ? shoes.analysis.subcategory?.toLowerCase() ?? ''
+        : '';
+
+    // ACTUAL OUTFIT-BASED TIPS - referencing the real items
+    if (_isDress(hero)) {
+      // Dress outfit tips
+      if (shoes != hero) {
+        final shoesColor = shoes.analysis.primaryColor.toLowerCase();
+        if (_colorsMatchFamily(heroColor, shoesColor)) {
+          tips.add(
+            'Your ${shoesColor} shoes complement this ${heroColor} dress beautifully',
+          );
+        } else {
+          tips.add(
+            'The ${shoesColor} shoes create nice contrast with the ${heroColor} dress',
+          );
+        }
+      }
+      if (!hasAccessories) {
+        tips.add('Consider adding a necklace or earrings to complete the look');
+      }
+    } else if (_isTop(hero) && bottom != hero) {
+      // Top + bottom outfit
+      if (bottomColor.isNotEmpty) {
+        if (_colorsMatchFamily(topColor, bottomColor)) {
+          tips.add(
+            'Monochrome ${topColor} look - add a colorful accessory for pop',
+          );
+        } else {
+          tips.add('The ${topColor} top pairs well with ${bottomColor}');
+        }
+      }
+
+      // Specific fit advice
       if (heroSubcategory.contains('button') ||
           heroSubcategory.contains('shirt')) {
-        tips.add('Roll sleeves to the elbow for a relaxed, confident look');
-        tips.add(
-          'Try half-tucking into your ${hasBottom ? items.firstWhere((item) => _isBottom(item)).analysis.subcategory?.toLowerCase() ?? "bottoms" : "bottoms"} for casual elegance',
-        );
-      } else if (heroSubcategory.contains('t-shirt') ||
-          heroSubcategory.contains('tee')) {
-        tips.add('Layer with an open shirt or jacket for dimension');
-        tips.add(
-          'Tuck fully for a polished look, or leave untucked for casual vibes',
-        );
-      } else if (heroSubcategory.contains('sweater') ||
-          heroSubcategory.contains('knit')) {
-        tips.add('Layer over a collared shirt for preppy sophistication');
-        tips.add('Push sleeves up slightly to show watch or bracelets');
-      } else if (heroSubcategory.contains('blouse')) {
-        tips.add('French tuck for effortless chic');
-        tips.add('Add a statement necklace to draw attention upward');
+        tips.add('Roll sleeves to the elbow for a relaxed look');
+      } else if (heroSubcategory.contains('t-shirt')) {
+        tips.add('Half-tuck for a polished yet casual vibe');
       }
-    } else if (_isBottom(hero)) {
-      if (heroSubcategory.contains('jeans') ||
+
+      // Shoes advice
+      if (shoes != hero && shoesType.contains('sneaker')) {
+        tips.add('Sneakers keep this casual and comfortable');
+      } else if (shoes != hero && shoesType.contains('heel')) {
+        tips.add('Heels dress up the outfit beautifully');
+      }
+    } else if (_isBottom(hero) && top != hero) {
+      // Bottom outfit tips
+      if (heroSubcategory.contains('jean') ||
           heroSubcategory.contains('denim')) {
-        tips.add(
-          'Cuff the hem once to show off your ${hasShoes ? items.firstWhere((item) => _isShoes(item)).analysis.subcategory?.toLowerCase() ?? "shoes" : "shoes"}',
-        );
-        tips.add('Balance loose jeans with a fitted top, or vice versa');
-      } else if (heroSubcategory.contains('trousers') ||
-          heroSubcategory.contains('pants')) {
-        tips.add('Ensure a clean break at the shoe for polished proportions');
-        tips.add(
-          'Add a belt that complements your ${hasShoes ? "shoes" : "overall look"}',
-        );
-      } else if (heroSubcategory.contains('skirt')) {
-        tips.add(
-          'Balance skirt length with top fit - short skirt = modest top',
-        );
-        tips.add('Add tights or bare legs depending on formality');
-      } else if (heroSubcategory.contains('shorts')) {
-        tips.add('Keep proportions balanced - fitted shorts with relaxed top');
-        tips.add('Roll the hem for a casual, summery vibe');
+        if (shoes != hero) {
+          tips.add('Cuff the jeans once to show off your shoes');
+        }
       }
-    } else if (_isDress(hero)) {
-      tips.add('Cinch with a belt at the natural waist for definition');
-      tips.add('Layer with a denim jacket or blazer for versatility');
-      if (heroSubcategory.contains('maxi')) {
-        tips.add('Add heels to elongate your silhouette');
-      } else if (heroSubcategory.contains('mini')) {
-        tips.add('Balance with a modest top layer or accessories');
+
+      if (shoes != hero) {
+        final shoesColor = shoes.analysis.primaryColor.toLowerCase();
+        if (_colorsMatchFamily(heroColor, shoesColor)) {
+          tips.add('Shoes and bottoms match - creates a sleek look');
+        }
       }
     } else if (_isShoes(hero)) {
+      // Shoe-focused outfit
       if (heroSubcategory.contains('sneaker')) {
-        tips.add('Keep the rest of the outfit streamlined to let sneakers pop');
-        tips.add('Roll or cuff pants to showcase the sneaker design');
-      } else if (heroSubcategory.contains('boot')) {
-        tips.add('Tuck pants into boots or let them stack naturally');
-        tips.add(
-          'Match boot formality to outfit - dress boots with tailored pieces',
-        );
+        tips.add('Let the sneakers be the statement piece');
+        if (bottom != hero) {
+          tips.add('Roll or cuff pants to showcase the sneakers');
+        }
       } else if (heroSubcategory.contains('heel')) {
-        tips.add('Ensure hem length works with heel height');
-        tips.add('Keep accessories minimal to let heels be the statement');
+        tips.add('Heels elevate any outfit instantly');
       }
     }
 
-    // Color harmony tips based on actual colors in outfit
-    if (heroColor.contains('black')) {
-      if (items.any(
-        (item) => item.analysis.primaryColor.toLowerCase().contains('white'),
-      )) {
-        tips.add(
-          'Classic black & white - add a third color for visual interest',
-        );
-      } else {
-        tips.add('Black anchors bold colors beautifully');
-      }
-    } else if (heroColor.contains('white') || heroColor.contains('cream')) {
-      tips.add('White brightens any palette - add texture to avoid flatness');
-    } else if (heroColor.contains('blue')) {
-      tips.add('Blue pairs well with neutrals and earth tones');
-    } else if (heroColor.contains('red')) {
-      tips.add('Red makes a statement - keep other pieces neutral');
-    }
-
-    // Formality-specific tips
-    if (hero.analysis.formality?.toLowerCase() == 'formal') {
-      tips.add('Maintain clean lines and tailored fit throughout');
-      if (!hasAccessories) {
-        tips.add('Add a watch or subtle jewelry for polish');
-      }
-    } else if (hero.analysis.formality?.toLowerCase() == 'casual') {
-      tips.add('Mix textures (denim, cotton, knit) for depth');
-      tips.add('Don\'t be afraid to roll, cuff, or layer casually');
-    }
-
-    // Playful tips for Surprise Me mode
-    if (playful) {
-      final playfulTips = [
-        'Break the rules - try unexpected combinations',
-        'Mix high and low - dress shoes with casual pieces',
-        'Add a bold accessory as your signature piece',
-        'Layer different patterns for creative flair',
-        'Play with proportions - oversized with fitted',
-      ];
-      tips.add(playfulTips[Random().nextInt(playfulTips.length)]);
-    }
-
-    // Seasonal contextual tips
-    final now = DateTime.now();
-    final season = _getCurrentSeason(now);
-    switch (season) {
-      case 'Summer':
-        tips.add('Light, breathable fabrics keep you comfortable');
-        break;
-      case 'Winter':
-        tips.add('Layer strategically - base, mid, outer');
-        break;
-      case 'Spring':
-        tips.add('Perfect for transitional layering pieces');
-        break;
-      case 'Fall':
-        tips.add('Rich, warm tones complement the season');
-        break;
+    // Universal polish tip
+    if (!hasAccessories && tips.length < 2) {
+      tips.add('Consider adding accessories to personalize the look');
     }
 
     // Return top 3-4 most relevant tips
@@ -1019,6 +1000,48 @@ class WardrobePairingService {
     if (month >= 6 && month <= 8) return 'Summer';
     if (month >= 9 && month <= 11) return 'Fall';
     return 'Winter';
+  }
+
+  /// Check if two colors are in the same family or match
+  bool _colorsMatchFamily(String color1, String color2) {
+    // Same color
+    if (color1 == color2) return true;
+
+    // Neutral family
+    final neutrals = [
+      'black',
+      'white',
+      'gray',
+      'grey',
+      'beige',
+      'cream',
+      'ivory',
+      'tan',
+      'brown',
+    ];
+    final isColor1Neutral = neutrals.any((n) => color1.contains(n));
+    final isColor2Neutral = neutrals.any((n) => color2.contains(n));
+    if (isColor1Neutral && isColor2Neutral) return true;
+
+    // Blue family
+    final blues = ['blue', 'navy', 'denim', 'indigo', 'teal', 'turquoise'];
+    if (blues.any((c) => color1.contains(c)) &&
+        blues.any((c) => color2.contains(c)))
+      return true;
+
+    // Red family
+    final reds = ['red', 'burgundy', 'maroon', 'wine', 'crimson'];
+    if (reds.any((c) => color1.contains(c)) &&
+        reds.any((c) => color2.contains(c)))
+      return true;
+
+    // Green family
+    final greens = ['green', 'olive', 'emerald', 'forest'];
+    if (greens.any((c) => color1.contains(c)) &&
+        greens.any((c) => color2.contains(c)))
+      return true;
+
+    return false;
   }
 }
 

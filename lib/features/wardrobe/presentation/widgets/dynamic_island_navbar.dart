@@ -18,32 +18,38 @@ class DynamicIslandNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      margin: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        bottomPadding > 0 ? bottomPadding + 12 : 20,
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(32),
+        color: theme.colorScheme.surface.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: theme.colorScheme.onSurface.withOpacity(0.1),
-          width: 0.5,
+          color: theme.colorScheme.onSurface.withOpacity(0.06),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.1),
+            color: theme.colorScheme.primary.withOpacity(0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(30),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
           child: Row(
