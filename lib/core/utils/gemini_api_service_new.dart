@@ -75,7 +75,8 @@ class GeminiApiService {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      final prompt = '''
+      final prompt =
+          '''
       Analyze this clothing item and create a detailed description for generating a mannequin image wearing it.
       
       Item Type: $itemType
@@ -230,11 +231,13 @@ class GeminiApiService {
       AppLogger.network(url, 'POST', body: requestBody);
 
       final startTime = DateTime.now();
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      ).timeout(const Duration(seconds: 30)); // Add timeout
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
         'Gemini API call',
@@ -280,8 +283,22 @@ class GeminiApiService {
             'styleHints': _extractStringList(result['styleHints']),
           };
 
+          AppLogger.info(
+            '✅ Clothing analysis complete',
+            data: {
+              'itemType': processedResult['itemType'],
+              'primaryColor': processedResult['primaryColor'],
+              'confidence': processedResult['confidence'],
+              'occasions': processedResult['occasions'],
+              'locations': processedResult['locations'],
+              'styleHints': processedResult['styleHints'],
+            },
+          );
           // Cache the successful response
-          ApiRateLimiter.instance.cacheResponse(cacheKey, jsonEncode(processedResult));
+          ApiRateLimiter.instance.cacheResponse(
+            cacheKey,
+            jsonEncode(processedResult),
+          );
 
           return processedResult;
         } else {
@@ -402,6 +419,101 @@ class GeminiApiService {
     return suggestions;
   }
 
+  /// Generate enhanced mannequin outfits as a stream for progressive loading
+  static Stream<MannequinOutfit> generateEnhancedMannequinOutfitsStream(
+    List<ClothingAnalysis> items, {
+    String? userNotes,
+    void Function(String)? onProgress,
+  }) async* {
+    AppLogger.info(
+      '👤 Streaming enhanced mannequin outfits',
+      data: {'items': items.length, 'notes': userNotes?.length},
+    );
+
+    if (items.isEmpty) {
+      AppLogger.warning('⚠️ No items provided for mannequin generation');
+      return;
+    }
+
+    final combinations = _composeOutfitCombinations(items);
+    final totalLooks = 6;
+
+    for (int i = 0; i < totalLooks; i++) {
+      final combo = combinations[i % combinations.length];
+      final styleLabel = combo.metadata['styleLabel'] as String? ?? 'signature';
+      final poseDescription =
+          combo.metadata['pose'] as String? ??
+          _poseLibrary[i % _poseLibrary.length];
+
+      onProgress?.call('Styling look ${i + 1} of $totalLooks ($styleLabel)');
+
+      try {
+        final prompt = _buildMannequinPrompt(
+          uploadedItems: combo.items,
+          userNotes: userNotes,
+          desiredStyle: styleLabel,
+          pairingNotes: combo.metadata['pairingNotes'] as String?,
+        );
+
+        final primaryImagePath = combo.items
+            .firstWhere((item) => item.imagePath != null)
+            .imagePath;
+        final imageFile = primaryImagePath != null
+            ? File(primaryImagePath)
+            : null;
+
+        if (imageFile == null) {
+          AppLogger.warning('⚠️ Missing image for mannequin combo, skipping');
+          continue;
+        }
+
+        final imageResult = await _callImagePreview(prompt, imageFile);
+
+        if (imageResult != null) {
+          yield MannequinOutfit(
+            id: 'mannequin_${DateTime.now().millisecondsSinceEpoch}_$i',
+            items: combo.items,
+            imageUrl: 'data:image/png;base64,$imageResult',
+            pose: poseDescription,
+            style: styleLabel,
+            confidence: 0.92,
+            metadata: {
+              'description':
+                  combo.metadata['description'] ??
+                  'Look $i styled with ${combo.items.length} of your pieces.',
+              'occasion': combo.metadata['occasion'],
+              'pairing': combo.metadata['pairingNotes'],
+            },
+          );
+        }
+
+        await Future.delayed(const Duration(milliseconds: 400));
+      } catch (e, stackTrace) {
+        AppLogger.error(
+          '❌ Failed to build mannequin look',
+          error: e,
+          stackTrace: stackTrace,
+        );
+        yield MannequinOutfit(
+          id: 'mannequin_fallback_$i',
+          items: combo.items,
+          imageUrl: '',
+          pose: poseDescription,
+          style: styleLabel,
+          confidence: 0.6,
+          metadata: {
+            'description':
+                'We couldn\'t render this look, but the pairing is ready to retry.',
+            'occasion': combo.metadata['occasion'],
+            'pairing': combo.metadata['pairingNotes'],
+          },
+        );
+      }
+    }
+
+    onProgress?.call('All looks styled successfully.');
+  }
+
   /// Generate enhanced mannequin outfits using full wardrobe context and notes
   static Future<List<MannequinOutfit>> generateEnhancedMannequinOutfits(
     List<ClothingAnalysis> items, {
@@ -424,13 +536,12 @@ class GeminiApiService {
       '📋 Uploaded items analysis:',
       data: {
         'total_items': items.length,
-        'item_types':
-            items
-                .map(
-                  (item) =>
-                      '${item.itemType} (${item.primaryColor}) - ${item.subcategory ?? "no subcategory"}',
-                )
-                .toList(),
+        'item_types': items
+            .map(
+              (item) =>
+                  '${item.itemType} (${item.primaryColor}) - ${item.subcategory ?? "no subcategory"}',
+            )
+            .toList(),
         'user_notes': userNotes ?? 'No notes provided',
         'has_footwear': items.any(
           (item) =>
@@ -469,10 +580,12 @@ class GeminiApiService {
         );
 
         // Use the first available image from the combination
-        final primaryImagePath =
-            combo.items.firstWhere((item) => item.imagePath != null).imagePath;
-        final imageFile =
-            primaryImagePath != null ? File(primaryImagePath) : null;
+        final primaryImagePath = combo.items
+            .firstWhere((item) => item.imagePath != null)
+            .imagePath;
+        final imageFile = primaryImagePath != null
+            ? File(primaryImagePath)
+            : null;
 
         if (imageFile == null) {
           AppLogger.warning('⚠️ Missing image for mannequin combo, skipping');
@@ -485,10 +598,9 @@ class GeminiApiService {
           data: {
             'combo_index': i,
             'items_count': combo.items.length,
-            'items':
-                combo.items
-                    .map((item) => '${item.itemType} (${item.primaryColor})')
-                    .toList(),
+            'items': combo.items
+                .map((item) => '${item.itemType} (${item.primaryColor})')
+                .toList(),
             'style': styleLabel,
           },
         );
@@ -555,11 +667,19 @@ class GeminiApiService {
   }) {
     final buffer = StringBuffer();
     buffer.writeln(
-      'You are a high-fashion stylist creating a photorealistic mannequin look.',
+      'You are a high-fashion stylist creating a FULL-BODY photorealistic mannequin look.',
     );
-    buffer.writeln('show the COMPLETE mannequin from head to toe!');
     buffer.writeln(
-      'NEVER crop out feet, shoes, or footwear - they must be fully visible!',
+      '🚨🚨🚨 CRITICAL: Show the COMPLETE mannequin from HEAD TO TOE - NO CROPPING!',
+    );
+    buffer.writeln(
+      '🚨🚨🚨 MANDATORY: Include the ENTIRE body - head, torso, legs, AND feet in frame!',
+    );
+    buffer.writeln(
+      '🚨🚨🚨 NEVER crop out feet, shoes, or footwear - they MUST be FULLY visible!',
+    );
+    buffer.writeln(
+      '🚨🚨🚨 FULL-LENGTH fashion photography framing - complete body shot!',
     );
     buffer.writeln(
       'Blend the uploaded wardrobe pieces into a cohesive outfit.',
@@ -714,34 +834,28 @@ class GeminiApiService {
   static List<_OutfitCombination> _composeOutfitCombinations(
     List<ClothingAnalysis> items,
   ) {
-    final shoes =
-        items
-            .where(
-              (item) =>
-                  item.itemType.toLowerCase().contains('shoe') ||
-                  item.itemType.toLowerCase().contains('footwear'),
-            )
-            .toList();
-    final dresses =
-        items
-            .where((item) => item.itemType.toLowerCase().contains('dress'))
-            .toList();
-    final tops =
-        items
-            .where((item) => item.itemType.toLowerCase().contains('top'))
-            .toList();
-    final bottoms =
-        items
-            .where((item) => item.itemType.toLowerCase().contains('bottom'))
-            .toList();
-    final outerwear =
-        items
-            .where((item) => item.itemType.toLowerCase().contains('outer'))
-            .toList();
-    final accessories =
-        items
-            .where((item) => item.itemType.toLowerCase().contains('accessory'))
-            .toList();
+    final shoes = items
+        .where(
+          (item) =>
+              item.itemType.toLowerCase().contains('shoe') ||
+              item.itemType.toLowerCase().contains('footwear'),
+        )
+        .toList();
+    final dresses = items
+        .where((item) => item.itemType.toLowerCase().contains('dress'))
+        .toList();
+    final tops = items
+        .where((item) => item.itemType.toLowerCase().contains('top'))
+        .toList();
+    final bottoms = items
+        .where((item) => item.itemType.toLowerCase().contains('bottom'))
+        .toList();
+    final outerwear = items
+        .where((item) => item.itemType.toLowerCase().contains('outer'))
+        .toList();
+    final accessories = items
+        .where((item) => item.itemType.toLowerCase().contains('accessory'))
+        .toList();
 
     final combinations = <_OutfitCombination>[];
 
@@ -766,21 +880,19 @@ class GeminiApiService {
                 if (accessories.isNotEmpty) accessories.first,
               ],
               metadata: {
-                'styleLabel':
-                    isBestMatch ? 'perfect pairing' : 'alternative style',
-                'pose':
-                    isBestMatch
-                        ? 'elegant evening pose'
-                        : 'confident runway stance',
+                'styleLabel': isBestMatch
+                    ? 'perfect pairing'
+                    : 'alternative style',
+                'pose': isBestMatch
+                    ? 'elegant evening pose'
+                    : 'confident runway stance',
                 'occasion': 'evening event',
-                'pairingNotes':
-                    isBestMatch
-                        ? 'Perfect harmony between your ${dress.primaryColor} dress and ${shoe.primaryColor} ${shoe.itemType}. This is the ideal pairing!'
-                        : 'Alternative styling with your ${dress.primaryColor} dress and ${shoe.primaryColor} ${shoe.itemType}. A bold choice!',
-                'description':
-                    isBestMatch
-                        ? 'The perfect dress and shoe combination - elegant and sophisticated'
-                        : 'Alternative dress pairing - ${shoe.primaryColor} ${shoe.itemType} with ${dress.primaryColor} dress',
+                'pairingNotes': isBestMatch
+                    ? 'Perfect harmony between your ${dress.primaryColor} dress and ${shoe.primaryColor} ${shoe.itemType}. This is the ideal pairing!'
+                    : 'Alternative styling with your ${dress.primaryColor} dress and ${shoe.primaryColor} ${shoe.itemType}. A bold choice!',
+                'description': isBestMatch
+                    ? 'The perfect dress and shoe combination - elegant and sophisticated'
+                    : 'Alternative dress pairing - ${shoe.primaryColor} ${shoe.itemType} with ${dress.primaryColor} dress',
               },
             ),
           );
@@ -790,12 +902,11 @@ class GeminiApiService {
     // Regular dress + shoes pairing
     else if (dresses.isNotEmpty) {
       for (final dress in dresses) {
-        final matchingShoes =
-            shoes.isNotEmpty
-                ? shoes
-                : bottoms.isNotEmpty
-                ? [bottoms.first]
-                : [];
+        final matchingShoes = shoes.isNotEmpty
+            ? shoes
+            : bottoms.isNotEmpty
+            ? [bottoms.first]
+            : [];
         combinations.add(
           _OutfitCombination(
             items: [
@@ -839,21 +950,19 @@ class GeminiApiService {
                 if (accessories.isNotEmpty) accessories.first,
               ],
               metadata: {
-                'styleLabel':
-                    isBestMatch ? 'perfect casual' : 'alternative casual',
-                'pose':
-                    isBestMatch
-                        ? 'relaxed street pose'
-                        : 'dynamic urban stance',
+                'styleLabel': isBestMatch
+                    ? 'perfect casual'
+                    : 'alternative casual',
+                'pose': isBestMatch
+                    ? 'relaxed street pose'
+                    : 'dynamic urban stance',
                 'occasion': 'casual day',
-                'pairingNotes':
-                    isBestMatch
-                        ? 'Perfect casual pairing with your ${top.primaryColor} ${top.itemType} and ${shoe.primaryColor} ${shoe.itemType}'
-                        : 'Alternative casual look featuring your ${top.primaryColor} ${top.itemType} and ${shoe.primaryColor} ${shoe.itemType}',
-                'description':
-                    isBestMatch
-                        ? 'The ideal casual combination - comfortable and stylish'
-                        : 'Alternative casual styling - ${shoe.primaryColor} ${shoe.itemType} with ${top.primaryColor} ${top.itemType}',
+                'pairingNotes': isBestMatch
+                    ? 'Perfect casual pairing with your ${top.primaryColor} ${top.itemType} and ${shoe.primaryColor} ${shoe.itemType}'
+                    : 'Alternative casual look featuring your ${top.primaryColor} ${top.itemType} and ${shoe.primaryColor} ${shoe.itemType}',
+                'description': isBestMatch
+                    ? 'The ideal casual combination - comfortable and stylish'
+                    : 'Alternative casual styling - ${shoe.primaryColor} ${shoe.itemType} with ${top.primaryColor} ${top.itemType}',
               },
             ),
           );
@@ -959,7 +1068,8 @@ class GeminiApiService {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
 
-      final prompt = '''
+      final prompt =
+          '''
 ANALYZE THIS CLOTHING ITEM AND CREATE A DETAILED DESCRIPTION FOR MANNEQUIN IMAGE GENERATION
 
 Uploaded Item Details:
@@ -971,7 +1081,7 @@ TASK: Create an extremely detailed description that can be used to generate a pr
 
 Return a JSON object with:
 {
-  "mannequinType": "male/female/unisex professional mannequin",
+  "mannequinType": "male/female/unisex professional full-body view mannequin",
   "bodyType": "athletic/slim/average build",
   "pose": "exact pose description for photorealistic rendering",
   "uploadedItem": {
@@ -1038,8 +1148,9 @@ Make the descriptions so detailed that an image generation AI could create an ex
           '📥 Mannequin description response received',
           data: {
             'response_length': text.length,
-            'response_preview':
-                text.length > 200 ? text.substring(0, 200) + '...' : text,
+            'response_preview': text.length > 200
+                ? text.substring(0, 200) + '...'
+                : text,
           },
         );
 
@@ -1067,8 +1178,9 @@ Make the descriptions so detailed that an image generation AI could create an ex
               codeBlockEnd != -1 &&
               codeBlockEnd > codeBlockStart) {
             try {
-              final jsonString =
-                  text.substring(codeBlockStart + 7, codeBlockEnd).trim();
+              final jsonString = text
+                  .substring(codeBlockStart + 7, codeBlockEnd)
+                  .trim();
               result = jsonDecode(jsonString);
               AppLogger.info('✅ Successfully extracted JSON from code block');
             } catch (e) {
@@ -1194,7 +1306,8 @@ Make the descriptions so detailed that an image generation AI could create an ex
 
     try {
       // Simple, clean prompt - following the "nano banana" approach
-      final simplePrompt = '''
+      final simplePrompt =
+          '''
 Create a professional fashion mannequin wearing a complete outfit featuring the uploaded clothing item. 
 Style: $poseDescription
 The mannequin should be photorealistic and have a full body view, well-lit, against a clean background.
@@ -1226,11 +1339,13 @@ Professional fashion photography style.
       AppLogger.network(url, 'POST', body: requestBody);
 
       final startTime = DateTime.now();
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      ).timeout(const Duration(seconds: 30)); // Add timeout
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
+          )
+          .timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
 
       AppLogger.performance(

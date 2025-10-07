@@ -75,7 +75,7 @@ class _WardrobeItemPreviewSheetState
       color: Colors.black54,
       child: GestureDetector(
         onTap: () => _closeSheet(),
-        child: Container(
+        child: SizedBox(
           height: screenHeight,
           child: Stack(
             children: [
@@ -183,7 +183,7 @@ class _WardrobeItemPreviewSheetState
             color:
                 widget.item.isFavorite
                     ? Colors.red.withOpacity(0.1)
-                    : theme.colorScheme.surfaceVariant,
+                    : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
           ),
           child: IconButton(
@@ -242,7 +242,7 @@ class _WardrobeItemPreviewSheetState
   Widget _buildPlaceholder() {
     final theme = Theme.of(context);
     return Container(
-      color: theme.colorScheme.surfaceVariant,
+      color: theme.colorScheme.surfaceContainerHighest,
       child: Center(
         child: Icon(
           Icons.checkroom,
@@ -515,7 +515,7 @@ class _WardrobeItemPreviewSheetState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

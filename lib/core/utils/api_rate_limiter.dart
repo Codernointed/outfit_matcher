@@ -42,7 +42,7 @@ class ApiRateLimiter {
     // Check if we're under the limit
     if (_requestTimes.length >= _maxRequestsPerMinute) {
       AppLogger.warning(
-        '🚦 API rate limit reached (${_maxRequestsPerMinute} requests/minute)',
+        '🚦 API rate limit reached ($_maxRequestsPerMinute requests/minute)',
       );
       return false;
     }

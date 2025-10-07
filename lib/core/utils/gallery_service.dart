@@ -103,7 +103,7 @@ class GalleryService {
       await tempFile.writeAsBytes(imageBytes);
 
       // Save to gallery using PhotoManager
-      final AssetEntity? entity = await PhotoManager.editor.saveImageWithPath(
+      final AssetEntity entity = await PhotoManager.editor.saveImageWithPath(
         tempFile.path,
         title: fileNameWithExt,
       );
@@ -111,14 +111,9 @@ class GalleryService {
       // Clean up temp file
       await tempFile.delete();
 
-      if (entity != null) {
-        print('✅ Image saved to gallery: ${entity.id}');
-        return true;
-      } else {
-        print('❌ Failed to save image to gallery');
-        return false;
-      }
-    } catch (e) {
+      print('✅ Image saved to gallery: ${entity.id}');
+      return true;
+        } catch (e) {
       print('❌ Error saving image to gallery: $e');
       return false;
     }

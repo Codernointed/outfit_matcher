@@ -16,7 +16,7 @@ class BatchUploadScreen extends ConsumerStatefulWidget {
 
 class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
   final ImagePicker _picker = ImagePicker();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   bool _isUploading = false;
   int _uploadProgress = 0;
 
@@ -53,7 +53,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
               border: Border(
                 bottom: BorderSide(color: theme.dividerColor),
               ),
@@ -228,7 +228,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
         border: Border(
           top: BorderSide(color: theme.dividerColor),
         ),
@@ -269,7 +269,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: _uploadProgress / _selectedImages.length,
-            backgroundColor: theme.colorScheme.surfaceVariant,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
           ),
         ],

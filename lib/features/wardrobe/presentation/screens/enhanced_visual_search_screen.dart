@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,10 +8,12 @@ import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/services/image_api_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/mannequin_cache_service.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/features/wardrobe/presentation/widgets/mannequin_skeleton_loader.dart';
 import 'package:photo_view/photo_view.dart';
 
 class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {
@@ -92,21 +93,17 @@ class _EnhancedVisualSearchScreenState
     final startTime = DateTime.now();
 
     try {
-      await Future.wait([_loadFashionInspirations(), _loadMannequinOutfits()]);
+      // Load inspirations first (fast) - don't wait for mannequins
+      _loadFashionInspirations();
+      
+      // Start mannequin generation in background with streaming
+      _loadMannequinOutfitsStreamed();
 
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
-        'Visual search data loading',
+        'Visual search data loading initiated',
         duration,
         result: 'success',
-      );
-      AppLogger.info(
-        '✅ All visual search data loaded successfully',
-        data: {
-          'inspirations_count': _inspirations.length,
-          'mannequin_outfits_count': _mannequinOutfits.length,
-          'duration_ms': duration.inMilliseconds,
-        },
       );
     } catch (e, stackTrace) {
       final duration = DateTime.now().difference(startTime);
@@ -281,6 +278,120 @@ class _EnhancedVisualSearchScreenState
     return poses[index % poses.length];
   }
 
+  /// Load mannequin outfits with progressive streaming and caching
+  Future<void> _loadMannequinOutfitsStreamed() async {
+    if (!mounted) return;
+
+    final startTime = DateTime.now();
+    
+    setState(() {
+      _isGeneratingMannequins = true;
+      _generationStatus = 'Checking cache...';
+      _generationProgress = 0;
+      _totalPoses = 6;
+    });
+
+    try {
+      // Check cache first
+      final cacheService = getIt<MannequinCacheService>();
+      final itemIds = widget.analyses.map((a) => a.id).toList();
+      final cachedOutfits = await cacheService.getCachedMannequins(itemIds);
+      
+      if (cachedOutfits != null && cachedOutfits.isNotEmpty) {
+        final cacheDuration = DateTime.now().difference(startTime);
+        AppLogger.performance(
+          'Mannequin cache hit',
+          cacheDuration,
+          result: 'success',
+        );
+        AppLogger.info(
+          '⚡ Cache hit! Loaded ${cachedOutfits.length} mannequins instantly',
+          data: {'duration_ms': cacheDuration.inMilliseconds},
+        );
+        
+        if (mounted) {
+          setState(() {
+            _mannequinOutfits = cachedOutfits;
+            _isGeneratingMannequins = false;
+            _generationStatus = '';
+          });
+        }
+        return;
+      }
+      
+      // Cache miss - generate with streaming
+      AppLogger.info('💫 Cache miss - generating mannequins with streaming');
+      setState(() => _generationStatus = 'Generating your looks...');
+      
+      final stream = GeminiApiService.generateEnhancedMannequinOutfitsStream(
+        widget.analyses,
+        userNotes: widget.userNotes,
+        onProgress: (status) {
+          if (mounted) {
+            setState(() => _generationStatus = status);
+          }
+        },
+      );
+
+      await for (final outfit in stream) {
+        if (!mounted) break;
+        
+        setState(() {
+          _mannequinOutfits.add(outfit);
+          _generationProgress = _mannequinOutfits.length;
+          AppLogger.debug('✨ Received mannequin ${_mannequinOutfits.length}');
+        });
+      }
+
+      // Cache the generated outfits
+      if (_mannequinOutfits.isNotEmpty) {
+        await cacheService.cacheMannequins(itemIds, _mannequinOutfits);
+      }
+
+      final totalDuration = DateTime.now().difference(startTime);
+      AppLogger.performance(
+        'Mannequin generation (streamed)',
+        totalDuration,
+        result: 'success',
+      );
+      AppLogger.info(
+        '✅ Streamed ${_mannequinOutfits.length} mannequin outfits',
+        data: {
+          'duration_ms': totalDuration.inMilliseconds,
+          'avg_per_outfit_ms': _mannequinOutfits.isEmpty 
+              ? 0 
+              : totalDuration.inMilliseconds ~/ _mannequinOutfits.length,
+        },
+      );
+
+      if (mounted) {
+        setState(() {
+          _isGeneratingMannequins = false;
+          _generationStatus = '';
+        });
+      }
+    } catch (e, stackTrace) {
+      final errorDuration = DateTime.now().difference(startTime);
+      AppLogger.error(
+        '❌ Error streaming mannequin outfits',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      AppLogger.performance(
+        'Mannequin generation',
+        errorDuration,
+        result: 'error',
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isGeneratingMannequins = false;
+          _generationStatus = 'Failed to generate mannequins';
+        });
+      }
+    }
+  }
+
   Future<void> _loadMannequinOutfits() async {
     if (!mounted) return;
 
@@ -385,7 +496,7 @@ class _EnhancedVisualSearchScreenState
               width: 220,
               height: 5,
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(2.5),
               ),
               child: FractionallySizedBox(
@@ -404,7 +515,7 @@ class _EnhancedVisualSearchScreenState
             ),
             const SizedBox(height: 12),
             Text(
-              '${_generationProgress} of ${_totalPoses} looks crafted',
+              '$_generationProgress of $_totalPoses looks crafted',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurface.withOpacity(0.6),
               ),
@@ -572,10 +683,32 @@ class _EnhancedVisualSearchScreenState
   }
 
   Widget _buildTryOnTab() {
-    if (_isGeneratingMannequins) {
-      return _buildLoadingIndicator('Curating personalized mannequin looks...');
+    // Show skeleton loaders while generating and no outfits yet
+    if (_isGeneratingMannequins && _mannequinOutfits.isEmpty) {
+      return const MannequinSkeletonLoader(count: 3);
     }
 
+    // Show progressive loading: existing outfits + skeleton for remaining
+    if (_isGeneratingMannequins && _mannequinOutfits.isNotEmpty) {
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _mannequinOutfits.length + 1, // +1 for loading indicator
+        itemBuilder: (context, index) {
+          if (index < _mannequinOutfits.length) {
+            final look = _mannequinOutfits[index];
+            return _buildMannequinCard(look, index + 1);
+          } else {
+            // Show skeleton loader for remaining outfits
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: _buildGeneratingCard(),
+            );
+          }
+        },
+      );
+    }
+
+    // No outfits and not generating
     if (_mannequinOutfits.isEmpty) {
       return _buildEmptyState(
         'No mannequins yet',
@@ -585,6 +718,7 @@ class _EnhancedVisualSearchScreenState
       );
     }
 
+    // Show all generated outfits
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: _mannequinOutfits.length,
@@ -592,6 +726,74 @@ class _EnhancedVisualSearchScreenState
         final look = _mannequinOutfits[index];
         return _buildMannequinCard(look, index + 1);
       },
+    );
+  }
+  
+  Widget _buildGeneratingCard() {
+    final theme = Theme.of(context);
+    
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 3 / 4,
+              child: Container(
+                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 48,
+                        height: 48,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.primary.withOpacity(0.7),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _generationStatus.isNotEmpty 
+                            ? _generationStatus 
+                            : 'Crafting your next look...',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (_generationProgress > 0 && _totalPoses > 0) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Look ${_generationProgress + 1} of $_totalPoses',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -700,7 +902,7 @@ class _EnhancedVisualSearchScreenState
   Widget _buildImageError() {
     final theme = Theme.of(context);
     return Container(
-      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

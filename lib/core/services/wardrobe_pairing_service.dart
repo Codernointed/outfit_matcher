@@ -1,16 +1,36 @@
 import 'dart:math';
 import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/compatibility_cache_service.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for generating outfit pairings from wardrobe items
 class WardrobePairingService {
-  WardrobePairingService({this.analytics});
+  WardrobePairingService({
+    this.analytics,
+    CompatibilityCacheService? compatibilityCache,
+  }) : _compatibilityCache = compatibilityCache;
 
   final WardrobePairingAnalytics? analytics;
+  final CompatibilityCacheService? _compatibilityCache;
 
   static const int _maxPairingSuggestions = 6;
   static const double _minCompatibilityScore = 0.3;
+
+  /// Pre-compute compatibility matrix for faster pairing generation
+  Future<void> precomputeCompatibility(List<WardrobeItem> items) async {
+    if (_compatibilityCache != null) {
+      await _compatibilityCache.precomputeCompatibilityMatrix(items);
+    }
+  }
+
+  /// Get compatibility score with caching
+  double _getCompatibilityScore(WardrobeItem item1, WardrobeItem item2) {
+    if (_compatibilityCache != null) {
+      return _compatibilityCache.getCompatibilityScore(item1, item2);
+    }
+    return item1.getCompatibilityScore(item2);
+  }
 
   /// Generate outfit pairings for a hero item using different modes
   Future<List<OutfitPairing>> generatePairings({
@@ -43,11 +63,14 @@ class WardrobePairingService {
 
     try {
       // Filter out the hero item from available items
-      final availableItems =
-          wardrobeItems.where((item) => item.id != heroItem.id).toList();
+      final availableItems = wardrobeItems
+          .where((item) => item.id != heroItem.id)
+          .toList();
 
       if (availableItems.isEmpty) {
-        AppLogger.warning('⚠️ No other items available - generating styling suggestions');
+        AppLogger.warning(
+          '⚠️ No other items available - generating styling suggestions',
+        );
         analytics?.trackPairingEmpty(mode: mode, reason: 'no_available_items');
         onProgress?.call('Creating styling suggestions...');
         return _generateFallbackPairings(heroItem, [], mode: mode);
@@ -82,17 +105,16 @@ class WardrobePairingService {
 
       // If no pairings were generated, create fallback suggestions
       if (pairings.isEmpty) {
-        AppLogger.warning('⚠️ No pairings generated - creating fallback suggestions');
+        AppLogger.warning(
+          '⚠️ No pairings generated - creating fallback suggestions',
+        );
         onProgress?.call('Creating styling suggestions...');
         return _generateFallbackPairings(heroItem, availableItems, mode: mode);
       }
 
       AppLogger.info(
         '✅ Pairing generation complete (no auto mannequins)',
-        data: {
-          'totalPairings': pairings.length,
-          'mode': mode.toString(),
-        },
+        data: {'totalPairings': pairings.length, 'mode': mode.toString()},
       );
       analytics?.trackPairingSuccess(
         mode: mode,
@@ -127,29 +149,38 @@ class WardrobePairingService {
   ) async {
     AppLogger.info('🎯 Generating perfect pairings');
 
-    // Group items by category
-    final tops = availableItems.where((item) => _isTop(item)).toList();
+    // Group items by category with smart exclusion
+    // For tops: Only allow layering pieces (jackets, blazers) as additional tops
+    final tops = availableItems
+        .where((item) => _isTop(item) && !_isLayeringPiece(item))
+        .toList();
+    final layering = availableItems
+        .where((item) => _isLayeringPiece(item))
+        .toList();
     final bottoms = availableItems.where((item) => _isBottom(item)).toList();
     final shoes = availableItems.where((item) => _isShoes(item)).toList();
-    final accessories =
-        availableItems.where((item) => _isAccessory(item)).toList();
-    final outerwear =
-        availableItems.where((item) => _isOuterwear(item)).toList();
+    final accessories = availableItems
+        .where((item) => _isAccessory(item))
+        .toList();
 
     final pairings = <OutfitPairing>[];
 
     // Track used items to ensure diversity
     final usedItemIds = <Set<String>>[];
-    
-    // Generate combinations based on hero item type
+
+    // Generate combinations based on hero item type with category exclusion
     if (_isDress(heroItem)) {
-      // Dress + shoes + accessories + outerwear - vary each look
-      for (int i = 0; i < shoes.length && pairings.length < _maxPairingSuggestions; i++) {
+      // Dress + shoes + accessories + layering pieces (jackets/coats) - EXCLUDE other dresses
+      for (
+        int i = 0;
+        i < shoes.length && pairings.length < _maxPairingSuggestions;
+        i++
+      ) {
         final items = [heroItem, shoes[i]];
-        
-        // Vary accessories and outerwear for each look
+
+        // Can add layering pieces over dresses, plus accessories
         if (accessories.length > i) items.add(accessories[i]);
-        if (outerwear.length > i && i % 2 == 0) items.add(outerwear[i]);
+        if (layering.length > i && i % 2 == 0) items.add(layering[i]);
 
         final itemIds = items.map((item) => item.id).toSet();
         if (!usedItemIds.any((set) => set.containsAll(itemIds))) {
@@ -157,21 +188,64 @@ class WardrobePairingService {
           pairings.add(
             _createPairing(
               items,
-              i == 0 ? 'Polished dress look' : i == 1 ? 'Casual dress style' : 'Elegant dress ensemble',
+              i == 0
+                  ? 'Polished dress look'
+                  : i == 1
+                  ? 'Casual dress style'
+                  : 'Elegant dress ensemble',
               PairingMode.pairThisItem,
               stylingTips: _buildStylingTips(items, heroItem: heroItem),
             ),
           );
         }
       }
-    } else if (_isTop(heroItem)) {
-      // Top + bottom + shoes + accessories - create diverse combinations
-      for (int i = 0; i < bottoms.length && pairings.length < _maxPairingSuggestions; i++) {
-        final compatibilityScore = heroItem.getCompatibilityScore(bottoms[i]);
+    } else if (_isTop(heroItem) && !_isLayeringPiece(heroItem)) {
+      // Regular top + bottoms + shoes + accessories - EXCLUDE other regular tops
+      // Can add layering pieces (jackets/blazers)
+      for (
+        int i = 0;
+        i < bottoms.length && pairings.length < _maxPairingSuggestions;
+        i++
+      ) {
+        final compatibilityScore = _getCompatibilityScore(heroItem, bottoms[i]);
         if (compatibilityScore >= _minCompatibilityScore) {
           final items = [heroItem, bottoms[i]];
-          
-          // Vary shoes and accessories
+
+          // Vary shoes, accessories, and layering
+          if (shoes.length > i) items.add(shoes[i]);
+          if (accessories.length > i && i % 2 == 0) items.add(accessories[i]);
+          if (layering.length > i && i % 3 == 0) items.add(layering[i]);
+
+          final itemIds = items.map((item) => item.id).toSet();
+          if (!usedItemIds.any((set) => set.containsAll(itemIds))) {
+            usedItemIds.add(itemIds);
+            pairings.add(
+              _createPairing(
+                items,
+                i == 0
+                    ? 'Classic ${heroItem.analysis.primaryColor} combo'
+                    : 'Fresh ${heroItem.analysis.primaryColor} pairing',
+                PairingMode.pairThisItem,
+                score: compatibilityScore,
+                stylingTips: _buildStylingTips(items, heroItem: heroItem),
+              ),
+            );
+          }
+        }
+      }
+    } else if (_isLayeringPiece(heroItem)) {
+      // Layering piece (jacket/blazer) + top + bottom + shoes - pair with tops AND bottoms
+      for (
+        int i = 0;
+        i < tops.length && pairings.length < _maxPairingSuggestions;
+        i++
+      ) {
+        final compatibilityScore = _getCompatibilityScore(heroItem, tops[i]);
+        if (compatibilityScore >= _minCompatibilityScore) {
+          final items = [heroItem, tops[i]];
+
+          // Add bottoms, shoes, accessories
+          if (bottoms.length > i) items.add(bottoms[i]);
           if (shoes.length > i) items.add(shoes[i]);
           if (accessories.length > i && i % 2 == 0) items.add(accessories[i]);
 
@@ -181,7 +255,7 @@ class WardrobePairingService {
             pairings.add(
               _createPairing(
                 items,
-                i == 0 ? 'Classic ${heroItem.analysis.primaryColor} combo' : 'Fresh ${heroItem.analysis.primaryColor} pairing',
+                i == 0 ? 'Layered sophistication' : 'Polished layering',
                 PairingMode.pairThisItem,
                 score: compatibilityScore,
                 stylingTips: _buildStylingTips(items, heroItem: heroItem),
@@ -191,15 +265,20 @@ class WardrobePairingService {
         }
       }
     } else if (_isBottom(heroItem)) {
-      // Bottom + top + shoes + accessories - ensure variety
-      for (int i = 0; i < tops.length && pairings.length < _maxPairingSuggestions; i++) {
-        final compatibilityScore = heroItem.getCompatibilityScore(tops[i]);
+      // Bottom + tops + shoes + accessories - EXCLUDE other bottoms
+      for (
+        int i = 0;
+        i < tops.length && pairings.length < _maxPairingSuggestions;
+        i++
+      ) {
+        final compatibilityScore = _getCompatibilityScore(heroItem, tops[i]);
         if (compatibilityScore >= _minCompatibilityScore) {
           final items = [heroItem, tops[i]];
-          
-          // Vary shoes and accessories
+
+          // Vary shoes, accessories, and layering
           if (shoes.length > i) items.add(shoes[i]);
           if (accessories.length > i && i % 2 == 0) items.add(accessories[i]);
+          if (layering.length > i && i % 3 == 0) items.add(layering[i]);
 
           final itemIds = items.map((item) => item.id).toSet();
           if (!usedItemIds.any((set) => set.containsAll(itemIds))) {
@@ -207,7 +286,9 @@ class WardrobePairingService {
             pairings.add(
               _createPairing(
                 items,
-                i == 0 ? 'Polished ${heroItem.analysis.primaryColor} look' : 'Stylish ${heroItem.analysis.primaryColor} outfit',
+                i == 0
+                    ? 'Polished ${heroItem.analysis.primaryColor} look'
+                    : 'Stylish ${heroItem.analysis.primaryColor} outfit',
                 PairingMode.pairThisItem,
                 score: compatibilityScore,
                 stylingTips: _buildStylingTips(items, heroItem: heroItem),
@@ -219,8 +300,16 @@ class WardrobePairingService {
     } else if (_isShoes(heroItem)) {
       // Shoes + top + bottom + accessories - create distinct looks
       int lookIndex = 0;
-      for (int i = 0; i < tops.length && pairings.length < _maxPairingSuggestions; i++) {
-        for (int j = 0; j < bottoms.length && pairings.length < _maxPairingSuggestions; j++) {
+      for (
+        int i = 0;
+        i < tops.length && pairings.length < _maxPairingSuggestions;
+        i++
+      ) {
+        for (
+          int j = 0;
+          j < bottoms.length && pairings.length < _maxPairingSuggestions;
+          j++
+        ) {
           final items = [heroItem, tops[i], bottoms[j]];
           if (accessories.length > lookIndex) items.add(accessories[lookIndex]);
 
@@ -230,7 +319,9 @@ class WardrobePairingService {
             pairings.add(
               _createPairing(
                 items,
-                lookIndex == 0 ? 'Outfit showcasing your ${heroItem.analysis.subcategory ?? 'shoes'}' : 'Alternative look with your ${heroItem.analysis.primaryColor} shoes',
+                lookIndex == 0
+                    ? 'Outfit showcasing your ${heroItem.analysis.subcategory ?? 'shoes'}'
+                    : 'Alternative look with your ${heroItem.analysis.primaryColor} shoes',
                 PairingMode.pairThisItem,
                 stylingTips: _buildStylingTips(items, heroItem: heroItem),
               ),
@@ -263,32 +354,34 @@ class WardrobePairingService {
     final tops = availableItems.where((item) => _isTop(item)).toList();
     final bottoms = availableItems.where((item) => _isBottom(item)).toList();
     final shoes = availableItems.where((item) => _isShoes(item)).toList();
-    final accessories =
-        availableItems.where((item) => _isAccessory(item)).toList();
-    final outerwear =
-        availableItems.where((item) => _isOuterwear(item)).toList();
+    final accessories = availableItems
+        .where((item) => _isAccessory(item))
+        .toList();
+    final outerwear = availableItems
+        .where((item) => _isOuterwear(item))
+        .toList();
 
     // Generate exactly 5 outfits with tight/loose ranking
     for (int i = 0; i < 5; i++) {
       final items = <WardrobeItem>[heroItem];
       final isTight = i < 3; // First 3 are tight, last 2 are loose
-      
+
       if (_isDress(heroItem)) {
         // Dress + shoes + accessories + outerwear
         if (shoes.isNotEmpty) {
-          final shoe = isTight 
+          final shoe = isTight
               ? _getBestCompatibleItem(heroItem, shoes)
               : shoes[random.nextInt(shoes.length)];
           items.add(shoe);
         }
-        
+
         if (accessories.isNotEmpty && (isTight ? true : random.nextBool())) {
           final accessory = isTight
               ? _getBestCompatibleItem(heroItem, accessories)
               : accessories[random.nextInt(accessories.length)];
           items.add(accessory);
         }
-        
+
         if (outerwear.isNotEmpty && (!isTight || random.nextBool())) {
           final outer = isTight
               ? _getBestCompatibleItem(heroItem, outerwear)
@@ -303,14 +396,14 @@ class WardrobePairingService {
               : bottoms[random.nextInt(bottoms.length)];
           items.add(bottom);
         }
-        
+
         if (shoes.isNotEmpty) {
           final shoe = isTight
               ? _getBestCompatibleItem(heroItem, shoes)
               : shoes[random.nextInt(shoes.length)];
           items.add(shoe);
         }
-        
+
         if (accessories.isNotEmpty && (isTight ? random.nextBool() : true)) {
           final accessory = accessories[random.nextInt(accessories.length)];
           items.add(accessory);
@@ -323,14 +416,14 @@ class WardrobePairingService {
               : tops[random.nextInt(tops.length)];
           items.add(top);
         }
-        
+
         if (shoes.isNotEmpty) {
           final shoe = isTight
               ? _getBestCompatibleItem(heroItem, shoes)
               : shoes[random.nextInt(shoes.length)];
           items.add(shoe);
         }
-        
+
         if (accessories.isNotEmpty && (isTight ? random.nextBool() : true)) {
           final accessory = accessories[random.nextInt(accessories.length)];
           items.add(accessory);
@@ -341,11 +434,11 @@ class WardrobePairingService {
         final baseScore = isTight ? 0.8 : 0.6;
         final randomVariation = random.nextDouble() * 0.2;
         final finalScore = (baseScore + randomVariation).clamp(0.0, 1.0);
-        
+
         pairings.add(
           _createPairing(
             items,
-            isTight 
+            isTight
                 ? 'Polished ${heroItem.analysis.primaryColor} ${heroItem.analysis.itemType.toLowerCase()} look'
                 : 'Creative surprise combination ${i - 2}',
             PairingMode.surpriseMe,
@@ -359,7 +452,11 @@ class WardrobePairingService {
             metadata: {
               'isTight': isTight,
               'rank': i + 1,
-              'stylingTips': _buildStylingTips(items, heroItem: heroItem, playful: !isTight),
+              'stylingTips': _buildStylingTips(
+                items,
+                heroItem: heroItem,
+                playful: !isTight,
+              ),
             },
           ),
         );
@@ -370,24 +467,31 @@ class WardrobePairingService {
     pairings.sort((a, b) {
       final aTight = a.metadata['isTight'] as bool? ?? false;
       final bTight = b.metadata['isTight'] as bool? ?? false;
-      
+
       if (aTight && !bTight) return -1;
       if (!aTight && bTight) return 1;
-      
+
       // Within same category, sort by score
       return b.compatibilityScore.compareTo(a.compatibilityScore);
     });
 
     return pairings;
   }
-  
+
   /// Get the best compatible item from a list based on compatibility score
-  WardrobeItem _getBestCompatibleItem(WardrobeItem heroItem, List<WardrobeItem> candidates) {
+  WardrobeItem _getBestCompatibleItem(
+    WardrobeItem heroItem,
+    List<WardrobeItem> candidates,
+  ) {
     if (candidates.isEmpty) return candidates.first;
-    
-    candidates.sort((a, b) => 
-        heroItem.getCompatibilityScore(b).compareTo(heroItem.getCompatibilityScore(a)));
-    
+
+    candidates.sort(
+      (a, b) => _getCompatibilityScore(
+        heroItem,
+        b,
+      ).compareTo(_getCompatibilityScore(heroItem, a)),
+    );
+
     return candidates.first;
   }
 
@@ -405,45 +509,44 @@ class WardrobePairingService {
     );
 
     // Filter items based on location/weather/occasion
-    final suitableItems =
-        availableItems.where((item) {
-          bool suitable = true;
+    final suitableItems = availableItems.where((item) {
+      bool suitable = true;
 
-          if (location != null) {
-            suitable &= item.matchesLocation(location);
-          }
+      if (location != null) {
+        suitable &= item.matchesLocation(location);
+      }
 
-          if (occasion != null) {
-            suitable &= item.matchesOccasion(occasion);
-          }
+      if (occasion != null) {
+        suitable &= item.matchesOccasion(occasion);
+      }
 
-          // Weather-based filtering
-          if (weather != null) {
-            switch (weather.toLowerCase()) {
-              case 'hot':
-              case 'warm':
-                suitable &=
-                    item.matchesSeason('Summer') ||
-                    item.analysis.material?.toLowerCase() == 'cotton' ||
-                    item.analysis.material?.toLowerCase() == 'linen';
-                break;
-              case 'cold':
-              case 'cool':
-                suitable &=
-                    item.matchesSeason('Winter') ||
-                    item.analysis.material?.toLowerCase() == 'wool' ||
-                    _isOuterwear(item);
-                break;
-              case 'rainy':
-                suitable &=
-                    _isOuterwear(item) ||
-                    item.analysis.material?.toLowerCase() == 'polyester';
-                break;
-            }
-          }
+      // Weather-based filtering
+      if (weather != null) {
+        switch (weather.toLowerCase()) {
+          case 'hot':
+          case 'warm':
+            suitable &=
+                item.matchesSeason('Summer') ||
+                item.analysis.material?.toLowerCase() == 'cotton' ||
+                item.analysis.material?.toLowerCase() == 'linen';
+            break;
+          case 'cold':
+          case 'cool':
+            suitable &=
+                item.matchesSeason('Winter') ||
+                item.analysis.material?.toLowerCase() == 'wool' ||
+                _isOuterwear(item);
+            break;
+          case 'rainy':
+            suitable &=
+                _isOuterwear(item) ||
+                item.analysis.material?.toLowerCase() == 'polyester';
+            break;
+        }
+      }
 
-          return suitable;
-        }).toList();
+      return suitable;
+    }).toList();
 
     if (suitableItems.isEmpty) {
       AppLogger.warning(
@@ -507,10 +610,10 @@ class WardrobePairingService {
     AppLogger.info('🔄 Generating fallback pairings');
 
     final pairings = <OutfitPairing>[];
-    
+
     // Even with no other items, suggest what would complete the outfit
     final suggestions = _getSingleItemSuggestions(heroItem);
-    
+
     for (int i = 0; i < suggestions.length; i++) {
       pairings.add(
         OutfitPairing(
@@ -545,27 +648,39 @@ class WardrobePairingService {
 
     return pairings;
   }
-  
+
   /// Get styling suggestions for a single item
   List<Map<String, dynamic>> _getSingleItemSuggestions(WardrobeItem heroItem) {
     final suggestions = <Map<String, dynamic>>[];
-    
+
     if (_isDress(heroItem)) {
       suggestions.addAll([
         {
           'description': 'Elegant evening look',
           'items': ['Heels', 'Statement jewelry', 'Clutch bag'],
-          'tips': ['Add a bold necklace', 'Choose heels that complement the color', 'Keep makeup sophisticated'],
+          'tips': [
+            'Add a bold necklace',
+            'Choose heels that complement the color',
+            'Keep makeup sophisticated',
+          ],
         },
         {
           'description': 'Casual day outfit',
           'items': ['Sneakers', 'Denim jacket', 'Crossbody bag'],
-          'tips': ['Layer with a light jacket', 'Comfortable shoes for walking', 'Add a casual bag'],
+          'tips': [
+            'Layer with a light jacket',
+            'Comfortable shoes for walking',
+            'Add a casual bag',
+          ],
         },
         {
           'description': 'Work-appropriate styling',
           'items': ['Blazer', 'Closed-toe shoes', 'Professional bag'],
-          'tips': ['Add a structured blazer', 'Choose conservative accessories', 'Opt for neutral colors'],
+          'tips': [
+            'Add a structured blazer',
+            'Choose conservative accessories',
+            'Opt for neutral colors',
+          ],
         },
       ]);
     } else if (_isTop(heroItem)) {
@@ -573,17 +688,29 @@ class WardrobePairingService {
         {
           'description': 'Smart casual combination',
           'items': ['Dark jeans', 'Loafers', 'Watch'],
-          'tips': ['Pair with well-fitted jeans', 'Add a classic watch', 'Choose leather shoes'],
+          'tips': [
+            'Pair with well-fitted jeans',
+            'Add a classic watch',
+            'Choose leather shoes',
+          ],
         },
         {
           'description': 'Office-ready look',
           'items': ['Dress pants', 'Blazer', 'Oxford shoes'],
-          'tips': ['Tuck into tailored pants', 'Layer with a blazer', 'Add professional footwear'],
+          'tips': [
+            'Tuck into tailored pants',
+            'Layer with a blazer',
+            'Add professional footwear',
+          ],
         },
         {
           'description': 'Weekend casual style',
           'items': ['Shorts', 'Sneakers', 'Baseball cap'],
-          'tips': ['Keep it relaxed with shorts', 'Comfortable sneakers', 'Add a casual hat'],
+          'tips': [
+            'Keep it relaxed with shorts',
+            'Comfortable sneakers',
+            'Add a casual hat',
+          ],
         },
       ]);
     } else if (_isBottom(heroItem)) {
@@ -591,17 +718,29 @@ class WardrobePairingService {
         {
           'description': 'Versatile everyday look',
           'items': ['Basic tee', 'Sneakers', 'Light jacket'],
-          'tips': ['Pair with a simple top', 'Add comfortable shoes', 'Layer for weather'],
+          'tips': [
+            'Pair with a simple top',
+            'Add comfortable shoes',
+            'Layer for weather',
+          ],
         },
         {
           'description': 'Elevated casual style',
           'items': ['Blouse', 'Heels', 'Statement bag'],
-          'tips': ['Choose a flattering top', 'Add height with heels', 'Carry a stylish bag'],
+          'tips': [
+            'Choose a flattering top',
+            'Add height with heels',
+            'Carry a stylish bag',
+          ],
         },
         {
           'description': 'Sporty active look',
           'items': ['Athletic top', 'Running shoes', 'Sports bag'],
-          'tips': ['Match with activewear', 'Choose performance shoes', 'Add a gym bag'],
+          'tips': [
+            'Match with activewear',
+            'Choose performance shoes',
+            'Add a gym bag',
+          ],
         },
       ]);
     } else {
@@ -609,17 +748,29 @@ class WardrobePairingService {
       suggestions.addAll([
         {
           'description': 'Complete the look',
-          'items': ['Complementary pieces', 'Matching accessories', 'Suitable footwear'],
-          'tips': ['Choose items that match the style', 'Consider the occasion', 'Balance colors and textures'],
+          'items': [
+            'Complementary pieces',
+            'Matching accessories',
+            'Suitable footwear',
+          ],
+          'tips': [
+            'Choose items that match the style',
+            'Consider the occasion',
+            'Balance colors and textures',
+          ],
         },
         {
           'description': 'Style it your way',
           'items': ['Personal favorites', 'Seasonal pieces', 'Statement items'],
-          'tips': ['Add your personal touch', 'Consider the weather', 'Mix textures and patterns'],
+          'tips': [
+            'Add your personal touch',
+            'Consider the weather',
+            'Mix textures and patterns',
+          ],
         },
       ]);
     }
-    
+
     return suggestions.take(3).toList();
   }
 
@@ -699,6 +850,22 @@ class WardrobePairingService {
       item.analysis.itemType.toLowerCase().contains('coat') ||
       item.analysis.itemType.toLowerCase().contains('blazer');
 
+  /// Check if item is a layering piece (can be worn with other tops)
+  static bool _isLayeringPiece(WardrobeItem item) {
+    final type = item.analysis.itemType.toLowerCase();
+    final sub = item.analysis.subcategory?.toLowerCase() ?? '';
+    return type.contains('jacket') ||
+        type.contains('blazer') ||
+        type.contains('vest') ||
+        type.contains('coat') ||
+        type.contains('cardigan') ||
+        sub.contains('jacket') ||
+        sub.contains('blazer') ||
+        sub.contains('vest') ||
+        sub.contains('coat') ||
+        sub.contains('cardigan');
+  }
+
   /// Build styling tips for a pairing - item-specific and contextual
   List<String> _buildStylingTips(
     List<WardrobeItem> items, {
@@ -707,25 +874,30 @@ class WardrobePairingService {
   }) {
     final tips = <String>[];
     final hero = heroItem ?? items.first;
-    final heroType = hero.analysis.itemType.toLowerCase();
     final heroColor = hero.analysis.primaryColor.toLowerCase();
     final heroSubcategory = hero.analysis.subcategory?.toLowerCase() ?? '';
-    
+
     // Analyze the complete outfit for contextual tips
-    final hasTop = items.any((item) => _isTop(item));
     final hasBottom = items.any((item) => _isBottom(item));
     final hasShoes = items.any((item) => _isShoes(item));
     final hasAccessories = items.any((item) => _isAccessory(item));
-    
+
     // Item-specific styling tips based on actual item type
     if (_isTop(hero)) {
-      if (heroSubcategory.contains('button') || heroSubcategory.contains('shirt')) {
+      if (heroSubcategory.contains('button') ||
+          heroSubcategory.contains('shirt')) {
         tips.add('Roll sleeves to the elbow for a relaxed, confident look');
-        tips.add('Try half-tucking into your ${hasBottom ? items.firstWhere((item) => _isBottom(item)).analysis.subcategory?.toLowerCase() ?? "bottoms" : "bottoms"} for casual elegance');
-      } else if (heroSubcategory.contains('t-shirt') || heroSubcategory.contains('tee')) {
+        tips.add(
+          'Try half-tucking into your ${hasBottom ? items.firstWhere((item) => _isBottom(item)).analysis.subcategory?.toLowerCase() ?? "bottoms" : "bottoms"} for casual elegance',
+        );
+      } else if (heroSubcategory.contains('t-shirt') ||
+          heroSubcategory.contains('tee')) {
         tips.add('Layer with an open shirt or jacket for dimension');
-        tips.add('Tuck fully for a polished look, or leave untucked for casual vibes');
-      } else if (heroSubcategory.contains('sweater') || heroSubcategory.contains('knit')) {
+        tips.add(
+          'Tuck fully for a polished look, or leave untucked for casual vibes',
+        );
+      } else if (heroSubcategory.contains('sweater') ||
+          heroSubcategory.contains('knit')) {
         tips.add('Layer over a collared shirt for preppy sophistication');
         tips.add('Push sleeves up slightly to show watch or bracelets');
       } else if (heroSubcategory.contains('blouse')) {
@@ -733,14 +905,22 @@ class WardrobePairingService {
         tips.add('Add a statement necklace to draw attention upward');
       }
     } else if (_isBottom(hero)) {
-      if (heroSubcategory.contains('jeans') || heroSubcategory.contains('denim')) {
-        tips.add('Cuff the hem once to show off your ${hasShoes ? items.firstWhere((item) => _isShoes(item)).analysis.subcategory?.toLowerCase() ?? "shoes" : "shoes"}');
+      if (heroSubcategory.contains('jeans') ||
+          heroSubcategory.contains('denim')) {
+        tips.add(
+          'Cuff the hem once to show off your ${hasShoes ? items.firstWhere((item) => _isShoes(item)).analysis.subcategory?.toLowerCase() ?? "shoes" : "shoes"}',
+        );
         tips.add('Balance loose jeans with a fitted top, or vice versa');
-      } else if (heroSubcategory.contains('trousers') || heroSubcategory.contains('pants')) {
+      } else if (heroSubcategory.contains('trousers') ||
+          heroSubcategory.contains('pants')) {
         tips.add('Ensure a clean break at the shoe for polished proportions');
-        tips.add('Add a belt that complements your ${hasShoes ? "shoes" : "overall look"}');
+        tips.add(
+          'Add a belt that complements your ${hasShoes ? "shoes" : "overall look"}',
+        );
       } else if (heroSubcategory.contains('skirt')) {
-        tips.add('Balance skirt length with top fit - short skirt = modest top');
+        tips.add(
+          'Balance skirt length with top fit - short skirt = modest top',
+        );
         tips.add('Add tights or bare legs depending on formality');
       } else if (heroSubcategory.contains('shorts')) {
         tips.add('Keep proportions balanced - fitted shorts with relaxed top');
@@ -760,17 +940,23 @@ class WardrobePairingService {
         tips.add('Roll or cuff pants to showcase the sneaker design');
       } else if (heroSubcategory.contains('boot')) {
         tips.add('Tuck pants into boots or let them stack naturally');
-        tips.add('Match boot formality to outfit - dress boots with tailored pieces');
+        tips.add(
+          'Match boot formality to outfit - dress boots with tailored pieces',
+        );
       } else if (heroSubcategory.contains('heel')) {
         tips.add('Ensure hem length works with heel height');
         tips.add('Keep accessories minimal to let heels be the statement');
       }
     }
-    
+
     // Color harmony tips based on actual colors in outfit
     if (heroColor.contains('black')) {
-      if (items.any((item) => item.analysis.primaryColor.toLowerCase().contains('white'))) {
-        tips.add('Classic black & white - add a third color for visual interest');
+      if (items.any(
+        (item) => item.analysis.primaryColor.toLowerCase().contains('white'),
+      )) {
+        tips.add(
+          'Classic black & white - add a third color for visual interest',
+        );
       } else {
         tips.add('Black anchors bold colors beautifully');
       }
@@ -781,7 +967,7 @@ class WardrobePairingService {
     } else if (heroColor.contains('red')) {
       tips.add('Red makes a statement - keep other pieces neutral');
     }
-    
+
     // Formality-specific tips
     if (hero.analysis.formality?.toLowerCase() == 'formal') {
       tips.add('Maintain clean lines and tailored fit throughout');
@@ -792,7 +978,7 @@ class WardrobePairingService {
       tips.add('Mix textures (denim, cotton, knit) for depth');
       tips.add('Don\'t be afraid to roll, cuff, or layer casually');
     }
-    
+
     // Playful tips for Surprise Me mode
     if (playful) {
       final playfulTips = [
@@ -804,7 +990,7 @@ class WardrobePairingService {
       ];
       tips.add(playfulTips[Random().nextInt(playfulTips.length)]);
     }
-    
+
     // Seasonal contextual tips
     final now = DateTime.now();
     final season = _getCurrentSeason(now);
@@ -822,11 +1008,11 @@ class WardrobePairingService {
         tips.add('Rich, warm tones complement the season');
         break;
     }
-    
+
     // Return top 3-4 most relevant tips
     return tips.take(4).toList();
   }
-  
+
   String _getCurrentSeason(DateTime date) {
     final month = date.month;
     if (month >= 3 && month <= 5) return 'Spring';

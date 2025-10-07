@@ -5,11 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
-import 'package:vestiq/features/wardrobe/presentation/widgets/wardrobe_quick_actions.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_quick_actions_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 // Providers for wardrobe state management
@@ -124,16 +127,15 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             child: filteredItemsAsync.when(
               data: (items) => RefreshIndicator(
                 onRefresh: _handleRefresh,
-                child:
-                    items.isEmpty
-                        ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            const SizedBox(height: 80),
-                            _buildEmptyState(context),
-                          ],
-                        )
-                        : _buildItemsGrid(context, items),
+                child: items.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          const SizedBox(height: 80),
+                          _buildEmptyState(context),
+                        ],
+                      )
+                    : _buildItemsGrid(context, items),
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stack) => RefreshIndicator(
@@ -150,15 +152,21 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SimpleWardrobeUploadScreen(),
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: filteredItemsAsync.maybeWhen(
+        data: (items) => items.isNotEmpty
+            ? FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SimpleWardrobeUploadScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('Add Item'),
+              )
+            : null,
+        orElse: () => null,
       ),
     );
   }
@@ -210,21 +218,18 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   // Search button
                   Container(
                     decoration: BoxDecoration(
-                      color:
-                          _isSearching
-                              ? theme.colorScheme.primaryContainer
-                              : theme.colorScheme.surfaceVariant.withOpacity(
-                                0.5,
-                              ),
+                      color: _isSearching
+                          ? theme.colorScheme.primaryContainer
+                          : theme.colorScheme.surfaceContainerHighest
+                                .withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
                       icon: Icon(
                         _isSearching ? Icons.close : Icons.search,
-                        color:
-                            _isSearching
-                                ? theme.colorScheme.onPrimaryContainer
-                                : theme.colorScheme.onSurface,
+                        color: _isSearching
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurface,
                       ),
                       onPressed: () {
                         setState(() {
@@ -242,12 +247,10 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   // Favorites button
                   Container(
                     decoration: BoxDecoration(
-                      color:
-                          showFavoritesOnly
-                              ? Colors.red.withOpacity(0.1)
-                              : theme.colorScheme.surfaceVariant.withOpacity(
-                                0.5,
-                              ),
+                      color: showFavoritesOnly
+                          ? Colors.red.withOpacity(0.1)
+                          : theme.colorScheme.surfaceContainerHighest
+                                .withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -255,10 +258,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                         showFavoritesOnly
                             ? Icons.favorite
                             : Icons.favorite_border,
-                        color:
-                            showFavoritesOnly
-                                ? Colors.red
-                                : theme.colorScheme.onSurface,
+                        color: showFavoritesOnly
+                            ? Colors.red
+                            : theme.colorScheme.onSurface,
                       ),
                       onPressed: () {
                         ref.read(showFavoritesOnlyProvider.notifier).state =
@@ -272,7 +274,8 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   // Settings button
                   Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -293,7 +296,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
+                  0.3,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: theme.colorScheme.primary.withOpacity(0.3),
@@ -364,17 +369,17 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        isSelected
-                            ? theme.colorScheme.primaryContainer
-                            : theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    color: isSelected
+                        ? theme.colorScheme.primaryContainer
+                        : theme.colorScheme.surfaceContainerHighest.withOpacity(
+                            0.3,
+                          ),
                     borderRadius: BorderRadius.circular(20),
-                    border:
-                        isSelected
-                            ? Border.all(
-                              color: theme.colorScheme.primary.withOpacity(0.3),
-                            )
-                            : null,
+                    border: isSelected
+                        ? Border.all(
+                            color: theme.colorScheme.primary.withOpacity(0.3),
+                          )
+                        : null,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -382,21 +387,20 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       Icon(
                         categoryIcon,
                         size: 18,
-                        color:
-                            isSelected
-                                ? theme.colorScheme.onPrimaryContainer
-                                : theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: isSelected
+                            ? theme.colorScheme.onPrimaryContainer
+                            : theme.colorScheme.onSurface.withOpacity(0.7),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         categoryName,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color:
-                              isSelected
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : theme.colorScheme.onSurface,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          color: isSelected
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onSurface,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                         ),
                       ),
                     ],
@@ -527,24 +531,23 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                     const SizedBox(height: 4),
                     Wrap(
                       spacing: 4,
-                      children:
-                          item.occasions.take(2).map((occasion) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.secondaryContainer
-                                    .withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                occasion,
-                                style: theme.textTheme.labelSmall,
-                              ),
-                            );
-                          }).toList(),
+                      children: item.occasions.take(2).map((occasion) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondaryContainer
+                                .withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            occasion,
+                            style: theme.textTheme.labelSmall,
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ],
@@ -560,7 +563,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     final imagePath = item.displayImagePath;
 
     if (imagePath.isNotEmpty && File(imagePath).existsSync()) {
-      return Container(
+      return SizedBox(
         width: double.infinity,
         height: double.infinity,
         child: Image.file(
@@ -568,8 +571,8 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           fit: BoxFit.cover,
           width: double.infinity,
           height: double.infinity,
-          errorBuilder:
-              (context, error, stackTrace) => _buildPlaceholderImage(),
+          errorBuilder: (context, error, stackTrace) =>
+              _buildPlaceholderImage(),
         ),
       );
     }
@@ -774,28 +777,193 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     showWardrobeItemPreview(context, item, heroTag: 'closet_item_${item.id}');
   }
 
-  void _showQuickActions(BuildContext context, WardrobeItem item) {
-    // Use a safer approach to get position
-    final RenderObject? renderObject = context.findRenderObject();
-    Offset position = Offset.zero;
+  void _showQuickActions(BuildContext context, WardrobeItem item) async {
+    AppLogger.ui(
+      'EnhancedCloset',
+      'ShowQuickActions',
+      data: {'item_id': item.id},
+    );
 
-    if (renderObject is RenderBox) {
+    await WardrobeQuickActionsSheet.show(
+      context,
+      item: item,
+      onPairThisItem: () => _navigateToPairing(item, PairingMode.pairThisItem),
+      onSurpriseMe: () => _navigateToPairing(item, PairingMode.surpriseMe),
+      onViewInspiration: () => _navigateToInspiration(item),
+      onEdit: () => _editItem(item),
+      onDelete: () => _deleteItem(item),
+    );
+  }
+
+  void _navigateToPairing(WardrobeItem heroItem, PairingMode mode) async {
+    if (!mounted) return;
+
+    // Use interactive pairing sheet for both Pair This Item and Surprise Me
+    // The pairing service will handle the different logic based on mode
+    showInteractivePairingSheet(
+      context: context,
+      heroItem: heroItem,
+      mode: mode,
+    );
+  }
+
+  void _navigateToInspiration(WardrobeItem item) async {
+    // Show dialog to add custom styling notes
+    final customNotes = await showDialog<String>(
+      context: context,
+      builder: (context) => _buildStylingNotesDialog(context, item),
+    );
+
+    if (!mounted) return;
+
+    // Combine default notes with custom notes
+    final finalNotes = [
+      if (item.userNotes != null) item.userNotes!,
+      if (customNotes != null && customNotes.isNotEmpty) customNotes,
+    ].join('\n\n');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnhancedVisualSearchScreen(
+          analyses: [item.analysis],
+          itemImages: [item.displayImagePath],
+          userNotes: finalNotes.isEmpty ? null : finalNotes,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStylingNotesDialog(BuildContext context, WardrobeItem item) {
+    final theme = Theme.of(context);
+    final controller = TextEditingController();
+
+    // Pre-fill with item context
+    final defaultNotes =
+        'Style this ${item.analysis.primaryColor} ${item.analysis.itemType}';
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Add Styling Notes')),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add custom styling instructions for the AI',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    defaultNotes,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText:
+                  'e.g., "Make it edgy", "Add vintage vibes", "Corporate chic"...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+            ),
+            autofocus: true,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Skip'),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.pop(context, controller.text),
+          icon: const Icon(Icons.auto_awesome),
+          label: const Text('Generate'),
+        ),
+      ],
+    );
+  }
+
+  void _editItem(WardrobeItem item) {
+    // TODO: Implement edit functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Edit functionality coming soon!')),
+    );
+  }
+
+  Future<void> _deleteItem(WardrobeItem item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Item'),
+        content: Text('Remove ${item.analysis.itemType} from your closet?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
       try {
-        position = renderObject.localToGlobal(Offset.zero);
-        position = Offset(
-          position.dx + renderObject.size.width / 2,
-          position.dy + renderObject.size.height / 2,
-        );
-      } catch (e) {
-        // Fallback to center of screen
-        position = Offset(200, 300);
-      }
-    } else {
-      // Fallback position
-      position = Offset(200, 300);
-    }
+        final storage = ref.read(wardrobeStorageProvider);
+        await storage.deleteWardrobeItem(item.id);
+        ref.invalidate(wardrobeItemsProvider);
+        ref.invalidate(filteredWardrobeItemsProvider);
 
-    showWardrobeQuickActions(context, item, position);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Item removed from closet')),
+          );
+        }
+      } catch (e) {
+        AppLogger.error('Failed to delete item', error: e);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to remove item')),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _handleRefresh() async {
@@ -830,7 +998,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             constraints: const BoxConstraints(maxHeight: 360),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: StatefulBuilder(
               builder: (context, setSheetState) {
@@ -874,8 +1044,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                                     : '💾 Premium polishing off - faster uploads, less data.',
                               ),
                               behavior: SnackBarBehavior.floating,
-                              backgroundColor:
-                                  value ? Colors.amber : Colors.grey[700],
+                              backgroundColor: value
+                                  ? Colors.amber
+                                  : Colors.grey[700],
                             ),
                           );
                         },
@@ -901,21 +1072,24 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                           mode == SortMode.dateAdded
                               ? Icons.schedule
                               : mode == SortMode.color
-                                  ? Icons.palette
-                                  : mode == SortMode.type
-                                      ? Icons.category
-                                      : Icons.repeat,
+                              ? Icons.palette
+                              : mode == SortMode.type
+                              ? Icons.category
+                              : Icons.repeat,
                         ),
                         title: Text(_sortLabelForMode(mode)),
                         trailing: isSelected
-                            ? Icon(Icons.check, color: theme.colorScheme.primary)
+                            ? Icon(
+                                Icons.check,
+                                color: theme.colorScheme.primary,
+                              )
                             : null,
                         onTap: () {
                           setSheetState(() => currentSort = mode);
                           ref.read(sortModeProvider.notifier).state = mode;
                         },
                       );
-                    }).toList(),
+                    }),
                     const SizedBox(height: 12),
                   ],
                 );

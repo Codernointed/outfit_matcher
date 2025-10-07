@@ -5,6 +5,8 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/core/services/image_processing_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/services/mannequin_cache_service.dart';
+import 'package:vestiq/core/services/compatibility_cache_service.dart';
 import 'package:vestiq/core/utils/image_cache_manager.dart';
 import 'package:vestiq/core/services/file_based_storage_service.dart';
 
@@ -40,8 +42,18 @@ Future<void> setupServiceLocator() async {
     () => ImageProcessingService(),
   );
   
+  getIt.registerLazySingleton<CompatibilityCacheService>(
+    () => CompatibilityCacheService(),
+  );
+  
+  getIt.registerLazySingleton<MannequinCacheService>(
+    () => MannequinCacheService(sharedPreferences),
+  );
+  
   getIt.registerLazySingleton<WardrobePairingService>(
-    () => WardrobePairingService(),
+    () => WardrobePairingService(
+      compatibilityCache: getIt<CompatibilityCacheService>(),
+    ),
   );
 
   getIt.registerLazySingleton<ImageCacheManager>(

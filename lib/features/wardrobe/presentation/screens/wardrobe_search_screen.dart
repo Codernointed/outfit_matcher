@@ -55,7 +55,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       appBar: AppBar(
         title: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.primary.withOpacity(0.3),
@@ -181,7 +181,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
@@ -264,7 +264,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
               borderRadius: BorderRadius.circular(60),
             ),
             child: Icon(

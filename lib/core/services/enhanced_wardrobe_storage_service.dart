@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/compatibility_cache_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 
 /// Enhanced storage service for wardrobe items and looks with caching and migrations
 class EnhancedWardrobeStorageService {
@@ -109,6 +111,16 @@ class EnhancedWardrobeStorageService {
       // Load wardrobe items
       final items = await getWardrobeItems();
       AppLogger.info('📦 Loaded ${items.length} wardrobe items from storage');
+
+      // Pre-compute compatibility matrix if we have enough items
+      if (items.length >= 2) {
+        try {
+          final compatibilityCache = getIt<CompatibilityCacheService>();
+          await compatibilityCache.precomputeCompatibilityMatrix(items);
+        } catch (e) {
+          AppLogger.warning('⚠️ Failed to precompute compatibility matrix', error: e);
+        }
+      }
 
       // Load wardrobe looks
       final looks = await getWardrobeLooks();

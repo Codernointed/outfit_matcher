@@ -7,9 +7,9 @@ plugins {
 
 android {
     namespace = "com.codernointed.vestiq"
-    compileSdk = 36
-    ndkVersion = "29.0.13113456"
-    buildToolsVersion = "33.0.0"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -25,7 +25,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = 33
+        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -38,6 +38,7 @@ android {
         }
     }
 }
+
 flutter {
     source = "../.."
 }

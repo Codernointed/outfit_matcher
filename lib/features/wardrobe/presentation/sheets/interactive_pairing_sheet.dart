@@ -5,10 +5,13 @@ import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+
 /// Interactive pairing sheet where user manually selects items and gets AI coaching
 Future<void> showInteractivePairingSheet({
   required BuildContext context,
   required WardrobeItem heroItem,
+  PairingMode mode = PairingMode.pairThisItem,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -16,7 +19,7 @@ Future<void> showInteractivePairingSheet({
     backgroundColor: Colors.transparent,
     isDismissible: true,
     enableDrag: true,
-    builder: (_) => InteractivePairingSheet(heroItem: heroItem),
+    builder: (_) => InteractivePairingSheet(heroItem: heroItem, mode: mode),
   );
 }
 
@@ -24,9 +27,11 @@ class InteractivePairingSheet extends StatefulWidget {
   const InteractivePairingSheet({
     super.key,
     required this.heroItem,
+    this.mode = PairingMode.pairThisItem,
   });
 
   final WardrobeItem heroItem;
+  final PairingMode mode;
 
   @override
   State<InteractivePairingSheet> createState() =>
@@ -35,7 +40,7 @@ class InteractivePairingSheet extends StatefulWidget {
 
 class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
   late final EnhancedWardrobeStorageService _storage;
-  
+
   List<WardrobeItem> _wardrobeItems = [];
   List<WardrobeItem> _selectedItems = [];
   bool _loading = true;
@@ -55,12 +60,18 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
     try {
       final items = await _storage.getWardrobeItems();
       setState(() {
-        _wardrobeItems = items.where((item) => item.id != widget.heroItem.id).toList();
+        _wardrobeItems = items
+            .where((item) => item.id != widget.heroItem.id)
+            .toList();
         _loading = false;
         _coachingMessage = 'Pick items from your wardrobe to build your look';
       });
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to load wardrobe', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        'Failed to load wardrobe',
+        error: e,
+        stackTrace: stackTrace,
+      );
       setState(() {
         _loading = false;
         _coachingMessage = 'Unable to load wardrobe. Please try again.';
@@ -84,7 +95,8 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
 
   void _updateCoaching() {
     if (_selectedItems.length == 1) {
-      _coachingMessage = 'Great start! Now pick items to pair with your ${widget.heroItem.analysis.itemType.toLowerCase()}';
+      _coachingMessage =
+          'Great start! Now pick items to pair with your ${widget.heroItem.analysis.itemType.toLowerCase()}';
       _currentScore = 0.0;
       _suggestions = [];
       return;
@@ -93,14 +105,16 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
     // Calculate compatibility
     double totalScore = 0.0;
     int comparisons = 0;
-    
+
     for (int i = 0; i < _selectedItems.length; i++) {
       for (int j = i + 1; j < _selectedItems.length; j++) {
-        totalScore += _selectedItems[i].getCompatibilityScore(_selectedItems[j]);
+        totalScore += _selectedItems[i].getCompatibilityScore(
+          _selectedItems[j],
+        );
         comparisons++;
       }
     }
-    
+
     _currentScore = comparisons > 0 ? totalScore / comparisons : 0.0;
     final percentage = (_currentScore * 100).round();
 
@@ -126,12 +140,12 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
   List<String> _generateImprovementSuggestions() {
     final suggestions = <String>[];
     final hero = widget.heroItem;
-    
+
     // Check what's missing
     final hasTop = _selectedItems.any((item) => _isTop(item));
     final hasBottom = _selectedItems.any((item) => _isBottom(item));
     final hasShoes = _selectedItems.any((item) => _isShoes(item));
-    
+
     if (!hasTop && !_isTop(hero)) {
       suggestions.add('Add a top to complete the look');
     }
@@ -141,36 +155,44 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
     if (!hasShoes && !_isShoes(hero)) {
       suggestions.add('Pick shoes to ground the outfit');
     }
-    
+
     // Color suggestions
     if (hero.analysis.primaryColor.toLowerCase().contains('black')) {
       suggestions.add('Add a pop of color to brighten it up');
     } else if (hero.analysis.primaryColor.toLowerCase().contains('white')) {
       suggestions.add('Layer textures for visual interest');
     }
-    
+
     return suggestions.take(3).toList();
   }
 
   bool _isTop(WardrobeItem item) {
     final type = item.analysis.itemType.toLowerCase();
-    return type.contains('top') || type.contains('shirt') || 
-           type.contains('blouse') || type.contains('sweater') ||
-           type.contains('t-shirt') || type.contains('tee');
+    return type.contains('top') ||
+        type.contains('shirt') ||
+        type.contains('blouse') ||
+        type.contains('sweater') ||
+        type.contains('t-shirt') ||
+        type.contains('tee');
   }
 
   bool _isBottom(WardrobeItem item) {
     final type = item.analysis.itemType.toLowerCase();
-    return type.contains('bottom') || type.contains('pants') || 
-           type.contains('jeans') || type.contains('skirt') ||
-           type.contains('shorts') || type.contains('trousers');
+    return type.contains('bottom') ||
+        type.contains('pants') ||
+        type.contains('jeans') ||
+        type.contains('skirt') ||
+        type.contains('shorts') ||
+        type.contains('trousers');
   }
 
   bool _isShoes(WardrobeItem item) {
     final type = item.analysis.itemType.toLowerCase();
-    return type.contains('shoe') || type.contains('sneaker') || 
-           type.contains('boot') || type.contains('sandal') ||
-           type.contains('heel');
+    return type.contains('shoe') ||
+        type.contains('sneaker') ||
+        type.contains('boot') ||
+        type.contains('sandal') ||
+        type.contains('heel');
   }
 
   @override
@@ -266,7 +288,7 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
 
   Widget _buildCoachingCard(ThemeData theme) {
     final percentage = (_currentScore * 100).round();
-    
+
     return Container(
       margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       padding: const EdgeInsets.all(20),
@@ -288,7 +310,10 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary,
                   borderRadius: BorderRadius.circular(20),
@@ -311,28 +336,30 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
           ),
           if (_suggestions.isNotEmpty) ...[
             const SizedBox(height: 16),
-            ..._suggestions.map((tip) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.arrow_forward,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      tip,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withAlpha(204),
+            ..._suggestions.map(
+              (tip) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tip,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withAlpha(204),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ],
       ),
@@ -355,13 +382,15 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
         Wrap(
           spacing: 12,
           runSpacing: 12,
-          children: _selectedItems.map((item) => _buildSelectedItemChip(theme, item)).toList(),
+          children: _selectedItems
+              .map((item) => _buildSelectedItemChip(theme, item))
+              .toList(),
         ),
-        
+
         const SizedBox(height: 24),
         const Divider(),
         const SizedBox(height: 24),
-        
+
         // Wardrobe items
         Text(
           'Pick from Your Wardrobe',
@@ -393,22 +422,23 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
 
   Widget _buildSelectedItemChip(ThemeData theme, WardrobeItem item) {
     final isHero = item.id == widget.heroItem.id;
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isHero 
+        color: isHero
             ? theme.colorScheme.primary.withAlpha(26)
             : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
-        border: isHero 
+        border: isHero
             ? Border.all(color: theme.colorScheme.primary, width: 2)
             : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isHero) Icon(Icons.star, size: 16, color: theme.colorScheme.primary),
+          if (isHero)
+            Icon(Icons.star, size: 16, color: theme.colorScheme.primary),
           if (isHero) const SizedBox(width: 4),
           Text(
             item.analysis.subcategory ?? item.analysis.itemType,
@@ -433,15 +463,19 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
     );
   }
 
-  Widget _buildWardrobeItemCard(ThemeData theme, WardrobeItem item, bool isSelected) {
+  Widget _buildWardrobeItemCard(
+    ThemeData theme,
+    WardrobeItem item,
+    bool isSelected,
+  ) {
     return GestureDetector(
       onTap: () => _onItemSelected(item),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected 
-                ? theme.colorScheme.primary 
+            color: isSelected
+                ? theme.colorScheme.primary
                 : theme.colorScheme.outline.withAlpha(51),
             width: isSelected ? 3 : 1,
           ),
@@ -450,29 +484,32 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(11),
-              child: (item.polishedImagePath?.isNotEmpty ?? false) && File(item.polishedImagePath!).existsSync()
+              child:
+                  (item.polishedImagePath?.isNotEmpty ?? false) &&
+                      File(item.polishedImagePath!).existsSync()
                   ? Image.file(
                       File(item.polishedImagePath!),
                       fit: BoxFit.cover,
                       width: double.infinity,
                       height: double.infinity,
                     )
-                  : item.originalImagePath.isNotEmpty && File(item.originalImagePath).existsSync()
-                      ? Image.file(
-                          File(item.originalImagePath),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        )
-                      : Container(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          child: Center(
-                            child: Icon(
-                              Icons.checkroom,
-                              color: theme.colorScheme.onSurface.withAlpha(128),
-                            ),
-                          ),
+                  : item.originalImagePath.isNotEmpty &&
+                        File(item.originalImagePath).existsSync()
+                  ? Image.file(
+                      File(item.originalImagePath),
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    )
+                  : Container(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: Center(
+                        child: Icon(
+                          Icons.checkroom,
+                          color: theme.colorScheme.onSurface.withAlpha(128),
                         ),
+                      ),
+                    ),
             ),
             if (isSelected)
               Positioned(
@@ -513,18 +550,22 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
       child: SafeArea(
         top: false,
         child: ElevatedButton(
-          onPressed: _selectedItems.length > 1 ? () {
-            // Save outfit logic here
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Outfit saved with ${_selectedItems.length} items!'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-          } : null,
+          onPressed: _selectedItems.length > 1
+              ? () {
+                  // Save outfit logic here
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Outfit saved with ${_selectedItems.length} items!',
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  if (Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              : null,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
@@ -532,13 +573,10 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
             ),
           ),
           child: Text(
-            _selectedItems.length > 1 
-                ? 'Save This Look' 
+            _selectedItems.length > 1
+                ? 'Save This Look'
                 : 'Select items to continue',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ),
