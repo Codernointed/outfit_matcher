@@ -67,8 +67,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     setState(() {
       _loading = !shuffle;
       _refreshing = shuffle;
-      _statusMessage =
-          shuffle ? 'Refreshing looks...' : 'Analyzing your wardrobe...';
+      _statusMessage = shuffle
+          ? 'Refreshing looks...'
+          : 'Analyzing your wardrobe...';
     });
 
     try {
@@ -105,10 +106,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         _selectedIndex = pairings.isNotEmpty ? 0 : 0;
         _loading = false;
         _refreshing = false;
-        _statusMessage =
-            pairings.isEmpty
-                ? 'Add one more piece to your closet to unlock ready-to-wear looks.'
-                : null;
+        _statusMessage = pairings.isEmpty
+            ? 'Add one more piece to your closet to unlock ready-to-wear looks.'
+            : null;
       });
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -148,12 +148,11 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                 if (_statusMessage != null)
                   _buildStatusBanner(theme, controller),
                 Expanded(
-                  child:
-                      _loading
-                          ? _buildLoading(theme)
-                          : _pairings.isEmpty
-                          ? _buildSingleItemSuggestions(theme, controller)
-                          : _buildContent(theme, controller),
+                  child: _loading
+                      ? _buildLoading(theme)
+                      : _pairings.isEmpty
+                      ? _buildSingleItemSuggestions(theme, controller)
+                      : _buildContent(theme, controller),
                 ),
               ],
             ),
@@ -209,19 +208,18 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         children: [
           SizedBox.square(
             dimension: 18,
-            child:
-                _loading || _refreshing
-                    ? CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.primary,
-                      ),
-                    )
-                    : Icon(
-                      Icons.info_outline,
-                      size: 18,
-                      color: theme.colorScheme.primary,
+            child: _loading || _refreshing
+                ? CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      theme.colorScheme.primary,
                     ),
+                  )
+                : Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -267,7 +265,10 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     );
   }
 
-  Widget _buildSingleItemSuggestions(ThemeData theme, ScrollController controller) {
+  Widget _buildSingleItemSuggestions(
+    ThemeData theme,
+    ScrollController controller,
+  ) {
     final hero = widget.heroItem;
     final analysis = hero.analysis;
 
@@ -288,7 +289,10 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.lightbulb_outline, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.lightbulb_outline,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -301,28 +305,30 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                 ],
               ),
               const SizedBox(height: 16),
-              ..._generateSingleItemSuggestions(hero).map((suggestion) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.arrow_forward,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        suggestion,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.5,
+              ..._generateSingleItemSuggestions(hero).map(
+                (suggestion) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          suggestion,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.5,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )),
+              ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -363,39 +369,76 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     final formality = item.analysis.formality?.toLowerCase() ?? '';
 
     // Item-specific pairing suggestions
-    if (itemType.contains('top') || subcategory.contains('shirt') || subcategory.contains('blouse')) {
-      suggestions.add('Pair with ${formality == 'formal' ? 'tailored trousers or a pencil skirt' : 'jeans or casual pants'} for a balanced look');
-      suggestions.add('Add ${color.contains('black') || color.contains('white') ? 'colorful' : 'neutral'} bottoms to complement the $color tone');
+    if (itemType.contains('top') ||
+        subcategory.contains('shirt') ||
+        subcategory.contains('blouse')) {
+      suggestions.add(
+        'Pair with ${formality == 'formal' ? 'tailored trousers or a pencil skirt' : 'jeans or casual pants'} for a balanced look',
+      );
+      suggestions.add(
+        'Add ${color.contains('black') || color.contains('white') ? 'colorful' : 'neutral'} bottoms to complement the $color tone',
+      );
       if (subcategory.contains('button')) {
-        suggestions.add('Roll sleeves to the elbow and tuck into high-waisted bottoms for effortless style');
+        suggestions.add(
+          'Roll sleeves to the elbow and tuck into high-waisted bottoms for effortless style',
+        );
       }
-    } else if (itemType.contains('bottom') || subcategory.contains('pants') || subcategory.contains('jeans') || subcategory.contains('skirt')) {
-      suggestions.add('Match with a ${formality == 'formal' ? 'crisp button-up or structured blouse' : 'casual tee or relaxed top'}');
-      suggestions.add('Choose ${color.contains('dark') ? 'lighter tops to create contrast' : 'complementary colors for harmony'}');
+    } else if (itemType.contains('bottom') ||
+        subcategory.contains('pants') ||
+        subcategory.contains('jeans') ||
+        subcategory.contains('skirt')) {
+      suggestions.add(
+        'Match with a ${formality == 'formal' ? 'crisp button-up or structured blouse' : 'casual tee or relaxed top'}',
+      );
+      suggestions.add(
+        'Choose ${color.contains('dark') ? 'lighter tops to create contrast' : 'complementary colors for harmony'}',
+      );
       if (subcategory.contains('jeans')) {
-        suggestions.add('Cuff the hem and pair with sneakers for casual vibes, or heels for elevated style');
+        suggestions.add(
+          'Cuff the hem and pair with sneakers for casual vibes, or heels for elevated style',
+        );
       }
     } else if (itemType.contains('dress')) {
-      suggestions.add('Layer with a denim jacket for casual outings or a blazer for formal events');
+      suggestions.add(
+        'Layer with a denim jacket for casual outings or a blazer for formal events',
+      );
       suggestions.add('Add a belt at the waist to define your silhouette');
-      suggestions.add('Complete with ${formality == 'formal' ? 'heels and minimal jewelry' : 'sneakers or sandals for relaxed elegance'}');
-    } else if (itemType.contains('shoe') || subcategory.contains('sneaker') || subcategory.contains('boot')) {
-      suggestions.add('Build outfits around these shoes - they set the tone for ${formality == 'formal' ? 'polished, professional looks' : 'casual, comfortable styling'}');
-      suggestions.add('Balance the footwear with ${subcategory.contains('sneaker') ? 'streamlined pieces to let them pop' : 'complementary textures and proportions'}');
+      suggestions.add(
+        'Complete with ${formality == 'formal' ? 'heels and minimal jewelry' : 'sneakers or sandals for relaxed elegance'}',
+      );
+    } else if (itemType.contains('shoe') ||
+        subcategory.contains('sneaker') ||
+        subcategory.contains('boot')) {
+      suggestions.add(
+        'Build outfits around these shoes - they set the tone for ${formality == 'formal' ? 'polished, professional looks' : 'casual, comfortable styling'}',
+      );
+      suggestions.add(
+        'Balance the footwear with ${subcategory.contains('sneaker') ? 'streamlined pieces to let them pop' : 'complementary textures and proportions'}',
+      );
     }
 
     // Color-specific suggestions
     if (color.contains('black')) {
-      suggestions.add('Black is versatile - pair with any color palette, or go monochrome for sleek sophistication');
+      suggestions.add(
+        'Black is versatile - pair with any color palette, or go monochrome for sleek sophistication',
+      );
     } else if (color.contains('white') || color.contains('cream')) {
-      suggestions.add('White brightens any outfit - mix with earth tones or bold colors for visual interest');
+      suggestions.add(
+        'White brightens any outfit - mix with earth tones or bold colors for visual interest',
+      );
     } else if (color.contains('blue')) {
-      suggestions.add('Blue pairs beautifully with neutrals, whites, and warm earth tones');
+      suggestions.add(
+        'Blue pairs beautifully with neutrals, whites, and warm earth tones',
+      );
     }
 
     // General styling tips
-    suggestions.add('Consider the occasion - dress it up with structured pieces or down with relaxed fits');
-    suggestions.add('Play with proportions - fitted $itemType works well with looser complementary pieces');
+    suggestions.add(
+      'Consider the occasion - dress it up with structured pieces or down with relaxed fits',
+    );
+    suggestions.add(
+      'Play with proportions - fitted $itemType works well with looser complementary pieces',
+    );
 
     return suggestions.take(5).toList();
   }
@@ -443,7 +486,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withAlpha((0.35 * 255).round()), // Deprecated surfaceVariant and withOpacity
+        color: theme.colorScheme.surfaceContainerHighest.withAlpha(
+          (0.35 * 255).round(),
+        ), // Deprecated surfaceVariant and withOpacity
         borderRadius: BorderRadius.circular(22),
       ),
       child: Row(
@@ -465,7 +510,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                 Text(
                   'Primary colour • ${_titleCase(analysis.primaryColor)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withAlpha((0.65 * 255).round()), // Deprecated withOpacity
+                    color: theme.colorScheme.onSurface.withAlpha(
+                      (0.65 * 255).round(),
+                    ), // Deprecated withOpacity
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -526,7 +573,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withAlpha((0.4 * 255).round()), // Deprecated withOpacity
+        color: theme.colorScheme.primaryContainer.withAlpha(
+          (0.4 * 255).round(),
+        ), // Deprecated withOpacity
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -542,7 +591,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
           Text(
             subtitle,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withAlpha((0.72 * 255).round()), // Deprecated withOpacity
+              color: theme.colorScheme.onSurface.withAlpha(
+                (0.72 * 255).round(),
+              ), // Deprecated withOpacity
             ),
           ),
         ],
@@ -565,7 +616,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.colorScheme.primary.withAlpha((0.2 * 255).round())), // Deprecated withOpacity
+        border: Border.all(
+          color: theme.colorScheme.primary.withAlpha((0.2 * 255).round()),
+        ), // Deprecated withOpacity
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +638,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                       text: ' match',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()), // Deprecated withOpacity
+                        color: theme.colorScheme.onSurface.withAlpha(
+                          (0.7 * 255).round(),
+                        ), // Deprecated withOpacity
                       ),
                     ),
                   ],
@@ -603,7 +658,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
             child: LinearProgressIndicator(
               value: score.clamp(0, 1),
               minHeight: 6,
-              backgroundColor: theme.colorScheme.primary.withAlpha((0.12 * 255).round()), // Deprecated withOpacity
+              backgroundColor: theme.colorScheme.primary.withAlpha(
+                (0.12 * 255).round(),
+              ), // Deprecated withOpacity
               valueColor: AlwaysStoppedAnimation<Color>(
                 theme.colorScheme.primary,
               ),
@@ -615,7 +672,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
   }
 
   Widget _buildLookSummary(ThemeData theme, OutfitPairing pairing) {
-    final supporting = pairing.items.where((item) => item.id != widget.heroItem.id).toList();
+    final supporting = pairing.items
+        .where((item) => item.id != widget.heroItem.id)
+        .toList();
     final isSuggestion = pairing.metadata['isSuggestion'] as bool? ?? false;
 
     return Container(
@@ -635,7 +694,10 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
           ),
           const SizedBox(height: 14),
           _buildItemRow(theme, widget.heroItem, label: 'Hero piece'),
-          ...supporting.map((item) => _buildItemRow(theme, item, label: _slotLabelForItem(item))),
+          ...supporting.map(
+            (item) =>
+                _buildItemRow(theme, item, label: _slotLabelForItem(item)),
+          ),
         ],
       ),
     );
@@ -658,7 +720,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
               Text(
                 label,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha((0.55 * 255).round()), // Deprecated withOpacity
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.55 * 255).round(),
+                  ), // Deprecated withOpacity
                 ),
               ),
               const SizedBox(height: 2),
@@ -672,7 +736,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
               Text(
                 _titleCase(analysis.primaryColor),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurface.withAlpha((0.65 * 255).round()), // Deprecated withOpacity
+                  color: theme.colorScheme.onSurface.withAlpha(
+                    (0.65 * 255).round(),
+                  ), // Deprecated withOpacity
                 ),
               ),
             ],
@@ -696,29 +762,28 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         Wrap(
           spacing: 10,
           runSpacing: 8,
-          children:
-              tips
-                  .map(
-                    (tip) => Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withAlpha(
-                          (0.25 * 255).round(),
-                        ), // Deprecated withOpacity
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Text(
-                        tip,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+          children: tips
+              .map(
+                (tip) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withAlpha(
+                      (0.25 * 255).round(),
+                    ), // Deprecated withOpacity
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    tip,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                  )
-                  .toList(),
+                  ),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -734,18 +799,17 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
           width: double.infinity,
           child: ElevatedButton.icon(
             onPressed: _saving ? null : _handleSave,
-            icon:
-                _saving
-                    ? SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.onPrimary,
-                        ),
+            icon: _saving
+                ? SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.onPrimary,
                       ),
-                    )
-                    : const Icon(Icons.bookmark_added_rounded),
+                    ),
+                  )
+                : const Icon(Icons.bookmark_added_rounded),
             label: Padding(
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Text(_saving ? 'Saving look...' : 'Save this look'),
@@ -757,13 +821,12 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: _previewLoading ? null : _handlePreview,
-            icon:
-                _previewLoading
-                    ? SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    )
-                    : Icon(hasPreview ? Icons.image : Icons.image_outlined),
+            icon: _previewLoading
+                ? SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2.5),
+                  )
+                : Icon(hasPreview ? Icons.image : Icons.image_outlined),
             label: Padding(
               padding: const EdgeInsets.symmetric(vertical: 14),
               child: Text(
@@ -799,7 +862,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
           final pairing = _pairings[index];
           final isSelected = index == _selectedIndex;
           final isTight = pairing.metadata['isTight'] as bool? ?? true;
-          
+
           return GestureDetector(
             onTap: () {
               if (isSelected) return;
@@ -811,15 +874,17 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                color:
-                    isSelected
-                        ? theme.colorScheme.primary.withAlpha((0.14 * 255).round()) // Deprecated withOpacity
-                        : theme.colorScheme.surfaceContainerHighest.withAlpha((0.3 * 255).round()), // Deprecated surfaceVariant and withOpacity
+                color: isSelected
+                    ? theme.colorScheme.primary.withAlpha(
+                        (0.14 * 255).round(),
+                      ) // Deprecated withOpacity
+                    : theme.colorScheme.surfaceContainerHighest.withAlpha(
+                        (0.3 * 255).round(),
+                      ), // Deprecated surfaceVariant and withOpacity
                 border: Border.all(
-                  color:
-                      isSelected
-                          ? theme.colorScheme.primary
-                          : Colors.transparent,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : Colors.transparent,
                   width: 1.6,
                 ),
               ),
@@ -837,18 +902,25 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                       const Spacer(),
                       // Tight/Loose badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: isTight 
-                              ? theme.colorScheme.primary.withAlpha((0.15 * 255).round()) // Deprecated withOpacity
-                              : theme.colorScheme.secondary.withAlpha((0.15 * 255).round()), // Deprecated withOpacity
+                          color: isTight
+                              ? theme.colorScheme.primary.withAlpha(
+                                  (0.15 * 255).round(),
+                                ) // Deprecated withOpacity
+                              : theme.colorScheme.secondary.withAlpha(
+                                  (0.15 * 255).round(),
+                                ), // Deprecated withOpacity
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           isTight ? 'TIGHT' : 'LOOSE',
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: isTight 
+                            color: isTight
                                 ? theme.colorScheme.primary
                                 : theme.colorScheme.secondary,
                           ),
@@ -861,27 +933,31 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
                     '${(pairing.compatibilityScore.clamp(0, 1) * 100).round()}% match',
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurface.withAlpha((0.7 * 255).round()), // Deprecated withOpacity
+                      color: theme.colorScheme.onSurface.withAlpha(
+                        (0.7 * 255).round(),
+                      ), // Deprecated withOpacity
                     ),
                   ),
                   const SizedBox(height: 8),
                   Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children:
-                          pairing.items
-                              .take(3)
-                              .map(
-                                (item) => Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: _buildWardrobeImage(
-                                    item,
-                                    size: 48,
-                                    borderRadius: 12,
-                                  ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: pairing.items
+                            .take(3)
+                            .map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: _buildWardrobeImage(
+                                  item,
+                                  size: 48,
+                                  borderRadius: 12,
                                 ),
-                              )
-                              .toList(),
+                              ),
+                            )
+                            .toList(),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -908,15 +984,17 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     final title = _buildLookTitle(pairing);
 
     try {
-      await _storage.saveWardrobeLook(WardrobeLook(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: title,
-        itemIds: pairing.items.map((item) => item.id).toList(),
-        imageUrl: pairing.mannequinImageUrl,
-        generationMode: pairing.generationMode.name,
-        createdAt: DateTime.now(),
-        metadata: pairing.metadata,
-      ));
+      await _storage.saveWardrobeLook(
+        WardrobeLook(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          title: title,
+          itemIds: pairing.items.map((item) => item.id).toList(),
+          imageUrl: pairing.mannequinImageUrl,
+          generationMode: pairing.generationMode.name,
+          createdAt: DateTime.now(),
+          metadata: pairing.metadata,
+        ),
+      );
 
       final now = DateTime.now();
       await Future.wait(
@@ -1041,10 +1119,9 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
 
   String _buildLookTitle(OutfitPairing pairing) {
     final occasions = widget.heroItem.occasions;
-    final focus =
-        occasions.isNotEmpty
-            ? _titleCase(occasions.first)
-            : _titleCase(widget.heroItem.analysis.formality ?? 'styled');
+    final focus = occasions.isNotEmpty
+        ? _titleCase(occasions.first)
+        : _titleCase(widget.heroItem.analysis.formality ?? 'styled');
     return 'Look ${_selectedIndex + 1} • $focus moment';
   }
 
@@ -1079,9 +1156,14 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        color: Colors.black.withAlpha((0.05 * 255).round()), // Deprecated withOpacity
+        color: Colors.black.withAlpha(
+          (0.05 * 255).round(),
+        ), // Deprecated withOpacity
       ),
-      child: Icon(Icons.image_outlined, color: Colors.black.withAlpha((0.3 * 255).round())), // Deprecated withOpacity
+      child: Icon(
+        Icons.image_outlined,
+        color: Colors.black.withAlpha((0.3 * 255).round()),
+      ), // Deprecated withOpacity
     );
 
     Widget imageWidget;

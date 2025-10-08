@@ -430,7 +430,8 @@ class WardrobePairingService {
         }
       }
 
-      if (items.length > 1) {
+      // Only create pairing if we have at least 2 items (hero + at least one other)
+      if (items.length >= 2) {
         // Calculate REAL compatibility score between items
         double totalScore = 0.0;
         int comparisons = 0;
