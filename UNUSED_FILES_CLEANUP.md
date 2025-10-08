@@ -4,20 +4,11 @@
 
 ### 1. **Duplicate/Unused Screen Files**
 
-#### `lib/features/wardrobe/presentation/screens/main_screen.dart`
-- **Status**: ❌ UNUSED (commented out)
-- **Issue**: This was the file I was editing, but the app actually uses `home_screen.dart`
-- **Action**: DELETE - completely commented out, not used anywhere
 
-#### `lib/features/wardrobe/presentation/screens/closet_screen.dart`
-- **Status**: ❌ UNUSED (old version)
-- **Issue**: Replaced by `enhanced_closet_screen.dart`
-- **Action**: DELETE - old implementation
 
-#### `lib/features/wardrobe/presentation/screens/visual_search_screen.dart`
-- **Status**: ❌ UNUSED (old version)
-- **Issue**: Replaced by `enhanced_visual_search_screen.dart`
-- **Action**: DELETE - old implementation
+
+
+
 
 #### `lib/features/wardrobe/presentation/screens/wardrobe_search_screen.dart`
 - **Status**: ❌ UNUSED

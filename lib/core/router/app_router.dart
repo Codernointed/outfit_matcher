@@ -4,7 +4,6 @@ import 'package:vestiq/features/onboarding/presentation/screens/splash_screen.da
 // import 'package:vestiq/features/wardrobe/presentation/screens/add_item_screen.dart'; // No longer used for parameter-less route
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/item_details_screen.dart';
-import 'package:vestiq/features/wardrobe/presentation/screens/main_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/outfit_suggestions_screen.dart';
 import 'package:vestiq/features/wardrobe/domain/entities/clothing_item.dart';
 
