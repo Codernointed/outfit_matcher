@@ -120,6 +120,15 @@ class WardrobeItem {
 
   /// Get compatibility score with another item (0.0 to 1.0)
   double getCompatibilityScore(WardrobeItem other) {
+    // CRITICAL: Check if items are same category - should NOT pair
+    if (_isSameCategory(other)) {
+      // Same category items get very low score (except layering pieces)
+      if (_isLayeringCompatible(other)) {
+        return 0.3; // Layering pieces can work together
+      }
+      return 0.1; // Same category = bad pairing
+    }
+
     double score = 0.0;
 
     // Color harmony (40% weight)
@@ -135,6 +144,66 @@ class WardrobeItem {
     score += _getSeasonScore(other) * 0.1;
 
     return score.clamp(0.0, 1.0);
+  }
+
+  /// Check if items are in the same category (should not be paired)
+  bool _isSameCategory(WardrobeItem other) {
+    final myType = analysis.itemType.toLowerCase();
+    final otherType = other.analysis.itemType.toLowerCase();
+
+    // Check if both are tops
+    if (_isTopType(myType) && _isTopType(otherType)) return true;
+
+    // Check if both are bottoms
+    if (_isBottomType(myType) && _isBottomType(otherType)) return true;
+
+    // Check if both are dresses
+    if (_isDressType(myType) && _isDressType(otherType)) return true;
+
+    // Check if both are shoes
+    if (_isShoeType(myType) && _isShoeType(otherType)) return true;
+
+    return false;
+  }
+
+  bool _isTopType(String type) =>
+      type.contains('top') ||
+      type.contains('shirt') ||
+      type.contains('blouse') ||
+      type.contains('tee') ||
+      type.contains('sweater');
+
+  bool _isBottomType(String type) =>
+      type.contains('bottom') ||
+      type.contains('pants') ||
+      type.contains('jeans') ||
+      type.contains('skirt') ||
+      type.contains('shorts') ||
+      type.contains('trousers');
+
+  bool _isDressType(String type) => type.contains('dress');
+
+  bool _isShoeType(String type) =>
+      type.contains('shoe') ||
+      type.contains('boot') ||
+      type.contains('sneaker') ||
+      type.contains('heel') ||
+      type.contains('sandal');
+
+  /// Check if items can be layered together
+  bool _isLayeringCompatible(WardrobeItem other) {
+    final mySubcategory = analysis.subcategory?.toLowerCase() ?? '';
+    final otherSubcategory = other.analysis.subcategory?.toLowerCase() ?? '';
+
+    // Jackets, blazers, coats can layer over other tops
+    final layeringPieces = ['jacket', 'blazer', 'coat', 'cardigan'];
+
+    final isMyLayering = layeringPieces.any((p) => mySubcategory.contains(p));
+    final isOtherLayering = layeringPieces.any(
+      (p) => otherSubcategory.contains(p),
+    );
+
+    return isMyLayering || isOtherLayering;
   }
 
   double _getColorHarmonyScore(WardrobeItem other) {
@@ -252,10 +321,9 @@ class WardrobeItem {
       styleHints: List<String>.from(json['styleHints'] ?? []),
       userNotes: json['userNotes'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      lastWorn:
-          json['lastWorn'] != null
-              ? DateTime.parse(json['lastWorn'] as String)
-              : null,
+      lastWorn: json['lastWorn'] != null
+          ? DateTime.parse(json['lastWorn'] as String)
+          : null,
       tags: List<String>.from(json['tags'] ?? []),
       isFavorite: json['isFavorite'] as bool? ?? false,
       wearCount: json['wearCount'] as int? ?? 0,

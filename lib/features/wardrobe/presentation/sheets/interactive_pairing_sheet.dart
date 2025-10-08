@@ -6,6 +6,8 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/models/saved_outfit.dart';
 
 /// Interactive pairing sheet where user manually selects items and gets AI coaching
 Future<void> showInteractivePairingSheet({
@@ -40,6 +42,7 @@ class InteractivePairingSheet extends StatefulWidget {
 
 class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
   late final EnhancedWardrobeStorageService _storage;
+  late final OutfitStorageService _outfitStorage;
 
   List<WardrobeItem> _wardrobeItems = [];
   List<WardrobeItem> _selectedItems = [];
@@ -52,6 +55,7 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
   void initState() {
     super.initState();
     _storage = getIt<EnhancedWardrobeStorageService>();
+    _outfitStorage = getIt<OutfitStorageService>();
     _selectedItems = [widget.heroItem]; // Hero item is always first
     _loadWardrobe();
   }
@@ -91,6 +95,69 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
         _updateCoaching();
       }
     });
+  }
+
+  Future<void> _saveOutfit() async {
+    AppLogger.info('💾 [PAIR THIS ITEM] Saving outfit...');
+    AppLogger.info('   Selected items: ${_selectedItems.length}');
+    AppLogger.info(
+      '   Match score: ${(_currentScore * 100).toStringAsFixed(1)}%',
+    );
+
+    try {
+      final title = _buildOutfitTitle();
+      AppLogger.info('   Title: "$title"');
+
+      final outfit = SavedOutfit(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: title,
+        items: _selectedItems.map((item) => item.analysis).toList(),
+        mannequinImages: [], // No mannequin image for interactive pairing
+        createdAt: DateTime.now(),
+        notes: _coachingMessage,
+        matchScore: _currentScore,
+      );
+
+      await _outfitStorage.save(outfit);
+      AppLogger.info('✅ [PAIR THIS ITEM] Outfit saved successfully!');
+      AppLogger.info('   Outfit ID: ${outfit.id}');
+      AppLogger.info(
+        '   Items: ${outfit.items.map((i) => '${i.primaryColor} ${i.itemType}').join(', ')}',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Saved "$title" to your looks! ✨'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      AppLogger.error('❌ [PAIR THIS ITEM] Failed to save outfit', error: e);
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to save outfit. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  String _buildOutfitTitle() {
+    final heroType = widget.heroItem.analysis.itemType;
+    final heroColor = widget.heroItem.analysis.primaryColor;
+    final itemCount = _selectedItems.length;
+
+    return '$heroColor $heroType Look ($itemCount items)';
   }
 
   void _updateCoaching() {
@@ -550,22 +617,7 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
       child: SafeArea(
         top: false,
         child: ElevatedButton(
-          onPressed: _selectedItems.length > 1
-              ? () {
-                  // Save outfit logic here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Outfit saved with ${_selectedItems.length} items!',
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                  if (Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                }
-              : null,
+          onPressed: _selectedItems.length > 1 ? _saveOutfit : null,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(

@@ -4,6 +4,9 @@ import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/utils/logger.dart';
 // import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 
 /// Quick action item data
@@ -44,10 +47,15 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   late AnimationController _fadeController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  late final EnhancedWardrobeStorageService _storage;
 
   @override
   void initState() {
     super.initState();
+    _storage = getIt<EnhancedWardrobeStorageService>();
+    AppLogger.info(
+      '⚡ [QUICK ACTIONS] Menu opened for ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
+    );
 
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 200),
@@ -306,6 +314,11 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   }
 
   void _navigateToPairingInteractive() {
+    AppLogger.info('🎯 [QUICK ACTIONS] Navigating to Pair This Item');
+    AppLogger.info(
+      '   Hero item: ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
+    );
+
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
@@ -318,6 +331,14 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   }
 
   void _navigateToPairingWithMode(PairingMode mode) {
+    final modeLabel = mode == PairingMode.surpriseMe
+        ? 'Surprise Me'
+        : 'Style by Location';
+    AppLogger.info('🎯 [QUICK ACTIONS] Navigating to $modeLabel');
+    AppLogger.info(
+      '   Hero item: ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
+    );
+
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
@@ -329,21 +350,63 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
     );
   }
 
-  void _toggleFavorite() {
-    // TODO: Implement favorite toggle
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          widget.item.isFavorite
-              ? 'Removed from favorites'
-              : 'Added to favorites',
-        ),
-        behavior: SnackBarBehavior.floating,
-      ),
+  Future<void> _toggleFavorite() async {
+    final isCurrentlyFavorite = widget.item.isFavorite;
+
+    AppLogger.info('⭐ [QUICK ACTIONS] Toggling favorite');
+    AppLogger.info(
+      '   Item: ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
     );
+    AppLogger.info('   Currently favorite: $isCurrentlyFavorite');
+
+    try {
+      // Update the item's favorite status
+      final updatedItem = widget.item.copyWith(
+        isFavorite: !isCurrentlyFavorite,
+      );
+
+      // Save to storage
+      await _storage.updateWardrobeItem(updatedItem);
+
+      AppLogger.info('✅ [QUICK ACTIONS] Favorite status updated successfully');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isCurrentlyFavorite
+                ? 'Removed from favorites'
+                : 'Added to favorites ❤️',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: isCurrentlyFavorite ? Colors.orange : Colors.green,
+        ),
+      );
+    } catch (e) {
+      AppLogger.error(
+        '❌ [QUICK ACTIONS] Failed to update favorite status',
+        error: e,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update favorite status. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _editItem() {
+    AppLogger.info('✏️ [QUICK ACTIONS] Edit item requested');
+    AppLogger.info(
+      '   Item: ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
+    );
+
     // TODO: Navigate to edit screen
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -354,6 +417,11 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
   }
 
   void _deleteItem() {
+    AppLogger.info('🗑️ [QUICK ACTIONS] Delete item requested');
+    AppLogger.info(
+      '   Item: ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -364,6 +432,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
         actions: [
           TextButton(
             onPressed: () {
+              AppLogger.info('❌ [QUICK ACTIONS] Delete cancelled');
               if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
               }
@@ -372,6 +441,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
           ),
           TextButton(
             onPressed: () {
+              AppLogger.info('✅ [QUICK ACTIONS] Delete confirmed');
               if (Navigator.of(context).canPop()) {
                 Navigator.of(context).pop();
               }

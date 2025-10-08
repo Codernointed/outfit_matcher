@@ -6,6 +6,9 @@ import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Clean, modern preview sheet for wardrobe items
 void showWardrobeItemPreview(
@@ -21,7 +24,7 @@ void showWardrobeItemPreview(
   );
 }
 
-class CleanItemPreviewSheet extends ConsumerWidget {
+class CleanItemPreviewSheet extends ConsumerStatefulWidget {
   final WardrobeItem item;
   final String heroTag;
 
@@ -32,7 +35,26 @@ class CleanItemPreviewSheet extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CleanItemPreviewSheet> createState() =>
+      _CleanItemPreviewSheetState();
+}
+
+class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
+  late WardrobeItem _currentItem;
+  late final EnhancedWardrobeStorageService _storage;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentItem = widget.item;
+    _storage = getIt<EnhancedWardrobeStorageService>();
+    AppLogger.info(
+      '👕 [WARDROBE PREVIEW] Sheet opened for ${_currentItem.analysis.primaryColor} ${_currentItem.analysis.itemType}',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
@@ -135,7 +157,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Hero(
-        tag: heroTag,
+        tag: widget.heroTag,
         child: Container(
           height: 300,
           width: double.infinity,
@@ -160,7 +182,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
   }
 
   Widget _buildImage(ThemeData theme) {
-    final imagePath = item.displayImagePath;
+    final imagePath = _currentItem.displayImagePath;
 
     if (imagePath.isNotEmpty && File(imagePath).existsSync()) {
       return Image.file(
@@ -194,14 +216,15 @@ class CleanItemPreviewSheet extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.analysis.subcategory ?? item.analysis.itemType,
+                _currentItem.analysis.subcategory ??
+                    _currentItem.analysis.itemType,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                '${item.analysis.primaryColor} • ${item.analysis.style}',
+                '${_currentItem.analysis.primaryColor} • ${_currentItem.analysis.style}',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(153),
                 ),
@@ -211,12 +234,10 @@ class CleanItemPreviewSheet extends ConsumerWidget {
         ),
         IconButton(
           icon: Icon(
-            item.isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: item.isFavorite ? Colors.red : null,
+            _currentItem.isFavorite ? Icons.favorite : Icons.favorite_border,
+            color: _currentItem.isFavorite ? Colors.red : null,
           ),
-          onPressed: () {
-            // TODO: Toggle favorite
-          },
+          onPressed: _toggleFavorite,
         ),
       ],
     );
@@ -229,21 +250,21 @@ class CleanItemPreviewSheet extends ConsumerWidget {
       children: [
         _buildDetailChip(
           theme,
-          item.analysis.material ?? 'Material',
+          _currentItem.analysis.material ?? 'Material',
           Icons.texture,
         ),
         _buildDetailChip(
           theme,
-          item.analysis.fit ?? 'Regular fit',
+          _currentItem.analysis.fit ?? 'Regular fit',
           Icons.checkroom,
         ),
         _buildDetailChip(
           theme,
-          item.analysis.formality ?? 'Casual',
+          _currentItem.analysis.formality ?? 'Casual',
           Icons.style,
         ),
-        if (item.occasions.isNotEmpty)
-          ...item.occasions
+        if (_currentItem.occasions.isNotEmpty)
+          ..._currentItem.occasions
               .take(2)
               .map(
                 (occasion) => _buildDetailChip(
@@ -304,7 +325,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
           Navigator.pop(context);
           showInteractivePairingSheet(
             context: context,
-            heroItem: item,
+            heroItem: _currentItem,
             mode: PairingMode.pairThisItem,
           );
         },
@@ -359,7 +380,12 @@ class CleanItemPreviewSheet extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem(theme, '${item.wearCount}x', 'Worn', Icons.repeat),
+          _buildStatItem(
+            theme,
+            '${_currentItem.wearCount}x',
+            'Worn',
+            Icons.repeat,
+          ),
           Container(
             width: 1,
             height: 40,
@@ -367,7 +393,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
           ),
           _buildStatItem(
             theme,
-            _formatDate(item.createdAt),
+            _formatDate(_currentItem.createdAt),
             'Added',
             Icons.calendar_today,
           ),
@@ -429,7 +455,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
   void _navigateToSurpriseMe(BuildContext context) {
     showWardrobePairingSheet(
       context: context,
-      heroItem: item,
+      heroItem: _currentItem,
       mode: PairingMode.surpriseMe,
     );
   }
@@ -445,7 +471,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
 
     // Combine default notes with custom notes
     final finalNotes = [
-      if (item.userNotes != null) item.userNotes!,
+      if (_currentItem.userNotes != null) _currentItem.userNotes!,
       if (customNotes != null && customNotes.isNotEmpty) customNotes,
     ].join('\n\n');
 
@@ -453,8 +479,8 @@ class CleanItemPreviewSheet extends ConsumerWidget {
       context,
       MaterialPageRoute(
         builder: (context) => EnhancedVisualSearchScreen(
-          analyses: [item.analysis],
-          itemImages: [item.displayImagePath],
+          analyses: [_currentItem.analysis],
+          itemImages: [_currentItem.displayImagePath],
           userNotes: finalNotes.isEmpty ? null : finalNotes,
         ),
       ),
@@ -467,7 +493,7 @@ class CleanItemPreviewSheet extends ConsumerWidget {
 
     // Pre-fill with item context
     final defaultNotes =
-        'Style this ${item.analysis.primaryColor} ${item.analysis.itemType}';
+        'Style this ${_currentItem.analysis.primaryColor} ${_currentItem.analysis.itemType}';
 
     return AlertDialog(
       title: Row(
@@ -541,5 +567,64 @@ class CleanItemPreviewSheet extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  /// Toggle favorite status for the item
+  Future<void> _toggleFavorite() async {
+    final isCurrentlyFavorite = _currentItem.isFavorite;
+
+    AppLogger.info('⭐ [WARDROBE PREVIEW] Toggling favorite');
+    AppLogger.info(
+      '   Item: ${_currentItem.analysis.primaryColor} ${_currentItem.analysis.itemType}',
+    );
+    AppLogger.info('   Currently favorite: $isCurrentlyFavorite');
+
+    try {
+      // Update the item's favorite status
+      final updatedItem = _currentItem.copyWith(
+        isFavorite: !isCurrentlyFavorite,
+      );
+
+      // Save to storage
+      await _storage.updateWardrobeItem(updatedItem);
+
+      // Update local state
+      setState(() {
+        _currentItem = updatedItem;
+      });
+
+      AppLogger.info(
+        '✅ [WARDROBE PREVIEW] Favorite status updated successfully',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isCurrentlyFavorite
+                ? 'Removed from favorites'
+                : 'Added to favorites ❤️',
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: isCurrentlyFavorite ? Colors.orange : Colors.green,
+        ),
+      );
+    } catch (e) {
+      AppLogger.error(
+        '❌ [WARDROBE PREVIEW] Failed to update favorite status',
+        error: e,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to update favorite status. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

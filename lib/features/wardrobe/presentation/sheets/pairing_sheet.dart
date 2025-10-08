@@ -68,6 +68,16 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
   }
 
   Future<void> _loadPairings({bool shuffle = false}) async {
+    final modeLabel = widget.mode == PairingMode.surpriseMe
+        ? 'SURPRISE ME'
+        : 'PAIRING';
+    AppLogger.info(
+      '🎯 [$modeLabel] ${shuffle ? "Refreshing" : "Starting"} pairing generation...',
+    );
+    AppLogger.info(
+      '   Hero item: ${widget.heroItem.analysis.primaryColor} ${widget.heroItem.analysis.itemType}',
+    );
+
     setState(() {
       _loading = !shuffle;
       _refreshing = shuffle;
@@ -78,12 +88,17 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
 
     try {
       List<WardrobeItem> items = await _wardrobeStorage.getWardrobeItems();
+      AppLogger.info('   Wardrobe items loaded: ${items.length}');
+
       if (!items.any((item) => item.id == widget.heroItem.id)) {
         items = [widget.heroItem, ...items];
       }
 
       // Check if only one item exists (just the hero item)
       if (items.length == 1) {
+        AppLogger.warning(
+          '⚠️ [$modeLabel] Only hero item available, cannot generate pairings',
+        );
         if (!mounted) return;
         setState(() {
           _pairings = [];
@@ -100,9 +115,18 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
         mode: widget.mode,
         onProgress: (status) {
           if (!mounted) return;
+          AppLogger.info('   Progress: $status');
           setState(() => _statusMessage = status);
         },
       );
+
+      AppLogger.info('✅ [$modeLabel] Generated ${pairings.length} pairings');
+      for (var i = 0; i < pairings.length && i < 3; i++) {
+        final p = pairings[i];
+        AppLogger.info(
+          '   Pairing ${i + 1}: ${p.items.length} items, ${(p.compatibilityScore * 100).toStringAsFixed(1)}% match',
+        );
+      }
 
       if (!mounted) return;
       setState(() {
@@ -116,7 +140,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       });
     } catch (e, stackTrace) {
       AppLogger.error(
-        '❌ Unable to generate wardrobe pairings',
+        '❌ [$modeLabel] Unable to generate wardrobe pairings',
         error: e,
         stackTrace: stackTrace,
       );
@@ -982,24 +1006,43 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
 
   Future<void> _handleSave() async {
     if (_saving) return;
-    setState(() => _saving = true);
 
     final pairing = _selectedPairing;
+    final modeLabel = widget.mode == PairingMode.surpriseMe
+        ? 'SURPRISE ME'
+        : 'PAIRING';
+
+    AppLogger.info('💾 [$modeLabel] Saving outfit...');
+    AppLogger.info('   Items: ${pairing.items.length}');
+    AppLogger.info(
+      '   Compatibility: ${(pairing.compatibilityScore * 100).toStringAsFixed(1)}%',
+    );
+
+    setState(() => _saving = true);
+
     final title = _buildLookTitle(pairing);
+    AppLogger.info('   Title: "$title"');
 
     try {
-      await _outfitStorage.save(
-        SavedOutfit(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          title: title,
-          items: pairing.items.map((item) => item.analysis).toList(),
-          mannequinImages: pairing.mannequinImageUrl != null
-              ? [pairing.mannequinImageUrl!]
-              : [],
-          createdAt: DateTime.now(),
-          notes: pairing.metadata['stylingTips']?.join('\n') ?? '',
-        ),
+      final outfit = SavedOutfit(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: title,
+        items: pairing.items.map((item) => item.analysis).toList(),
+        mannequinImages: pairing.mannequinImageUrl != null
+            ? [pairing.mannequinImageUrl!]
+            : [],
+        createdAt: DateTime.now(),
+        notes: pairing.metadata['stylingTips']?.join('\n') ?? '',
       );
+
+      await _outfitStorage.save(outfit);
+
+      AppLogger.info('✅ [$modeLabel] Outfit saved successfully!');
+      AppLogger.info('   Outfit ID: ${outfit.id}');
+      AppLogger.info(
+        '   Items: ${outfit.items.map((i) => '${i.primaryColor} ${i.itemType}').join(', ')}',
+      );
+      AppLogger.info('   Has mannequin: ${outfit.mannequinImages.isNotEmpty}');
 
       // Note: OutfitStorageService doesn't track wear count
       // This would need to be handled by EnhancedWardrobeStorageService if needed
