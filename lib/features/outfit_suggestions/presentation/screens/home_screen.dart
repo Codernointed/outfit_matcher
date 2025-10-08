@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
@@ -70,19 +71,19 @@ class HomeScreen extends ConsumerWidget {
         onTap: (index) {
           ref.read(bottomNavIndexProvider.notifier).state = index;
         },
-        items: const [
+        items: [
           DynamicIslandNavItem(
-            icon: Icons.home_outlined,
-            activeIcon: Icons.home,
+            icon: Icons.home_rounded,
+            activeIcon: Icons.home_rounded,
             label: 'Home',
           ),
-          DynamicIslandNavItem(
+          const DynamicIslandNavItem(
             icon: Icons.checkroom_outlined,
             activeIcon: Icons.checkroom,
             label: 'Closet',
           ),
-          DynamicIslandNavItem(
-            icon: Icons.person_outline,
+          const DynamicIslandNavItem(
+            icon: CupertinoIcons.person,
             activeIcon: Icons.person,
             label: 'Profile',
           ),

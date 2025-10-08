@@ -23,9 +23,9 @@
 - **Action**: DELETE - backup file
 
 #### `lib/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet_redesigned.dart`
-- **Status**: ❌ UNUSED (duplicate)
-- **Issue**: This was the new design, but it was moved to replace the main file
-- **Action**: DELETE - content moved to main file
+- **Status**: ✅ DELETED (imposter file)
+- **Issue**: This was the redesigned version, but the app was using the non-redesigned version
+- **Action**: ✅ COMPLETED - Content moved to main file, imposter deleted
 
 ### 3. **Duplicate/Unused Widget Files**
 

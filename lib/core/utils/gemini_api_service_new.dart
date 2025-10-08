@@ -1308,9 +1308,10 @@ Make the descriptions so detailed that an image generation AI could create an ex
       // Simple, clean prompt - following the "nano banana" approach
       final simplePrompt =
           '''
-Create a professional fashion mannequin wearing a complete outfit featuring the uploaded clothing item. 
+Create a professional full body view fashion mannequin wearing a complete outfit featuring the uploaded clothing item. 
 Style: $poseDescription
 The mannequin should be photorealistic and have a full body view, well-lit, against a clean background.
+The mannequin should be a professional full body view mannequin.
 Show a complete, stylish outfit that includes the uploaded item plus complementary pieces and it should be an outfit that is perfect, based on color combination and style 
 (eg, when you are having a blue shirt, you should wear a this pants, the footwear and accessories should be perfect based on the style).
 Professional fashion photography style.

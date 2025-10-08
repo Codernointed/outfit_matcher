@@ -5,6 +5,7 @@ import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 
 /// Clean, modern preview sheet for wardrobe items
 void showWardrobeItemPreview(
@@ -131,16 +132,29 @@ class CleanItemPreviewSheet extends ConsumerWidget {
   }
 
   Widget _buildHeroImage(BuildContext context, ThemeData theme) {
-    return Hero(
-      tag: heroTag,
-      child: Container(
-        height: 400,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      child: Hero(
+        tag: heroTag,
+        child: Container(
+          height: 300,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: _buildImage(theme),
+          ),
         ),
-        child: _buildImage(theme),
       ),
     );
   }
@@ -149,13 +163,12 @@ class CleanItemPreviewSheet extends ConsumerWidget {
     final imagePath = item.displayImagePath;
 
     if (imagePath.isNotEmpty && File(imagePath).existsSync()) {
-      return ClipRRect(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        child: Image.file(
-          File(imagePath),
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPlaceholder(theme),
-        ),
+      return Image.file(
+        File(imagePath),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => _buildPlaceholder(theme),
       );
     }
 
@@ -358,17 +371,17 @@ class CleanItemPreviewSheet extends ConsumerWidget {
             'Added',
             Icons.calendar_today,
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: theme.colorScheme.outline.withAlpha(51),
-          ),
-          _buildStatItem(
-            theme,
-            '${(item.analysis.confidence * 5).toStringAsFixed(1)}⭐',
-            'Rating',
-            Icons.star,
-          ),
+          // Container(
+          //   width: 1,
+          //   height: 40,
+          //   color: theme.colorScheme.outline.withAlpha(51),
+          // ),
+          // _buildStatItem(
+          //   theme,
+          //   '${(item.analysis.confidence * 5).toStringAsFixed(1)}⭐',
+          //   'Rating',
+          //   Icons.star,
+          // ),
         ],
       ),
     );
@@ -421,13 +434,112 @@ class CleanItemPreviewSheet extends ConsumerWidget {
     );
   }
 
-  void _navigateToInspiration(BuildContext context) {
-    // TODO: Navigate to inspiration screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('View Inspiration coming soon!'),
-        behavior: SnackBarBehavior.floating,
+  void _navigateToInspiration(BuildContext context) async {
+    // Show dialog to add custom styling notes
+    final customNotes = await showDialog<String>(
+      context: context,
+      builder: (context) => _buildStylingNotesDialog(context),
+    );
+
+    if (!context.mounted) return;
+
+    // Combine default notes with custom notes
+    final finalNotes = [
+      if (item.userNotes != null) item.userNotes!,
+      if (customNotes != null && customNotes.isNotEmpty) customNotes,
+    ].join('\n\n');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnhancedVisualSearchScreen(
+          analyses: [item.analysis],
+          itemImages: [item.displayImagePath],
+          userNotes: finalNotes.isEmpty ? null : finalNotes,
+        ),
       ),
+    );
+  }
+
+  Widget _buildStylingNotesDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final controller = TextEditingController();
+
+    // Pre-fill with item context
+    final defaultNotes =
+        'Style this ${item.analysis.primaryColor} ${item.analysis.itemType}';
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Add Styling Notes')),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add custom styling instructions for the AI',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    defaultNotes,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText:
+                  'e.g., "Make it edgy", "Add vintage vibes", "Corporate chic"...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+            ),
+            autofocus: true,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Skip'),
+        ),
+        FilledButton.icon(
+          onPressed: () => Navigator.pop(context, controller.text),
+          icon: const Icon(Icons.auto_awesome),
+          label: const Text('Generate'),
+        ),
+      ],
     );
   }
 }
