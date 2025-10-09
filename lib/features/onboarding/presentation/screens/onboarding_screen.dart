@@ -41,34 +41,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   /// Navigate to the main screen and mark onboarding as completed
-  Future<void> _completeOnboarding() async {
+  void _completeOnboarding() {
     AppLogger.info('🎉 Completing onboarding flow');
 
-    try {
-      // Save that onboarding has been completed
-      final prefs = getIt<SharedPreferences>();
-      await prefs.setBool(AppConstants.onboardingCompletedKey, true);
-      AppLogger.info('✅ Onboarding completion flag saved');
+    // Use post-frame callback to ensure navigation happens after current frame
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        // Save that onboarding has been completed
+        final prefs = getIt<SharedPreferences>();
+        await prefs.setBool(AppConstants.onboardingCompletedKey, true);
+        AppLogger.info('✅ Onboarding completion flag saved');
 
-      if (!mounted) {
-        AppLogger.warning('⚠️ Widget not mounted, aborting navigation');
-        return;
+        if (!mounted) {
+          AppLogger.warning('⚠️ Widget not mounted, aborting navigation');
+          return;
+        }
+
+        AppLogger.info('🏠 Navigating to Home Screen');
+        // Navigate to main screen - use pushAndRemoveUntil to clear the stack
+        await Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+          (route) => false,
+        );
+        AppLogger.info('✅ Successfully navigated to Home Screen');
+      } catch (e, stackTrace) {
+        AppLogger.error(
+          '❌ Error completing onboarding',
+          error: e,
+          stackTrace: stackTrace,
+        );
       }
-
-      AppLogger.info('🏠 Navigating to Home Screen');
-      // Navigate to main screen - use pushAndRemoveUntil to clear the stack
-      await Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-        (route) => false,
-      );
-      AppLogger.info('✅ Successfully navigated to Home Screen');
-    } catch (e, stackTrace) {
-      AppLogger.error(
-        '❌ Error completing onboarding',
-        error: e,
-        stackTrace: stackTrace,
-      );
-    }
+    });
   }
 
   @override

@@ -5,6 +5,9 @@ import 'package:vestiq/core/models/profile_data.dart';
 import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Premium gender selection screen for onboarding
 class GenderSelectionScreen extends ConsumerStatefulWidget {
@@ -81,10 +84,8 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
         );
       }
 
-      AppLogger.info('🎯 Calling onComplete callback to navigate to home');
-      // Call immediately without await to prevent widget disposal
-      widget.onComplete();
-      AppLogger.info('✅ Navigation callback completed');
+      AppLogger.info('🎯 Navigating directly to home screen');
+      _navigateToHome();
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ Error during continue process',
@@ -112,10 +113,8 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
       final profileService = getIt<ProfileService>();
       profileService.updateGenderPreference(Gender.female);
 
-      AppLogger.info('🎯 Calling onComplete callback to navigate to home');
-      // Call immediately without await to prevent widget disposal
-      widget.onComplete();
-      AppLogger.info('✅ Navigation callback completed');
+      AppLogger.info('🎯 Navigating directly to home screen');
+      _navigateToHome();
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ Error during skip process',
@@ -125,6 +124,34 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
       if (mounted) {
         setState(() => _isProcessing = false);
       }
+    }
+  }
+
+  void _navigateToHome() async {
+    try {
+      // Save that onboarding has been completed
+      final prefs = getIt<SharedPreferences>();
+      await prefs.setBool(AppConstants.onboardingCompletedKey, true);
+      AppLogger.info('✅ Onboarding completion flag saved');
+
+      if (!mounted) {
+        AppLogger.warning('⚠️ Widget not mounted, aborting navigation');
+        return;
+      }
+
+      AppLogger.info('🏠 Navigating to Home Screen');
+      // Navigate directly to home screen
+      await Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,
+      );
+      AppLogger.info('✅ Successfully navigated to Home Screen');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Error navigating to home',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
