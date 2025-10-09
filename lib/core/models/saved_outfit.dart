@@ -12,6 +12,7 @@ class SavedOutfit {
   final String style;
   final double matchScore;
   final DateTime createdAt;
+  final bool? isFavorite;
 
   const SavedOutfit({
     required this.id,
@@ -23,6 +24,7 @@ class SavedOutfit {
     this.style = '',
     this.matchScore = 0.0,
     required this.createdAt,
+    this.isFavorite,
   });
 
   /// Convert to JSON for storage
@@ -37,6 +39,7 @@ class SavedOutfit {
       'style': style,
       'matchScore': matchScore,
       'createdAt': createdAt.toIso8601String(),
+      'isFavorite': isFavorite,
     };
   }
 
@@ -65,6 +68,7 @@ class SavedOutfit {
       style: json['style'] as String? ?? '',
       matchScore: (json['matchScore'] as num?)?.toDouble() ?? 0.0,
       createdAt: DateTime.parse(json['createdAt'] as String),
+      isFavorite: json['isFavorite'] as bool?,
     );
   }
 }

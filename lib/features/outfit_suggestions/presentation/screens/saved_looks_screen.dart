@@ -10,14 +10,16 @@ import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_p
 
 /// Full-screen view of all saved outfit looks with filtering and sorting
 class SavedLooksScreen extends ConsumerStatefulWidget {
-  const SavedLooksScreen({super.key});
+  final String initialFilter;
+
+  const SavedLooksScreen({super.key, this.initialFilter = 'All'});
 
   @override
   ConsumerState<SavedLooksScreen> createState() => _SavedLooksScreenState();
 }
 
 class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
-  String _selectedFilter = 'All'; // All, Tight, Loose, Favorites
+  late String _selectedFilter;
   String _selectedSort = 'Recent'; // Recent, Score, Name
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -25,7 +27,10 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.info('📂 Saved Looks Screen opened');
+    _selectedFilter = widget.initialFilter;
+    AppLogger.info(
+      '📂 Saved Looks Screen opened with filter: $_selectedFilter',
+    );
   }
 
   @override
@@ -243,8 +248,8 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
         AppLogger.info('🏷️ Filter changed to: $label');
       },
       selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 
-        0.3,
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.3,
       ),
       labelStyle: TextStyle(
         color: isSelected
@@ -342,7 +347,9 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(alpha: 0.9),
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.9,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -350,7 +357,9 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                             size: 16,
                             color: isFavorite
                                 ? Colors.red
-                                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                           ),
                         ),
                       ),
@@ -380,13 +389,17 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                       Icon(
                         Icons.checkroom,
                         size: 12,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${look.items.length} items',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                           fontSize: 11,
                         ),
                       ),

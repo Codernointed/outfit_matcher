@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/theme/app_theme.dart';
@@ -47,7 +49,28 @@ final appThemeModeProvider =
 
 /// Theme mode notifier
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier() : super(ThemeMode.light);
+  ThemeModeNotifier() : super(ThemeMode.light) {
+    _loadSavedTheme();
+  }
+
+  Future<void> _loadSavedTheme() async {
+    try {
+      // Import here to avoid circular dependencies
+      final getIt = GetIt.I;
+      if (getIt.isRegistered<SharedPreferences>()) {
+        final prefs = getIt<SharedPreferences>();
+        final saved = prefs.getString('theme_preference');
+        if (saved != null) {
+          state = ThemeMode.values.firstWhere(
+            (e) => e.name == saved,
+            orElse: () => ThemeMode.light,
+          );
+        }
+      }
+    } catch (_) {
+      // Ignore errors on initial load
+    }
+  }
 
   void toggleTheme() {
     state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;

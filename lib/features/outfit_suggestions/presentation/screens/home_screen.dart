@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
 // import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
+import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
@@ -33,7 +34,7 @@ class HomeScreen extends ConsumerWidget {
   final List<Widget> _mainScreens = [
     const MainContentHomeScreen(),
     const EnhancedClosetScreen(),
-    const Center(child: Text('Profile Screen - Coming Soon')),
+    const ProfileScreen(),
   ];
 
   void _openSearch(BuildContext context) {
@@ -889,14 +890,14 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                           Text(
                             '${outfit.items.length} items',
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 
-                                0.6,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
                               ),
                               fontSize: 10,
                             ),
                             maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                softWrap: false,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                           ),
                           const Spacer(),
                           Row(
@@ -904,8 +905,8 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                               Icon(
                                 Icons.access_time,
                                 size: 10,
-                                color: theme.colorScheme.onSurface.withValues(alpha: 
-                                  0.5,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
                                 ),
                               ),
                               const SizedBox(width: 3),
@@ -956,7 +957,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         size: 16,
                         color: isFav
                             ? Colors.red
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                       ),
                     ),
                   ),
@@ -1291,7 +1294,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                       style: TextStyle(
                         color: todaysPicks.activeTab == TodayTab.today
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                         fontWeight: todaysPicks.activeTab == TodayTab.today
                             ? FontWeight.w600
                             : FontWeight.w500,
@@ -1336,7 +1341,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                       style: TextStyle(
                         color: todaysPicks.activeTab == TodayTab.tonight
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            : theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
                         fontWeight: todaysPicks.activeTab == TodayTab.tonight
                             ? FontWeight.w600
                             : FontWeight.w500,
@@ -1433,7 +1440,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         child: Icon(
                           Icons.checkroom_rounded,
                           size: 60,
-                          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                     ),
@@ -1865,7 +1874,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.7),
+                    ],
                     stops: const [0.0, 1.0],
                   ),
                 ),
@@ -2963,8 +2975,8 @@ class _OccasionOutfitSuggestionsScreenState
                           Text(
                             pairing.description,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 
-                                0.7,
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
                               ),
                             ),
                           ),
