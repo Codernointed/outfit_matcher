@@ -26,26 +26,26 @@ class AppLogger {
   static void api(String endpoint, {Map<String, dynamic>? request, dynamic response}) {
     developer.log('🌐 $endpoint', name: 'API', error: {'request': request, 'response': response});
     debugPrint('🌐 API: $endpoint');
-    if (request != null) print('📤 Request: $request');
-    if (response != null) print('📥 Response: $response');
+    if (request != null) debugPrint('📤 Request: $request');
+    if (response != null) debugPrint('📥 Response: $response');
   }
 
   static void network(String url, String method, {int? statusCode, dynamic body}) {
     developer.log('🌍 $method $url', name: 'NETWORK');
     debugPrint('🌍 $method $url');
-    if (statusCode != null) print('📊 Status: $statusCode');
-    if (body != null) print('📦 Body: $body');
+    if (statusCode != null) debugPrint('📊 Status: $statusCode');
+    if (body != null) debugPrint('📦 Body: $body');
   }
 
   static void ui(String screen, String action, {dynamic data}) {
     developer.log('📱 $screen: $action', name: 'UI');
     debugPrint('📱 $screen: $action');
-    if (data != null) print('📋 Data: $data');
+    if (data != null) debugPrint('📋 Data: $data');
   }
 
   static void performance(String operation, Duration duration, {dynamic result}) {
     developer.log('⚡ $operation completed in ${duration.inMilliseconds}ms', name: 'PERFORMANCE');
     debugPrint('⚡ $operation: ${duration.inMilliseconds}ms');
-    if (result != null) print('🎯 Result: $result');
+    if (result != null) debugPrint('🎯 Result: $result');
   }
 }

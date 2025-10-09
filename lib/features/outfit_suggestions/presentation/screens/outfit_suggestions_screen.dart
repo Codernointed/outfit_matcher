@@ -116,7 +116,7 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
                             '👈 [OUTFIT SUGGESTIONS] Navigating to previous outfit',
                           );
                           AppLogger.info(
-                            '   From: ${_currentOutfit} to ${_currentOutfit - 1}',
+                            '   From: $_currentOutfit to ${_currentOutfit - 1}',
                           );
                           setState(() {
                             _currentOutfit--;
@@ -140,7 +140,7 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
                             '👉 [OUTFIT SUGGESTIONS] Navigating to next outfit',
                           );
                           AppLogger.info(
-                            '   From: ${_currentOutfit} to ${_currentOutfit + 1}',
+                            '   From: $_currentOutfit to ${_currentOutfit + 1}',
                           );
                           setState(() {
                             _currentOutfit++;

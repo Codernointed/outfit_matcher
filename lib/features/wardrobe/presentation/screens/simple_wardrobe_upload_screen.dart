@@ -102,7 +102,7 @@ class _SimpleWardrobeUploadScreenState
                 context,
                 icon: Icons.photo_library,
                 title: 'Choose from Gallery',
-                subtitle: 'Select up to 4 photos (${_uploadCount}/8 uploaded)',
+                subtitle: 'Select up to 4 photos ($_uploadCount/8 uploaded)',
                 onTap: () => _pickImages(ImageSource.gallery),
               ),
             ] else ...[
@@ -321,7 +321,7 @@ class _SimpleWardrobeUploadScreenState
         // Limit to 4 per batch
         if (selectedImages.length > _maxPerBatch) {
           _showErrorSnackBar(
-            'You can only upload ${_maxPerBatch} images at once. Only first 4 will be processed.',
+            'You can only upload $_maxPerBatch images at once. Only first 4 will be processed.',
           );
           images = selectedImages.take(_maxPerBatch).toList();
         } else {
@@ -352,7 +352,7 @@ class _SimpleWardrobeUploadScreenState
           content: Text(
             i == 0
                 ? 'Tap "Take Photo" to start capturing items'
-                : 'You have ${i} photo(s). Take another or finish?',
+                : 'You have $i photo(s). Take another or finish?',
           ),
           actions: [
             if (i > 0)
@@ -427,7 +427,7 @@ class _SimpleWardrobeUploadScreenState
             setState(() {
               _currentProgress = index + 1;
               _processingStatus =
-                  'Analyzing ${_currentProgress}/${_totalToProcess}...';
+                  'Analyzing $_currentProgress/$_totalToProcess...';
             });
 
             // Step 2: Process image
@@ -505,7 +505,7 @@ class _SimpleWardrobeUploadScreenState
           SnackBar(
             content: Text(
               '${successfulItems.length} item${successfulItems.length > 1 ? "s" : ""} added to your wardrobe! '
-              '(${_uploadCount}/8 uploads${_uploadCount >= _maxBeforeCooldown ? " - 2min cooldown active" : ""})',
+              '($_uploadCount/8 uploads${_uploadCount >= _maxBeforeCooldown ? " - 2min cooldown active" : ""})',
             ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,

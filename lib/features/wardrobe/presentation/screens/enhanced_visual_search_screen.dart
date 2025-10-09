@@ -488,9 +488,10 @@ class _EnhancedVisualSearchScreenState
             Icons.arrow_back_ios_rounded,
             color: theme.colorScheme.onSurface,
           ),
-          onPressed: () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => HomeScreen()),
-          ),
+          onPressed: () => Navigator.of(context).pop(),
+          // onPressed: () => Navigator.of(context).pushReplacement(
+          //   MaterialPageRoute(builder: (context) => HomeScreen()),
+          // ),
         ),
         backgroundColor: Colors.transparent,
         actions: [
@@ -878,17 +879,24 @@ class _EnhancedVisualSearchScreenState
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.12),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+              spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+              spreadRadius: 0,
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1289,27 +1297,74 @@ class _EnhancedVisualSearchScreenState
 
     return Stack(
       children: [
-        // Main image - takes full space
+        // Main image container with elegant background
         AspectRatio(
           aspectRatio: 3 / 4, // Portrait aspect ratio for fashion
           child: Container(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            child: hasValidImage
-                ? (imageUrl.startsWith('data:')
-                      ? Image.memory(
-                          _dataUrlToBytes(imageUrl),
-                          fit: BoxFit.contain,
-                        )
-                      : CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.contain,
-                          placeholder: (context, url) => _buildElegantLoading(),
-                          errorWidget: (context, url, error) =>
-                              _buildImageError(),
-                        ))
-                : _isGeneratingMannequins
-                ? _buildElegantLoading()
-                : _buildImageError(),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
+                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
+                children: [
+                  // Background pattern for empty spaces
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.center,
+                          radius: 1.2,
+                          colors: [
+                            Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
+                            Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Main image with contain to show full mannequin
+                  if (hasValidImage)
+                    Positioned.fill(
+                      child: imageUrl.startsWith('data:')
+                          ? Image.memory(
+                              _dataUrlToBytes(imageUrl),
+                              fit: BoxFit.contain,
+                            )
+                          : CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) => _buildElegantLoading(),
+                              errorWidget: (context, url, error) =>
+                                  _buildImageError(),
+                            ),
+                    ),
+                  if (!hasValidImage)
+                    Positioned.fill(
+                      child: _isGeneratingMannequins
+                          ? _buildElegantLoading()
+                          : _buildImageError(),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
 

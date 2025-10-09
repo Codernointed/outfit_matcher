@@ -53,7 +53,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         })
         .catchError((Object e) {
           if (e is CameraException) {
-            print('Error initializing camera: ${e.code}\n${e.description}');
+            debugPrint('Error initializing camera: ${e.code}\n${e.description}');
             // Handle camera initialization errors (e.g., show a message)
           }
         });
@@ -79,7 +79,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         _currentFlashMode = newFlashMode;
       });
     } catch (e) {
-      print('Error toggling flash: $e');
+      debugPrint('Error toggling flash: $e');
     }
   }
 

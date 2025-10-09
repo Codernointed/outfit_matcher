@@ -1020,10 +1020,6 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                 child: _buildSingleItemImage(itemsToShow[0], theme),
               ),
             ),
-            Container(
-              width: 1,
-              color: theme.colorScheme.outline.withValues(alpha: 0.1),
-            ),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -1041,79 +1037,81 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     }
 
     if (itemsToShow.length == 3) {
-      return Column(
-        children: [
-          // Top row - single item spanning full width
-          Expanded(
-            flex: 1,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                  width: 0.5,
+      return SizedBox(
+        height: 120, // Fixed height to prevent overflow
+        child: Column(
+          children: [
+            // Top row - single item spanning full width
+            Expanded(
+              flex: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
                 ),
+                child: _buildSingleItemImage(itemsToShow[0], theme),
               ),
-              child: _buildSingleItemImage(itemsToShow[0], theme),
             ),
-          ),
-          Container(
-            height: 1,
-            color: theme.colorScheme.outline.withValues(alpha: 0.1),
-          ),
-          // Bottom row - two items side by side
-          Expanded(
-            flex: 1,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                        width: 0.5,
+            // Bottom row - two items side by side
+            Expanded(
+              flex: 1,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                          width: 0.5,
+                        ),
                       ),
+                      child: _buildSingleItemImage(itemsToShow[1], theme),
                     ),
-                    child: _buildSingleItemImage(itemsToShow[1], theme),
                   ),
-                ),
-                Container(
-                  width: 1,
-                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
-                        width: 0.5,
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                          width: 0.5,
+                        ),
                       ),
+                      child: _buildSingleItemImage(itemsToShow[2], theme),
                     ),
-                    child: _buildSingleItemImage(itemsToShow[2], theme),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
     // 4 items - 2x2 grid
-    return GridView.count(
-      crossAxisCount: 2,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.0,
-      children: itemsToShow.map((item) {
-        return Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.1),
-              width: 0.5,
+    return SizedBox(
+      height: 160, // Fixed height to prevent overflow
+      child: GridView.count(
+        crossAxisCount: 2,
+        physics: const NeverScrollableScrollPhysics(),
+        childAspectRatio: 1.0,
+        children: itemsToShow.map((item) {
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                width: 0.5,
+              ),
             ),
-          ),
-          child: _buildSingleItemImage(item, theme),
-        );
-      }).toList(),
+            child: _buildSingleItemImage(item, theme),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -1192,25 +1190,26 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       ),
       child: Center(
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Prevent overflow
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(4), // Reduced padding
               decoration: BoxDecoration(
                 color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 _getIconForItemType(item.itemType),
-                size: 20,
+                size: 14, // Reduced icon size
                 color: theme.colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 2), // Reduced spacing
             Text(
               item.primaryColor,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 9,
+                fontSize: 7, // Smaller font
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.primary,
               ),
@@ -1218,11 +1217,11 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 1), // Minimal spacing
             Text(
               item.itemType.toUpperCase(),
               style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 7,
+                fontSize: 6, // Even smaller font
                 fontWeight: FontWeight.w500,
                 color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
@@ -2874,18 +2873,19 @@ class _OccasionOutfitSuggestionsScreenState
       color: theme.colorScheme.surfaceContainerHighest,
       child: Center(
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Prevent overflow
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               _getIconForItemType(item.itemType),
-              size: 20,
+              size: 14, // Reduced icon size
               color: theme.colorScheme.primary,
             ),
             const SizedBox(height: 2),
             Text(
               item.primaryColor,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 8,
+                fontSize: 7, // Smaller font
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
