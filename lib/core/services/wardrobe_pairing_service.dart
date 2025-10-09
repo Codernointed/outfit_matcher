@@ -361,15 +361,17 @@ class WardrobePairingService {
         .where((item) => _isOuterwear(item))
         .toList();
 
+    // Build a diverse set of hero candidates (not just the first match)
+    final heroCandidates = _selectHeroCandidates(heroItem, availableItems);
+    final Set<String> seenCombos = <String>{};
+
     // Generate exactly 5 outfits with tight/loose ranking
     for (int i = 0; i < 5; i++) {
       final items = <WardrobeItem>[];
       final isTight = i < 3; // First 3 are tight, last 2 are loose
 
-      // Vary the hero item for more diversity
-      final currentHero = i == 0
-          ? heroItem
-          : _getVariedHeroItem(heroItem, availableItems, i);
+      // Rotate hero among strong candidates for variety
+      final currentHero = heroCandidates[i % heroCandidates.length];
       items.add(currentHero);
 
       if (_isDress(currentHero)) {
@@ -435,6 +437,14 @@ class WardrobePairingService {
           items.add(accessory);
         }
       }
+
+      // Skip duplicate sets to avoid repetition
+      final key = items.map((w) => w.id).toList()..sort();
+      final signature = key.join('_');
+      if (seenCombos.contains(signature)) {
+        continue;
+      }
+      seenCombos.add(signature);
 
       // Only create pairing if we have at least 2 items (hero + at least one other)
       if (items.length >= 2) {
@@ -502,7 +512,7 @@ class WardrobePairingService {
     WardrobeItem heroItem,
     List<WardrobeItem> candidates,
   ) {
-    if (candidates.isEmpty) return candidates.first;
+    if (candidates.isEmpty) return heroItem;
 
     candidates.sort(
       (a, b) => _getCompatibilityScore(
@@ -512,6 +522,45 @@ class WardrobePairingService {
     );
 
     return candidates.first;
+  }
+
+  /// Pick diverse hero candidates prioritizing occasion relevance and rotation
+  List<WardrobeItem> _selectHeroCandidates(
+    WardrobeItem initialHero,
+    List<WardrobeItem> availableItems,
+  ) {
+    final initialType = initialHero.analysis.itemType.toLowerCase();
+
+    // Occasion-aligned same-type items
+    List<WardrobeItem> sameTypeOccasionAligned = availableItems.where((w) {
+      final typeMatch = w.analysis.itemType.toLowerCase() == initialType;
+      final occasions = w.analysis.occasions ?? const <String>[];
+      final initialOcc = initialHero.analysis.occasions ?? const <String>[];
+      final aligned = occasions.any((o) => initialOcc.contains(o));
+      return typeMatch && aligned;
+    }).toList();
+
+    if (sameTypeOccasionAligned.isEmpty) {
+      sameTypeOccasionAligned = availableItems
+          .where((w) => w.analysis.itemType.toLowerCase() == initialType)
+          .toList();
+    }
+
+    // Add a few different-type candidates for exploration
+    final differentType = availableItems
+        .where((w) => w.analysis.itemType.toLowerCase() != initialType)
+        .take(3)
+        .toList();
+
+    // Prefer less-worn items first
+    sameTypeOccasionAligned.sort((a, b) => a.wearCount.compareTo(b.wearCount));
+
+    final result = <WardrobeItem>{}
+      ..add(initialHero)
+      ..addAll(sameTypeOccasionAligned.take(4))
+      ..addAll(differentType);
+
+    return result.toList(growable: false);
   }
 
   /// Get a varied hero item for different outfit combinations

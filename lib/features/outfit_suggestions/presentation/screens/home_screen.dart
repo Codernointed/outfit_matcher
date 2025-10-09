@@ -816,7 +816,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
     return Container(
       width: 140,
-      height: 160, // Further reduced height to minimize gaps
+      height: 164, // Further reduced height to minimize gaps
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -868,7 +868,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
                   // Content - Fixed height
                   SizedBox(
-                    height: 40, // Further reduced to minimize gaps
+                    height: 46, // Further reduced to minimize gaps
                     child: Padding(
                       padding: const EdgeInsets.all(8), // Reduced padding
                       child: Column(
@@ -881,8 +881,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
                             ),
-                            maxLines: 2,
+                            maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -893,6 +894,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                               ),
                               fontSize: 10,
                             ),
+                            maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                softWrap: false,
                           ),
                           const Spacer(),
                           Row(
