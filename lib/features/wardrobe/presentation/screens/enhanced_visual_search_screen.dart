@@ -10,7 +10,6 @@ import 'package:vestiq/core/services/image_api_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/mannequin_cache_service.dart';
 import 'package:vestiq/core/services/profile_service.dart';
-import 'package:vestiq/core/models/profile_data.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
@@ -57,7 +56,6 @@ class _EnhancedVisualSearchScreenState
   String _generationStatus = '';
   int _generationProgress = 0;
   int _totalPoses = 6;
-  bool _showGenderToggle = false;
 
   @override
   void initState() {
@@ -476,6 +474,13 @@ class _EnhancedVisualSearchScreenState
           ),
         ),
         elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_ios_rounded,
+            color: theme.colorScheme.onSurface,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         backgroundColor: Colors.transparent,
         actions: [
           // Gender toggle button

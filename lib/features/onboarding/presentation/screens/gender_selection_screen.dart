@@ -60,7 +60,7 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
     }
   }
 
-  Future<void> _continue() async {
+  void _continue() {
     if (_isProcessing) {
       AppLogger.warning('⚠️ Continue already in progress, ignoring tap');
       return;
@@ -72,7 +72,9 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
     try {
       if (_selectedGender == null) {
         AppLogger.info('⚠️ No gender selected, defaulting to Female');
-        await _selectGender(Gender.female);
+        // Save default gender synchronously
+        final profileService = getIt<ProfileService>();
+        profileService.updateGenderPreference(Gender.female);
       } else {
         AppLogger.info(
           '✅ Gender already selected: ${_selectedGender!.displayName}',
@@ -80,6 +82,7 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
       }
 
       AppLogger.info('🎯 Calling onComplete callback to navigate to home');
+      // Call immediately without await to prevent widget disposal
       widget.onComplete();
       AppLogger.info('✅ Navigation callback completed');
     } catch (e, stackTrace) {
@@ -88,11 +91,13 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
         error: e,
         stackTrace: stackTrace,
       );
-      setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 
-  Future<void> _skip() async {
+  void _skip() {
     if (_isProcessing) {
       AppLogger.warning('⚠️ Skip already in progress, ignoring tap');
       return;
@@ -103,9 +108,12 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
 
     try {
       AppLogger.info('⚠️ Skipping gender selection, defaulting to Female');
-      await _selectGender(Gender.female);
+      // Save default gender synchronously
+      final profileService = getIt<ProfileService>();
+      profileService.updateGenderPreference(Gender.female);
 
       AppLogger.info('🎯 Calling onComplete callback to navigate to home');
+      // Call immediately without await to prevent widget disposal
       widget.onComplete();
       AppLogger.info('✅ Navigation callback completed');
     } catch (e, stackTrace) {
@@ -114,7 +122,9 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
         error: e,
         stackTrace: stackTrace,
       );
-      setState(() => _isProcessing = false);
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 

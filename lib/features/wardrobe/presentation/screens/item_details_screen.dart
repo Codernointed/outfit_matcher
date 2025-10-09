@@ -1,8 +1,13 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/models/profile_data.dart';
+import 'package:vestiq/core/services/profile_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
+import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/domain/entities/clothing_item.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:lottie/lottie.dart';
@@ -53,6 +58,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   late final List<_ItemEditorState> _itemStates;
   late final TextEditingController _globalNotesController;
   int _currentIndex = 0;
+  String _currentGender = 'female'; // Default gender
+  final ProfileService _profileService = getIt<ProfileService>();
 
   _ItemEditorState get _currentState => _itemStates[_currentIndex];
   bool get _canContinue =>
@@ -64,30 +71,52 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
 
   final List<ClothingType> _itemTypeOptions = ClothingType.values.toList();
   final List<ClothingColor> _colorOptions = ClothingColor.values.toList();
-  final List<ClothingOccasion> _occasionOptions =
-      ClothingOccasion.values.toList();
+  final List<ClothingOccasion> _occasionOptions = ClothingOccasion.values
+      .toList();
   final List<ClothingPattern> _patternOptions = ClothingPattern.values.toList();
-  final List<ClothingMaterial> _materialOptions =
-      ClothingMaterial.values.toList();
+  final List<ClothingMaterial> _materialOptions = ClothingMaterial.values
+      .toList();
   final List<ClothingFit> _fitOptions = ClothingFit.values.toList();
-  final List<ClothingFormality> _formalityOptions =
-      ClothingFormality.values.toList();
+  final List<ClothingFormality> _formalityOptions = ClothingFormality.values
+      .toList();
   final List<String> _seasonOptions = ['Spring', 'Summer', 'Fall', 'Winter'];
 
   @override
   void initState() {
     super.initState();
-    _itemStates =
-        widget.imagePaths
-            .map((path) => _ItemEditorState(imagePath: path))
-            .toList();
+    AppLogger.info('📝 Item Details Screen initialized');
+    _itemStates = widget.imagePaths
+        .map((path) => _ItemEditorState(imagePath: path))
+        .toList();
     _pageController = PageController();
     _globalNotesController = TextEditingController();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
+    _loadGenderPreference();
     _analyzeImages();
+  }
+
+  Future<void> _loadGenderPreference() async {
+    try {
+      final profile = await _profileService.getProfile();
+      setState(() {
+        _currentGender = profile.preferredGender.apiValue;
+      });
+      AppLogger.info('✅ Loaded gender preference: $_currentGender');
+    } catch (e) {
+      AppLogger.error('❌ Error loading gender preference', error: e);
+    }
+  }
+
+  Future<void> _toggleGender() async {
+    HapticFeedback.lightImpact();
+    final newGender = _currentGender == 'male' ? 'female' : 'male';
+    setState(() {
+      _currentGender = newGender;
+    });
+    AppLogger.info('👤 Gender toggled to: $_currentGender');
   }
 
   @override
@@ -249,13 +278,12 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder:
-            (context) => EnhancedVisualSearchScreen(
-              analyses: analyses,
-              searchQuery: searchQuery,
-              itemImages: _imagePaths,
-              userNotes: userNotes,
-            ),
+        builder: (context) => EnhancedVisualSearchScreen(
+          analyses: analyses,
+          searchQuery: searchQuery,
+          itemImages: _imagePaths,
+          userNotes: userNotes,
+        ),
       ),
     );
   }
@@ -338,13 +366,24 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        actions: [
+          // Gender toggle button
+          IconButton(
+            icon: Icon(
+              _currentGender == 'male' ? Icons.man : Icons.woman,
+              color: theme.colorScheme.primary,
+            ),
+            onPressed: _toggleGender,
+            tooltip:
+                'Mannequin style: ${_currentGender == 'male' ? 'Male' : 'Female'}',
+          ),
+        ],
       ),
-      body:
-          _isLoading
-              ? _buildLoadingState(theme)
-              : _error != null
-              ? _buildErrorState(theme)
-              : _buildContent(theme),
+      body: _isLoading
+          ? _buildLoadingState(theme)
+          : _error != null
+          ? _buildErrorState(theme)
+          : _buildContent(theme),
       bottomNavigationBar: _isLoading ? null : _buildBottomBar(theme),
     );
   }
@@ -356,12 +395,12 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         children: [
           _isAnalyzing
               ? Lottie.asset(
-                'assets/animations/clothing_analysis.json',
-                width: 200,
-                height: 200,
-                controller: _animationController,
-                fit: BoxFit.cover,
-              )
+                  'assets/animations/clothing_analysis.json',
+                  width: 200,
+                  height: 200,
+                  controller: _animationController,
+                  fit: BoxFit.cover,
+                )
               : const CircularProgressIndicator(),
           const SizedBox(height: 24),
           Text(
@@ -453,8 +492,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                         child: Image.file(
                           File(widget.imagePaths[index]),
                           fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error, stackTrace) => Container(
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
                                 decoration: BoxDecoration(
                                   color: Colors.grey[100],
                                   borderRadius: BorderRadius.circular(20),
@@ -496,10 +535,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      color:
-                          index == _currentIndex
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface.withOpacity(0.2),
+                      color: index == _currentIndex
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withOpacity(0.2),
                     ),
                   ),
                 ),
@@ -715,49 +753,43 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         Wrap(
           spacing: 12,
           runSpacing: 8,
-          children:
-              options.map((option) {
-                final isSelected = option == selectedValue;
-                return GestureDetector(
-                  onTap: () => onChanged(option),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      _capitalizeEnum(option.toString().split('.').last),
-                      style: TextStyle(
-                        color:
-                            isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurface,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
-                        fontSize: 14,
-                      ),
-                    ),
+          children: options.map((option) {
+            final isSelected = option == selectedValue;
+            return GestureDetector(
+              onTap: () => onChanged(option),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.transparent,
+                    width: 1.5,
                   ),
-                );
-              }).toList(),
+                ),
+                child: Text(
+                  _capitalizeEnum(option.toString().split('.').last),
+                  style: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -870,57 +902,51 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         Wrap(
           spacing: 12,
           runSpacing: 8,
-          children:
-              options.map((option) {
-                final isSelected = selectedValues.contains(option);
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (isSelected) {
-                        selectedValues.remove(option);
-                      } else {
-                        selectedValues.add(option);
-                      }
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.transparent,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      option,
-                      style: TextStyle(
-                        color:
-                            isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurface,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w400,
-                        fontSize: 14,
-                      ),
-                    ),
+          children: options.map((option) {
+            final isSelected = selectedValues.contains(option);
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (isSelected) {
+                    selectedValues.remove(option);
+                  } else {
+                    selectedValues.add(option);
+                  }
+                });
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.transparent,
+                    width: 1.5,
                   ),
-                );
-              }).toList(),
+                ),
+                child: Text(
+                  option,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );

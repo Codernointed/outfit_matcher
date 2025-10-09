@@ -41,7 +41,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   /// Navigate to the main screen and mark onboarding as completed
-  void _completeOnboarding() async {
+  Future<void> _completeOnboarding() async {
     AppLogger.info('🎉 Completing onboarding flow');
 
     try {
@@ -56,10 +56,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       }
 
       AppLogger.info('🏠 Navigating to Home Screen');
-      // Navigate to main screen
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+      // Navigate to main screen - use pushAndRemoveUntil to clear the stack
+      await Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,
+      );
       AppLogger.info('✅ Successfully navigated to Home Screen');
     } catch (e, stackTrace) {
       AppLogger.error(
