@@ -25,7 +25,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          _selectedImages.isEmpty ? 'Add to Wardrobe' : '${_selectedImages.length} Selected',
+          _selectedImages.isEmpty ? 'Add to Generate Your Outfit' : '${_selectedImages.length} Selected',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),

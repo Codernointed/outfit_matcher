@@ -1,23 +1,25 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:vestiq/core/di/service_locator.dart';
-import 'package:vestiq/core/models/clothing_analysis.dart';
-import 'package:vestiq/core/models/saved_outfit.dart';
-import 'package:vestiq/core/services/app_settings_service.dart';
-import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:vestiq/core/services/outfit_storage_service.dart';
-import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
-import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
-import 'package:vestiq/features/wardrobe/presentation/screens/wardrobe_search_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
+import 'dart:typed_data';
+import 'dart:convert';
+import 'dart:io';
 import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
+// import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
+import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/widgets/customize_mood_sheet.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
 // TODO: Import ProfileScreen when created
 // import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
 
@@ -104,67 +106,165 @@ class MainContentHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
-  final OutfitStorageService _outfitStorageService =
-      getIt<OutfitStorageService>();
-  List<SavedOutfit> _recentOutfits = [];
-  bool _isLoadingOutfits = true;
-  final Set<String> _favoriteOutfitIds = {};
-
   @override
   void initState() {
     super.initState();
-    _loadRecentOutfits();
-    AppLogger.info('🏠 Home screen initialized');
+    AppLogger.info('🏠 Home screen initialized - using providers');
   }
 
-  Future<void> _loadRecentOutfits() async {
-    AppLogger.info('📥 Loading recent outfits...');
-    try {
-      final outfits = await _outfitStorageService.fetchAll();
-      AppLogger.info('✅ Loaded ${outfits.length} saved outfits');
-      setState(() {
-        _recentOutfits = outfits.take(6).toList(); // Show only 6 most recent
-        _isLoadingOutfits = false;
-      });
-    } catch (e) {
-      AppLogger.error('❌ Failed to load outfits', error: e);
-      setState(() {
-        _isLoadingOutfits = false;
-      });
-    }
-  }
-
-  Future<void> _refreshRecentOutfits() async {
-    AppLogger.info('🔄 Refreshing recent outfits...');
-    setState(() {
-      _isLoadingOutfits = true;
-    });
-    await _loadRecentOutfits();
+  Future<void> _refreshAll() async {
+    AppLogger.info('🔄 Refreshing all home sections...');
+    // Refresh all providers
+    ref.invalidate(recentLooksProvider);
+    ref.invalidate(todaysPicksProvider);
+    ref.invalidate(wardrobeSnapshotProvider);
   }
 
   void _toggleFavorite(String outfitId) {
     AppLogger.info('⭐ Toggling favorite for outfit: $outfitId');
-    setState(() {
-      if (_favoriteOutfitIds.contains(outfitId)) {
-        _favoriteOutfitIds.remove(outfitId);
-        AppLogger.info('💔 Removed from favorites');
-      } else {
-        _favoriteOutfitIds.add(outfitId);
-        AppLogger.info('❤️ Added to favorites');
-      }
-    });
-    // TODO: Persist favorite status to storage
+    ref.read(recentLooksProvider.notifier).toggleFavorite(outfitId);
   }
 
-  bool _isFavorite(String outfitId) {
-    return _favoriteOutfitIds.contains(outfitId);
+  Color _getScoreColor(double score) {
+    if (score >= 0.8) return Colors.green;
+    if (score >= 0.6) return Colors.orange;
+    return Colors.red;
+  }
+
+  Future<void> _generateOutfitSuggestions(String occasion) async {
+    AppLogger.info('🎯 Generating outfit suggestions for: $occasion');
+
+    try {
+      // Get wardrobe storage service
+      final wardrobeStorage = getIt<EnhancedWardrobeStorageService>();
+      final pairingService = getIt<WardrobePairingService>();
+
+      // Get user's wardrobe items
+      final wardrobeItems = await wardrobeStorage.getWardrobeItems();
+
+      if (wardrobeItems.isEmpty) {
+        // Show message to add items first
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Add some items to your wardrobe first!'),
+              action: SnackBarAction(
+                label: 'Add Items',
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SimpleWardrobeUploadScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Find a good hero item for this occasion
+      WardrobeItem heroItem;
+      switch (occasion.toLowerCase()) {
+        case 'casual':
+          heroItem = wardrobeItems.firstWhere(
+            (item) =>
+                item.analysis.occasions?.contains('casual') == true ||
+                item.analysis.occasions?.contains('weekend') == true,
+            orElse: () => wardrobeItems.first,
+          );
+          break;
+        case 'work':
+          heroItem = wardrobeItems.firstWhere(
+            (item) =>
+                item.analysis.occasions?.contains('work') == true ||
+                item.analysis.occasions?.contains('business') == true,
+            orElse: () => wardrobeItems.first,
+          );
+          break;
+        case 'date':
+          heroItem = wardrobeItems.firstWhere(
+            (item) =>
+                item.analysis.occasions?.contains('date') == true ||
+                item.analysis.occasions?.contains('evening') == true,
+            orElse: () => wardrobeItems.first,
+          );
+          break;
+        case 'party':
+          heroItem = wardrobeItems.firstWhere(
+            (item) =>
+                item.analysis.occasions?.contains('party') == true ||
+                item.analysis.occasions?.contains('celebration') == true,
+            orElse: () => wardrobeItems.first,
+          );
+          break;
+        default:
+          heroItem = wardrobeItems.first;
+      }
+
+      // Generate pairings for this occasion
+      final pairings = await pairingService.generatePairings(
+        heroItem: heroItem,
+        wardrobeItems: wardrobeItems,
+        mode: PairingMode.surpriseMe,
+        occasion: occasion,
+      );
+
+      if (pairings.isNotEmpty) {
+        // Navigate to outfit suggestions screen
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => _OccasionOutfitSuggestionsScreen(
+                occasion: occasion,
+                pairings: pairings,
+                heroItem: heroItem,
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'No outfit suggestions found for $occasion. Try adding more items to your wardrobe!',
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      AppLogger.error('❌ Error generating outfit suggestions', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate suggestions. Please try again.'),
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch all providers
+    final quickIdeas = ref.watch(quickIdeasProvider);
+    final recentLooks = ref.watch(recentLooksProvider);
+    final todaysPicks = ref.watch(todaysPicksProvider);
+    final wardrobe = ref.watch(wardrobeSnapshotProvider);
+
+    AppLogger.info(
+      '🔄 Home build - QuickIdeas: ${quickIdeas.ideas.length}, '
+      'Recent: ${recentLooks.looks.length}, '
+      'Today: ${todaysPicks.todayPicks.length}, '
+      'Wardrobe: ${wardrobe.items.length}',
+    );
+
     return SafeArea(
       child: RefreshIndicator(
-        onRefresh: _refreshRecentOutfits,
+        onRefresh: _refreshAll,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -174,16 +274,16 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               _buildHeroSection(context),
 
               // Quick Actions
-              _buildQuickActions(context),
+              _buildQuickActions(context, quickIdeas),
 
               // Recent Generations
-              _buildRecentGenerations(context),
+              _buildRecentGenerations(context, recentLooks),
 
               // Today's Suggestions
-              _buildTodaysSuggestions(context),
+              _buildTodaysSuggestions(context, todaysPicks),
 
               // Recent Items Preview
-              _buildRecentItemsPreview(context),
+              _buildRecentItemsPreview(context, wardrobe),
 
               const SizedBox(height: 32),
             ],
@@ -277,7 +377,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               Icon(Icons.camera_alt_rounded, color: Colors.white, size: 24),
               const SizedBox(width: 12),
               Text(
-                'Add Item to Wardrobe',
+                'Generate Your Outfit',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -290,8 +390,31 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, QuickIdeasState quickIdeas) {
     final theme = Theme.of(context);
+
+    if (quickIdeas.isLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Quick Outfit Ideas',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Center(child: CircularProgressIndicator()),
+          ],
+        ),
+      );
+    }
+
+    final ideas = quickIdeas.ideas.isNotEmpty
+        ? quickIdeas.ideas
+        : _getDefaultQuickIdeas();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -307,49 +430,17 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: _buildOccasionCard(
-                  context,
-                  'Casual',
-                  Icons.weekend_rounded,
-                  Colors.blue.shade100,
-                  Colors.blue.shade700,
-                ),
-              ),
+              Expanded(child: _buildOccasionCard(context, ideas[0])),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildOccasionCard(
-                  context,
-                  'Work',
-                  Icons.business_center_rounded,
-                  Colors.purple.shade100,
-                  Colors.purple.shade700,
-                ),
-              ),
+              Expanded(child: _buildOccasionCard(context, ideas[1])),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: _buildOccasionCard(
-                  context,
-                  'Date',
-                  Icons.favorite_rounded,
-                  Colors.pink.shade100,
-                  Colors.pink.shade700,
-                ),
-              ),
+              Expanded(child: _buildOccasionCard(context, ideas[2])),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildOccasionCard(
-                  context,
-                  'Party',
-                  Icons.celebration_rounded,
-                  Colors.orange.shade100,
-                  Colors.orange.shade700,
-                ),
-              ),
+              Expanded(child: _buildOccasionCard(context, ideas[3])),
             ],
           ),
         ],
@@ -357,53 +448,169 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     );
   }
 
-  Widget _buildOccasionCard(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color bgColor,
-    Color iconColor,
-  ) {
-    final theme = Theme.of(context);
-
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: iconColor.withOpacity(0.2), width: 1),
+  List<QuickIdeaCard> _getDefaultQuickIdeas() {
+    return const [
+      QuickIdeaCard(
+        occasion: 'Casual',
+        icon: 'weekend',
+        bgColor: 'blue',
+        iconColor: 'blue700',
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Navigate to occasion-specific suggestions
+      QuickIdeaCard(
+        occasion: 'Work',
+        icon: 'business',
+        bgColor: 'purple',
+        iconColor: 'purple700',
+      ),
+      QuickIdeaCard(
+        occasion: 'Date',
+        icon: 'favorite',
+        bgColor: 'pink',
+        iconColor: 'pink700',
+      ),
+      QuickIdeaCard(
+        occasion: 'Party',
+        icon: 'celebration',
+        bgColor: 'orange',
+        iconColor: 'orange700',
+      ),
+    ];
+  }
+
+  IconData _getDistinctIconForOccasion(String occasion) {
+    switch (occasion.toLowerCase()) {
+      case 'casual':
+        return Icons.weekend_rounded; // Weekend/relaxed icon
+      case 'work':
+        return Icons.business_center_rounded; // Briefcase icon
+      case 'date':
+        return Icons.favorite_rounded; // Heart icon
+      case 'party':
+        return Icons.celebration_rounded; // Party/confetti icon
+      default:
+        return Icons.checkroom_rounded;
+    }
+  }
+
+  Widget _buildOccasionCard(BuildContext context, QuickIdeaCard idea) {
+    final theme = Theme.of(context);
+    // Use distinct icons based on occasion instead of generic string mapping
+    final icon = _getDistinctIconForOccasion(idea.occasion);
+
+    // Use direct color mapping based on occasion for reliability
+    Color bgColor;
+    Color iconColor;
+    switch (idea.occasion.toLowerCase()) {
+      case 'casual':
+        bgColor = Colors.blue.shade100;
+        iconColor = Colors.blue.shade700;
+        break;
+      case 'work':
+        bgColor = Colors.purple.shade100;
+        iconColor = Colors.purple.shade700;
+        break;
+      case 'date':
+        bgColor = Colors.pink.shade100;
+        iconColor = Colors.pink.shade700;
+        break;
+      case 'party':
+        bgColor = Colors.orange.shade100;
+        iconColor = Colors.orange.shade700;
+        break;
+      default:
+        bgColor = theme.colorScheme.primaryContainer;
+        iconColor = theme.colorScheme.primary;
+    }
+
+    return GestureDetector(
+      onLongPress: () {
+        AppLogger.info('🔥 Long-pressed quick idea: ${idea.occasion}');
+        // Show customize mood sheet
+        showCustomizeMoodSheet(
+          context,
+          occasion: idea.occasion,
+          onApply: () {
+            AppLogger.info('✅ Mood customized for ${idea.occasion}');
+            // TODO: Navigate to pairing with custom mood
           },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: iconColor, size: 28),
-              const SizedBox(height: 4),
-              Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: iconColor,
-                  fontWeight: FontWeight.w600,
+        );
+      },
+      child: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: iconColor.withOpacity(0.2), width: 1),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              AppLogger.info('🎯 Tapped quick idea: ${idea.occasion}');
+              // Generate outfit suggestions from existing wardrobe for this occasion
+              _generateOutfitSuggestions(idea.occasion);
+            },
+            child: Stack(
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Icon(icon, color: iconColor, size: 28),
+                      const SizedBox(height: 4),
+                      Text(
+                        idea.occasion,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: iconColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                // "New" badge if hasNewSuggestions
+                if (idea.hasNewSuggestions)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '✨ New',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildRecentGenerations(BuildContext context) {
+  Widget _buildRecentGenerations(
+    BuildContext context,
+    RecentLooksState recentLooks,
+  ) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -416,10 +623,15 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (_recentOutfits.isNotEmpty)
+              if (recentLooks.looks.isNotEmpty)
                 TextButton(
                   onPressed: () {
-                    // TODO: Navigate to all saved outfits
+                    AppLogger.info('📂 View All Recent Generations tapped');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SavedLooksScreen(),
+                      ),
+                    );
                   },
                   child: Text(
                     'View All',
@@ -433,23 +645,27 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           ),
           const SizedBox(height: 16),
 
-          if (_isLoadingOutfits)
+          if (recentLooks.isLoading)
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(32.0),
                 child: CircularProgressIndicator(),
               ),
             )
-          else if (_recentOutfits.isEmpty)
+          else if (recentLooks.looks.isEmpty)
             _buildEmptyRecentGenerations(context)
           else
             SizedBox(
               height: 190,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: _recentOutfits.length,
+                itemCount: recentLooks.looks.length,
                 itemBuilder: (context, index) {
-                  return _buildRecentOutfitCard(context, _recentOutfits[index]);
+                  return _buildRecentOutfitCard(
+                    context,
+                    recentLooks.looks[index],
+                    recentLooks.favoriteIds,
+                  );
                 },
               ),
             ),
@@ -500,9 +716,13 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     );
   }
 
-  Widget _buildRecentOutfitCard(BuildContext context, SavedOutfit outfit) {
+  Widget _buildRecentOutfitCard(
+    BuildContext context,
+    SavedOutfit outfit,
+    Set<String> favoriteIds,
+  ) {
     final theme = Theme.of(context);
-    final isFav = _isFavorite(outfit.id);
+    final isFav = favoriteIds.contains(outfit.id);
 
     return Container(
       width: 140,
@@ -831,7 +1051,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     }
   }
 
-  Widget _buildTodaysSuggestions(BuildContext context) {
+  Widget _buildTodaysSuggestions(
+    BuildContext context,
+    TodaysPicksState todaysPicks,
+  ) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -850,6 +1073,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               ),
               TextButton(
                 onPressed: () {
+                  AppLogger.info('📂 See All Today\'s Picks tapped');
                   // TODO: Navigate to all suggestions
                 },
                 child: Text(
@@ -863,14 +1087,126 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 200,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                return _buildOutfitSuggestionCard(context, index);
+
+          // Segmented Control for Today/Tonight
+          _buildTodayTonightTabs(context, todaysPicks, theme),
+          const SizedBox(height: 16),
+
+          if (todaysPicks.isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (todaysPicks.activeTab == TodayTab.today &&
+              todaysPicks.todayPicks.isEmpty)
+            _buildEmptyTodaysPicks(context)
+          else if (todaysPicks.activeTab == TodayTab.tonight &&
+              todaysPicks.tonightPicks.isEmpty)
+            _buildEmptyTonightPicks(context)
+          else
+            _buildTodaysPicksList(context, todaysPicks, theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayTonightTabs(
+    BuildContext context,
+    TodaysPicksState todaysPicks,
+    ThemeData theme,
+  ) {
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                AppLogger.info('🌅 Switched to Today tab');
+                ref
+                    .read(todaysPicksProvider.notifier)
+                    .setActiveTab(TodayTab.today);
               },
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: todaysPicks.activeTab == TodayTab.today
+                      ? Colors.white
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: todaysPicks.activeTab == TodayTab.today
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    'For Today',
+                    style: TextStyle(
+                      color: todaysPicks.activeTab == TodayTab.today
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: todaysPicks.activeTab == TodayTab.today
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                AppLogger.info('🌙 Switched to Tonight tab');
+                ref
+                    .read(todaysPicksProvider.notifier)
+                    .setActiveTab(TodayTab.tonight);
+              },
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: todaysPicks.activeTab == TodayTab.tonight
+                      ? Colors.white
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: todaysPicks.activeTab == TodayTab.tonight
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Center(
+                  child: Text(
+                    'For Tonight',
+                    style: TextStyle(
+                      color: todaysPicks.activeTab == TodayTab.tonight
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: todaysPicks.activeTab == TodayTab.tonight
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -878,26 +1214,44 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     );
   }
 
-  Widget _buildOutfitSuggestionCard(BuildContext context, int index) {
-    final theme = Theme.of(context);
-    final outfitImages = [
-      'assets/images/casual_outfit.jpeg',
-      'assets/images/business_outfit.jpeg',
-      'assets/images/black_dress.jpeg',
-    ];
-    final outfitTitles = ['Casual Chic', 'Business Ready', 'Evening Elegance'];
-    final outfitDescriptions = [
-      'Perfect for weekend vibes',
-      'Professional and polished',
-      'Sophisticated and stylish',
-    ];
+  Widget _buildTodaysPicksList(
+    BuildContext context,
+    TodaysPicksState todaysPicks,
+    ThemeData theme,
+  ) {
+    final activePicks = todaysPicks.activeTab == TodayTab.today
+        ? todaysPicks.todayPicks
+        : todaysPicks.tonightPicks;
 
+    return SizedBox(
+      height: 280,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: activePicks.length.clamp(0, 5),
+        itemBuilder: (context, index) {
+          return _buildTodaysPickCard(
+            context,
+            activePicks[index],
+            index,
+            theme,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTodaysPickCard(
+    BuildContext context,
+    OutfitPairing pick,
+    int index,
+    ThemeData theme,
+  ) {
     return Container(
-      width: 160,
-      margin: EdgeInsets.only(right: index == 2 ? 0 : 16),
+      width: 180,
+      margin: EdgeInsets.only(right: index == 4 ? 0 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -909,69 +1263,163 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           onTap: () {
-            // TODO: Navigate to outfit details
+            AppLogger.info('🎯 Tapped today\'s pick: ${pick.description}');
+            // TODO: Navigate to outfit detail or mannequin preview
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary.withOpacity(0.1),
-                        theme.colorScheme.secondary.withOpacity(0.05),
-                      ],
-                    ),
-                  ),
-                  child: Image.asset(
-                    outfitImages[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey.shade200,
+              // Image area with weather chip
+              Expanded(
+                flex: 3,
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            theme.colorScheme.primary.withOpacity(0.1),
+                            theme.colorScheme.secondary.withOpacity(0.05),
+                          ],
+                        ),
+                      ),
+                      child: Center(
                         child: Icon(
                           Icons.checkroom_rounded,
-                          size: 40,
-                          color: Colors.grey.shade400,
+                          size: 60,
+                          color: theme.colorScheme.primary.withOpacity(0.3),
                         ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      outfitTitles[index],
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      outfitDescriptions[index],
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    // Weather chip
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              index.isEven
+                                  ? Icons.nightlight_round
+                                  : Icons.wb_sunny_rounded,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              index.isEven ? 'Tonight' : '22°C',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                ),
+              ),
+
+              // Content area
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pick.description,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+
+                      // Match score
+                      Row(
+                        children: [
+                          Expanded(
+                            child: LinearProgressIndicator(
+                              value: pick.compatibilityScore,
+                              backgroundColor: Colors.grey.shade200,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _getScoreColor(pick.compatibilityScore),
+                              ),
+                              minHeight: 4,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${(pick.compatibilityScore * 100).round()}%',
+                            style: TextStyle(
+                              color: _getScoreColor(pick.compatibilityScore),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Action buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => _wearNow(pick),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
+                                minimumSize: Size.zero,
+                              ),
+                              child: const Text(
+                                'Wear Now',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => _saveTodaysPick(pick),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                ),
+                                minimumSize: Size.zero,
+                              ),
+                              child: const Text(
+                                'Save',
+                                style: TextStyle(fontSize: 10),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -981,7 +1429,116 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     );
   }
 
-  Widget _buildRecentItemsPreview(BuildContext context) {
+  Widget _buildEmptyTodaysPicks(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wb_sunny_outlined,
+            size: 48,
+            color: theme.colorScheme.onSurface.withOpacity(0.4),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No picks for today yet',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Add more items to your wardrobe',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyTonightPicks(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 120,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.nightlight_round_outlined,
+            size: 48,
+            color: theme.colorScheme.onSurface.withOpacity(0.4),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No evening picks yet',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Add more items to your wardrobe',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _wearNow(OutfitPairing pick) {
+    AppLogger.info('👕 Wearing now: ${pick.description}');
+    // TODO: Mark items as worn, increment wear count, log event
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Marked "${pick.description}" as worn today! 👕'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _saveTodaysPick(OutfitPairing pick) {
+    AppLogger.info('💾 Saving today\'s pick: ${pick.description}');
+    // TODO: Save as SavedOutfit, add to Recent Generations
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Saved "${pick.description}" to your looks! ✨'),
+        backgroundColor: Colors.blue,
+      ),
+    );
+  }
+
+  Widget _buildRecentItemsPreview(
+    BuildContext context,
+    WardrobeSnapshotState wardrobe,
+  ) {
     final theme = Theme.of(context);
 
     return Padding(
@@ -1000,7 +1557,12 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               ),
               TextButton(
                 onPressed: () {
-                  // TODO: Navigate to full closet
+                  AppLogger.info('👗 Navigate to full closet');
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const EnhancedClosetScreen(),
+                    ),
+                  );
                 },
                 child: Text(
                   'View All',
@@ -1013,56 +1575,711 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: 5,
-              itemBuilder: (context, index) {
-                return Container(
-                  width: 80,
-                  margin: EdgeInsets.only(right: index == 4 ? 0 : 12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200, width: 1),
+
+          if (wardrobe.isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (wardrobe.items.isEmpty)
+            _buildEmptyWardrobe(context)
+          else
+            _buildWardrobeGrid(context, wardrobe, theme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyWardrobe(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      height: 100,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SimpleWardrobeUploadScreen(),
+            ),
+          );
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.add_circle_outline,
+              size: 32,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Upload your first item',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWardrobeGrid(
+    BuildContext context,
+    WardrobeSnapshotState wardrobe,
+    ThemeData theme,
+  ) {
+    final items = wardrobe.items.take(6).toList();
+
+    return Column(
+      children: [
+        // 2 rows of 3 columns
+        SizedBox(
+          height: 220,
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 1,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return _buildWardrobeGridTile(context, items[index], theme);
+            },
+          ),
+        ),
+
+        // Upload more CTA if less than 6 items
+        if (wardrobe.items.length < 6) ...[
+          const SizedBox(height: 16),
+          _buildUploadMoreCTA(context, theme),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildWardrobeGridTile(
+    BuildContext context,
+    WardrobeItem item,
+    ThemeData theme,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        AppLogger.info('👔 Tapped wardrobe item: ${item.id}');
+        // TODO: Navigate to item details or preview
+      },
+      onLongPress: () {
+        AppLogger.info('👔 Long-pressed wardrobe item: ${item.id}');
+        _showWardrobeItemActions(context, item);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              // Background image or placeholder
+              Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      theme.colorScheme.primary.withOpacity(0.1),
+                      theme.colorScheme.secondary.withOpacity(0.05),
+                    ],
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        // TODO: Navigate to item details
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                ),
+                child:
+                    item.polishedImagePath != null &&
+                        File(item.polishedImagePath!).existsSync()
+                    ? Image.file(
+                        File(item.polishedImagePath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildItemPlaceholder(item.analysis, theme);
+                        },
+                      )
+                    : _buildItemPlaceholder(item.analysis, theme),
+              ),
+
+              // Gradient overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                    stops: const [0.0, 1.0],
+                  ),
+                ),
+              ),
+
+              // Bottom info
+              Positioned(
+                bottom: 8,
+                left: 8,
+                right: 8,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category chip
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        item.analysis.itemType,
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    // Wear count
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.repeat_rounded,
+                          size: 10,
+                          color: Colors.white.withOpacity(0.8),
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          'Worn ${item.wearCount}x',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadMoreCTA(BuildContext context, ThemeData theme) {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: theme.colorScheme.primary.withOpacity(0.3),
+          width: 2,
+          style: BorderStyle.solid,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            AppLogger.info('📸 Upload more items tapped');
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SimpleWardrobeUploadScreen(),
+              ),
+            );
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.camera_alt_outlined,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Upload more items to complete your wardrobe',
+                style: TextStyle(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showWardrobeItemActions(BuildContext context, WardrobeItem item) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Text(
+                    item.analysis.itemType,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+
+            // Actions
+            ListTile(
+              leading: const Icon(Icons.person_add, color: Colors.blue),
+              title: const Text('Pair This Item'),
+              onTap: () {
+                Navigator.pop(context);
+                AppLogger.info('✨ Pair this item: ${item.id}');
+                // TODO: Navigate to pairing
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.casino, color: Colors.purple),
+              title: const Text('Surprise Me'),
+              onTap: () {
+                Navigator.pop(context);
+                AppLogger.info('🎲 Surprise me with: ${item.id}');
+                // TODO: Navigate to surprise me
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_on, color: Colors.orange),
+              title: const Text('Style by Location'),
+              onTap: () {
+                Navigator.pop(context);
+                AppLogger.info('📍 Style by location: ${item.id}');
+                // TODO: Navigate to location-based styling
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.visibility, color: Colors.green),
+              title: const Text('View Details'),
+              onTap: () {
+                Navigator.pop(context);
+                AppLogger.info('👁️ View details: ${item.id}');
+                // TODO: Navigate to item details
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Delete Item'),
+              onTap: () {
+                Navigator.pop(context);
+                AppLogger.info('🗑️ Delete item: ${item.id}');
+                // TODO: Show confirmation dialog and delete
+              },
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWardrobeItemThumbnail(
+    BuildContext context,
+    WardrobeItem item,
+    int index,
+    int totalCount,
+  ) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: 80,
+      margin: EdgeInsets.only(right: index == totalCount - 1 ? 0 : 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            AppLogger.info('👔 Tapped wardrobe item: ${item.id}');
+            // TODO: Navigate to item details or preview
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child:
+                item.polishedImagePath != null &&
+                    item.polishedImagePath!.isNotEmpty
+                ? Image.file(
+                    File(item.polishedImagePath!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildItemPlaceholderSmall(item, theme);
+                    },
+                  )
+                : _buildItemPlaceholderSmall(item, theme),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemPlaceholderSmall(WardrobeItem item, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _getIconForItemType(item.analysis.itemType),
+            size: 32,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            item.analysis.primaryColor,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              fontSize: 10,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Screen to display outfit suggestions for a specific occasion
+class _OccasionOutfitSuggestionsScreen extends StatefulWidget {
+  final String occasion;
+  final List<OutfitPairing> pairings;
+  final WardrobeItem heroItem;
+
+  const _OccasionOutfitSuggestionsScreen({
+    required this.occasion,
+    required this.pairings,
+    required this.heroItem,
+  });
+
+  @override
+  State<_OccasionOutfitSuggestionsScreen> createState() =>
+      _OccasionOutfitSuggestionsScreenState();
+}
+
+class _OccasionOutfitSuggestionsScreenState
+    extends State<_OccasionOutfitSuggestionsScreen> {
+  late final OutfitStorageService _outfitStorage;
+
+  @override
+  void initState() {
+    super.initState();
+    _outfitStorage = getIt<OutfitStorageService>();
+  }
+
+  Future<void> _saveOutfit(OutfitPairing pairing) async {
+    try {
+      final savedOutfit = SavedOutfit(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: '${widget.occasion} Outfit',
+        items: pairing.items.map((item) => item.analysis).toList(),
+        mannequinImages: pairing.mannequinImageUrl != null
+            ? [pairing.mannequinImageUrl!]
+            : [],
+        matchScore: pairing.compatibilityScore,
+        createdAt: DateTime.now(),
+        occasion: widget.occasion,
+        notes: pairing.description,
+      );
+
+      await _outfitStorage.save(savedOutfit);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Outfit saved successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      AppLogger.error('❌ Error saving outfit', error: e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save outfit'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${widget.occasion} Outfit Ideas'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: widget.pairings.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.checkroom_outlined,
+                    size: 64,
+                    color: theme.colorScheme.onSurface.withOpacity(0.3),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No outfit suggestions found',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Try adding more items to your wardrobe',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: widget.pairings.length,
+              itemBuilder: (context, index) {
+                final pairing = widget.pairings[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header with score and occasion
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(
-                              Icons.checkroom_rounded,
-                              size: 32,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(height: 4),
                             Text(
-                              'Item ${index + 1}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: Colors.grey.shade600,
+                              '${widget.occasion} Look ${index + 1}',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
                               ),
-                              textAlign: TextAlign.center,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getScoreColor(
+                                  pairing.compatibilityScore,
+                                ).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _getScoreColor(
+                                    pairing.compatibilityScore,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                '${(pairing.compatibilityScore * 100).round()}%',
+                                style: TextStyle(
+                                  color: _getScoreColor(
+                                    pairing.compatibilityScore,
+                                  ),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 12),
+
+                        // Items in this outfit
+                        Text(
+                          'Items:',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: pairing.items.map((item) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primaryContainer
+                                    .withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.colorScheme.primary.withOpacity(
+                                    0.2,
+                                  ),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                item.analysis.itemType,
+                                style: TextStyle(
+                                  color: theme.colorScheme.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+
+                        // Description
+                        if (pairing.description.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            'Description:',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            pairing.description,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.7,
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 16),
+
+                        // Action buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () => _saveOutfit(pairing),
+                                icon: const Icon(Icons.bookmark_outline),
+                                label: const Text('Save Outfit'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  // TODO: Generate mannequin preview
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Mannequin preview coming soon!',
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.preview),
+                                label: const Text('Preview'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 );
               },
             ),
-          ),
-        ],
-      ),
     );
+  }
+
+  Color _getScoreColor(double score) {
+    if (score >= 0.8) return Colors.green;
+    if (score >= 0.6) return Colors.orange;
+    return Colors.red;
   }
 }

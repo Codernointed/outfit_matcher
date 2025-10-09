@@ -58,9 +58,9 @@ class _EnhancedVisualSearchScreenState
     AppLogger.info(
       '🚀 EnhancedVisualSearchScreen initialized',
       data: {
-        'analyses_count': widget.analyses.length,
-        'item_images_count': widget.itemImages.length,
-        'search_query': widget.searchQuery,
+      'analyses_count': widget.analyses.length,
+      'item_images_count': widget.itemImages.length,
+      'search_query': widget.searchQuery,
         'user_notes_length': widget.userNotes?.length,
       },
     );
@@ -75,8 +75,8 @@ class _EnhancedVisualSearchScreenState
       AppLogger.info(
         '📱 Tab switched',
         data: {
-          'tab_index': _tabController.index,
-          'tab_name': tabNames[_tabController.index],
+        'tab_index': _tabController.index,
+        'tab_name': tabNames[_tabController.index],
         },
       );
     }
@@ -171,8 +171,8 @@ class _EnhancedVisualSearchScreenState
     AppLogger.info(
       '🎨 Starting mannequin generation',
       data: {
-        'analyses_count': widget.analyses.length,
-        'item_images_count': widget.itemImages.length,
+      'analyses_count': widget.analyses.length,
+      'item_images_count': widget.itemImages.length,
       },
     );
 
@@ -187,22 +187,22 @@ class _EnhancedVisualSearchScreenState
     try {
       final generatedOutfits =
           await GeminiApiService.generateEnhancedMannequinOutfits(
-            widget.analyses,
+        widget.analyses,
             userNotes: widget.userNotes,
-            onProgress: (status) {
-              if (mounted) {
-                setState(() => _generationStatus = status);
-              }
-            },
-            onProgressUpdate: (completed, total) {
-              if (mounted) {
-                setState(() {
-                  _generationProgress = completed;
-                  _totalPoses = total;
-                });
-              }
-            },
-          );
+        onProgress: (status) {
+          if (mounted) {
+            setState(() => _generationStatus = status);
+          }
+        },
+        onProgressUpdate: (completed, total) {
+          if (mounted) {
+            setState(() {
+              _generationProgress = completed;
+              _totalPoses = total;
+            });
+          }
+        },
+      );
 
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
@@ -213,8 +213,8 @@ class _EnhancedVisualSearchScreenState
       AppLogger.info(
         '✅ Generated mannequin outfits successfully',
         data: {
-          'count': generatedOutfits.length,
-          'duration_ms': duration.inMilliseconds,
+        'count': generatedOutfits.length,
+        'duration_ms': duration.inMilliseconds,
         },
       );
 
@@ -234,11 +234,11 @@ class _EnhancedVisualSearchScreenState
           final pose = _getPoseForIndex(i);
           outfits.add(
             MannequinOutfit(
-              id: 'mannequin_$i',
+            id: 'mannequin_$i',
               items: [fallbackAnalysis],
               imageUrl:
                   'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=600&fit=crop&crop=center',
-              pose: pose,
+            pose: pose,
               style:
                   [
                     'casual chic',
@@ -262,7 +262,7 @@ class _EnhancedVisualSearchScreenState
         '✅ Created fallback mannequin outfits',
         data: {'count': outfits.length},
       );
-      return outfits;
+    return outfits;
     }
   }
 
@@ -601,17 +601,17 @@ class _EnhancedVisualSearchScreenState
                   fit: BoxFit.cover,
                   placeholder:
                       (context, url) => Container(
-                        color: theme.colorScheme.surface,
+                    color: theme.colorScheme.surface,
                         child: const Center(child: CircularProgressIndicator()),
-                      ),
+                    ),
                   errorWidget:
                       (context, url, error) => Container(
-                        color: theme.colorScheme.surface,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: theme.colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                      ),
+                    color: theme.colorScheme.surface,
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
                 ),
               ),
 
@@ -728,30 +728,30 @@ class _EnhancedVisualSearchScreenState
       },
     );
   }
-  
+
   Widget _buildGeneratingCard() {
     final theme = Theme.of(context);
-    
+
     return DecoratedBox(
-      decoration: BoxDecoration(
+        decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
+          boxShadow: [
+            BoxShadow(
             color: theme.colorScheme.shadow.withOpacity(0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
+            ),
+          ],
+        ),
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
+            children: [
+              AspectRatio(
               aspectRatio: 3 / 4,
-              child: Container(
+                  child: Container(
                 color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
                 child: Center(
                   child: Column(
@@ -805,7 +805,7 @@ class _EnhancedVisualSearchScreenState
       padding: const EdgeInsets.only(bottom: 24),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+                    color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -817,9 +817,9 @@ class _EnhancedVisualSearchScreenState
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: Column(
+                    child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+                      children: [
               AspectRatio(
                 aspectRatio: 3 / 4,
                 child: _buildMannequinImage(outfit.imageUrl),
@@ -829,7 +829,7 @@ class _EnhancedVisualSearchScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                        Text(
                       'Look $index: ${_formatStyleLabel(outfit.style)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -859,8 +859,8 @@ class _EnhancedVisualSearchScreenState
                     const SizedBox(height: 16),
                     _buildMannequinActions(outfit, index),
                   ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -958,14 +958,14 @@ class _EnhancedVisualSearchScreenState
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: onAction,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
-                shape: RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -1329,224 +1329,224 @@ class _EnhancedVisualSearchScreenState
       context: context,
       builder:
           (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(16),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Header
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.explore,
+                      color: theme.colorScheme.primary,
+                      size: 28,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.explore,
-                          color: theme.colorScheme.primary,
-                          size: 28,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (inspiration.title != null)
+                            Text(
+                              inspiration.title!,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                          Text(
+                            inspiration.source,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(
+                        Icons.close,
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Image
+              Container(
+                constraints: const BoxConstraints(maxHeight: 300),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: PhotoView(
+                        imageProvider: CachedNetworkImageProvider(
+                          inspiration.imageUrl,
                         ),
-                        const SizedBox(width: 12),
+                    minScale: PhotoViewComputedScale.contained,
+                    maxScale: PhotoViewComputedScale.covered * 2,
+                    backgroundDecoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Info
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (inspiration.description != null) ...[
+                      Text(
+                        'Description:',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        inspiration.description!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(
+                                0.8,
+                              ),
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Metadata
+                    Row(
+                      children: [
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (inspiration.title != null)
-                                Text(
-                                  inspiration.title!,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.primary,
-                                  ),
+                              Text(
+                                'Source',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.6),
+                                  fontWeight: FontWeight.w600,
                                 ),
+                              ),
                               Text(
                                 inspiration.source,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.7),
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(0.8),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: Icon(
-                            Icons.close,
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Image
-                  Container(
-                    constraints: const BoxConstraints(maxHeight: 300),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: PhotoView(
-                        imageProvider: CachedNetworkImageProvider(
-                          inspiration.imageUrl,
-                        ),
-                        minScale: PhotoViewComputedScale.contained,
-                        maxScale: PhotoViewComputedScale.covered * 2,
-                        backgroundDecoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Info
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (inspiration.description != null) ...[
-                          Text(
-                            'Description:',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            inspiration.description!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.8,
-                              ),
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Metadata
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Source',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withOpacity(0.6),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    inspiration.source,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withOpacity(0.8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (inspiration.photographer != null)
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Photographer',
+                        if (inspiration.photographer != null)
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Photographer',
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: theme.colorScheme.onSurface
                                                 .withOpacity(0.6),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    Text(
-                                      inspiration.photographer!,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  inspiration.photographer!,
                                       style: theme.textTheme.bodySmall
                                           ?.copyWith(
                                             color: theme.colorScheme.onSurface
                                                 .withOpacity(0.8),
-                                          ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // Confidence indicator
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.verified,
-                              size: 16,
-                              color:
-                                  inspiration.confidence > 0.8
-                                      ? Colors.green
-                                      : inspiration.confidence > 0.6
-                                      ? Colors.orange
-                                      : Colors.red,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Match: ${(inspiration.confidence * 100).toInt()}%',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Action buttons
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed:
-                                () => _downloadInspirationImage(inspiration),
-                            icon: const Icon(Icons.download, size: 18),
-                            label: const Text('Download'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              ],
                             ),
                           ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Confidence indicator
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.verified,
+                          size: 16,
+                              color:
+                                  inspiration.confidence > 0.8
+                              ? Colors.green
+                              : inspiration.confidence > 0.6
+                                  ? Colors.orange
+                                  : Colors.red,
                         ),
-                        const SizedBox(width: 12),
-                        TextButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Close'),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Match: ${(inspiration.confidence * 100).toInt()}%',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+
+              // Action buttons
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                            onPressed:
+                                () => _downloadInspirationImage(inspiration),
+                        icon: const Icon(Icons.download, size: 18),
+                        label: const Text('Download'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: theme.colorScheme.onPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
+      ),
     );
   }
 

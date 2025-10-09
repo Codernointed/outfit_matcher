@@ -32,6 +32,10 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
       appBar: AppBar(
         title: const Text('Add to Wardrobe'),
         backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         elevation: 0,
       ),
       body: Padding(
