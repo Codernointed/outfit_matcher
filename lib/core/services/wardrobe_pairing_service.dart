@@ -363,43 +363,49 @@ class WardrobePairingService {
 
     // Generate exactly 5 outfits with tight/loose ranking
     for (int i = 0; i < 5; i++) {
-      final items = <WardrobeItem>[heroItem];
+      final items = <WardrobeItem>[];
       final isTight = i < 3; // First 3 are tight, last 2 are loose
 
-      if (_isDress(heroItem)) {
+      // Vary the hero item for more diversity
+      final currentHero = i == 0
+          ? heroItem
+          : _getVariedHeroItem(heroItem, availableItems, i);
+      items.add(currentHero);
+
+      if (_isDress(currentHero)) {
         // Dress + shoes + accessories + outerwear
         if (shoes.isNotEmpty) {
           final shoe = isTight
-              ? _getBestCompatibleItem(heroItem, shoes)
+              ? _getBestCompatibleItem(currentHero, shoes)
               : shoes[random.nextInt(shoes.length)];
           items.add(shoe);
         }
 
         if (accessories.isNotEmpty && (isTight ? true : random.nextBool())) {
           final accessory = isTight
-              ? _getBestCompatibleItem(heroItem, accessories)
+              ? _getBestCompatibleItem(currentHero, accessories)
               : accessories[random.nextInt(accessories.length)];
           items.add(accessory);
         }
 
         if (outerwear.isNotEmpty && (!isTight || random.nextBool())) {
           final outer = isTight
-              ? _getBestCompatibleItem(heroItem, outerwear)
+              ? _getBestCompatibleItem(currentHero, outerwear)
               : outerwear[random.nextInt(outerwear.length)];
           items.add(outer);
         }
-      } else if (_isTop(heroItem)) {
+      } else if (_isTop(currentHero)) {
         // Top + bottom + shoes + accessories
         if (bottoms.isNotEmpty) {
           final bottom = isTight
-              ? _getBestCompatibleItem(heroItem, bottoms)
+              ? _getBestCompatibleItem(currentHero, bottoms)
               : bottoms[random.nextInt(bottoms.length)];
           items.add(bottom);
         }
 
         if (shoes.isNotEmpty) {
           final shoe = isTight
-              ? _getBestCompatibleItem(heroItem, shoes)
+              ? _getBestCompatibleItem(currentHero, shoes)
               : shoes[random.nextInt(shoes.length)];
           items.add(shoe);
         }
@@ -408,18 +414,18 @@ class WardrobePairingService {
           final accessory = accessories[random.nextInt(accessories.length)];
           items.add(accessory);
         }
-      } else if (_isBottom(heroItem)) {
+      } else if (_isBottom(currentHero)) {
         // Bottom + top + shoes + accessories
         if (tops.isNotEmpty) {
           final top = isTight
-              ? _getBestCompatibleItem(heroItem, tops)
+              ? _getBestCompatibleItem(currentHero, tops)
               : tops[random.nextInt(tops.length)];
           items.add(top);
         }
 
         if (shoes.isNotEmpty) {
           final shoe = isTight
-              ? _getBestCompatibleItem(heroItem, shoes)
+              ? _getBestCompatibleItem(currentHero, shoes)
               : shoes[random.nextInt(shoes.length)];
           items.add(shoe);
         }
@@ -506,6 +512,26 @@ class WardrobePairingService {
     );
 
     return candidates.first;
+  }
+
+  /// Get a varied hero item for different outfit combinations
+  WardrobeItem _getVariedHeroItem(
+    WardrobeItem originalHero,
+    List<WardrobeItem> availableItems,
+    int index,
+  ) {
+    // For variety, alternate between different item types
+    final sameTypeItems = availableItems.where((item) {
+      return item.analysis.itemType.toLowerCase() ==
+          originalHero.analysis.itemType.toLowerCase();
+    }).toList();
+
+    if (sameTypeItems.length > index && index < sameTypeItems.length) {
+      return sameTypeItems[index % sameTypeItems.length];
+    }
+
+    // Fallback to original hero
+    return originalHero;
   }
 
   /// Generate location/weather-based pairings

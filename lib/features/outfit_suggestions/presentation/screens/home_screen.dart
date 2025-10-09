@@ -816,7 +816,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
     return Container(
       width: 140,
-      height: 180, // Fixed height to prevent overflow
+      height: 160, // Further reduced height to minimize gaps
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -839,7 +839,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () {
             AppLogger.info('👆 Tapped outfit: ${outfit.title}');
-            // Outfit details are shown directly in this card view
+            _showOutfitPreview(context, outfit, theme);
           },
           child: Stack(
             children: [
@@ -849,7 +849,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                 children: [
                   // Image - Fixed height
                   SizedBox(
-                    height: 100,
+                    height: 120, // Increased to fill more space
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.vertical(
@@ -868,9 +868,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
                   // Content - Fixed height
                   SizedBox(
-                    height: 80,
+                    height: 40, // Further reduced to minimize gaps
                     child: Padding(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8), // Reduced padding
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
@@ -1032,6 +1032,40 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
     // Show placeholder with item info if no image path
     return _buildItemPlaceholder(item, theme);
+  }
+
+  Widget _buildItemImage(WardrobeItem item, ThemeData theme) {
+    // Try polished image first
+    if (item.polishedImagePath != null &&
+        File(item.polishedImagePath!).existsSync()) {
+      return Image.file(
+        File(item.polishedImagePath!),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          AppLogger.debug('Failed to load polished image, trying original');
+          return _tryOriginalImage(item, theme);
+        },
+      );
+    }
+
+    // Try original image
+    return _tryOriginalImage(item, theme);
+  }
+
+  Widget _tryOriginalImage(WardrobeItem item, ThemeData theme) {
+    if (File(item.originalImagePath).existsSync()) {
+      return Image.file(
+        File(item.originalImagePath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          AppLogger.debug('Failed to load original image, using placeholder');
+          return _buildItemPlaceholder(item.analysis, theme);
+        },
+      );
+    }
+
+    // Fallback to placeholder with icon
+    return _buildItemPlaceholder(item.analysis, theme);
   }
 
   Widget _buildItemPlaceholder(ClothingAnalysis item, ThemeData theme) {
@@ -1783,7 +1817,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     return GestureDetector(
       onTap: () {
         AppLogger.info('👔 Tapped wardrobe item: ${item.id}');
-        // Opens wardrobe item preview sheet with details
+        _showItemPreview(context, item);
       },
       onLongPress: () {
         AppLogger.info('👔 Long-pressed wardrobe item: ${item.id}');
@@ -1818,17 +1852,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     ],
                   ),
                 ),
-                child:
-                    item.polishedImagePath != null &&
-                        File(item.polishedImagePath!).existsSync()
-                    ? Image.file(
-                        File(item.polishedImagePath!),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildItemPlaceholder(item.analysis, theme);
-                        },
-                      )
-                    : _buildItemPlaceholder(item.analysis, theme),
+                child: _buildItemImage(item, theme),
               ),
 
               // Gradient overlay
@@ -1940,6 +1964,206 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showOutfitPreview(
+    BuildContext context,
+    SavedOutfit outfit,
+    ThemeData theme,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Stack(
+            children: [
+              // Main outfit image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: _buildOutfitImage(outfit, theme),
+                ),
+              ),
+              // Close button
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+              // Outfit info overlay
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        outfit.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${outfit.items.length} items',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (outfit.items.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          outfit.items.map((item) => item.itemType).join(' • '),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showItemPreview(BuildContext context, WardrobeItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.9,
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          child: Stack(
+            children: [
+              // Main image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: _buildItemImage(item, Theme.of(context)),
+              ),
+              // Close button
+              Positioned(
+                top: 16,
+                right: 16,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
+              ),
+              // Item info overlay
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        item.analysis.itemType,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (item.analysis.subcategory != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          item.analysis.subcategory!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 4),
+                      Text(
+                        item.analysis.primaryColor,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -2369,6 +2593,162 @@ class _OccasionOutfitSuggestionsScreenState
     _outfitStorage = getIt<OutfitStorageService>();
   }
 
+  Widget _buildItemImage(WardrobeItem item, ThemeData theme) {
+    // Try polished image first
+    if (item.polishedImagePath != null &&
+        File(item.polishedImagePath!).existsSync()) {
+      return Image.file(
+        File(item.polishedImagePath!),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _tryOriginalImage(item, theme);
+        },
+      );
+    }
+
+    // Try original image
+    return _tryOriginalImage(item, theme);
+  }
+
+  Widget _tryOriginalImage(WardrobeItem item, ThemeData theme) {
+    if (File(item.originalImagePath).existsSync()) {
+      return Image.file(
+        File(item.originalImagePath),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildItemPlaceholder(item.analysis, theme);
+        },
+      );
+    }
+
+    // Fallback to placeholder with icon
+    return _buildItemPlaceholder(item.analysis, theme);
+  }
+
+  Widget _buildItemPlaceholder(ClothingAnalysis item, ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _getIconForItemType(item.itemType),
+              size: 20,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              item.primaryColor,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 8,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getIconForItemType(String itemType) {
+    switch (itemType.toLowerCase()) {
+      case 'top':
+        return Icons.checkroom;
+      case 'bottom':
+        return Icons.accessibility_new;
+      case 'dress':
+        return Icons.checkroom_outlined;
+      case 'shoes':
+        return Icons.directions_walk;
+      case 'outerwear':
+        return Icons.ac_unit;
+      case 'accessory':
+        return Icons.watch;
+      default:
+        return Icons.checkroom;
+    }
+  }
+
+  String _getSpecificItemName(WardrobeItem item) {
+    final analysis = item.analysis;
+    final type = analysis.itemType.toLowerCase();
+    final color = analysis.primaryColor;
+    final subcategory = analysis.subcategory ?? '';
+
+    // Create specific item names based on type and subcategory
+    switch (type) {
+      case 'top':
+        if (subcategory.toLowerCase().contains('t-shirt') ||
+            subcategory.toLowerCase().contains('tee')) {
+          return '${color} T-Shirt';
+        } else if (subcategory.toLowerCase().contains('blouse')) {
+          return '${color} Blouse';
+        } else if (subcategory.toLowerCase().contains('shirt')) {
+          return '${color} Shirt';
+        } else if (subcategory.toLowerCase().contains('sweater')) {
+          return '${color} Sweater';
+        } else if (subcategory.toLowerCase().contains('hoodie')) {
+          return '${color} Hoodie';
+        } else if (subcategory.toLowerCase().contains('tank')) {
+          return '${color} Tank Top';
+        } else {
+          return '${color} Top';
+        }
+      case 'bottom':
+        if (subcategory.toLowerCase().contains('jean')) {
+          if (subcategory.toLowerCase().contains('skinny')) {
+            return '${color} Skinny Jeans';
+          } else if (subcategory.toLowerCase().contains('wide')) {
+            return '${color} Wide-Leg Jeans';
+          } else if (subcategory.toLowerCase().contains('relaxed')) {
+            return '${color} Relaxed Jeans';
+          } else if (subcategory.toLowerCase().contains('straight')) {
+            return '${color} Straight Jeans';
+          } else {
+            return '${color} Jeans';
+          }
+        } else if (subcategory.toLowerCase().contains('pant')) {
+          return '${color} Pants';
+        } else if (subcategory.toLowerCase().contains('short')) {
+          return '${color} Shorts';
+        } else if (subcategory.toLowerCase().contains('skirt')) {
+          return '${color} Skirt';
+        } else {
+          return '${color} Bottom';
+        }
+      case 'shoes':
+        if (subcategory.toLowerCase().contains('sneaker')) {
+          return '${color} Sneakers';
+        } else if (subcategory.toLowerCase().contains('heel')) {
+          return '${color} Heels';
+        } else if (subcategory.toLowerCase().contains('boot')) {
+          return '${color} Boots';
+        } else if (subcategory.toLowerCase().contains('sandal')) {
+          return '${color} Sandals';
+        } else if (subcategory.toLowerCase().contains('loafer')) {
+          return '${color} Loafers';
+        } else {
+          return '${color} Shoes';
+        }
+      case 'dress':
+        if (subcategory.toLowerCase().contains('maxi')) {
+          return '${color} Maxi Dress';
+        } else if (subcategory.toLowerCase().contains('mini')) {
+          return '${color} Mini Dress';
+        } else if (subcategory.toLowerCase().contains('midi')) {
+          return '${color} Midi Dress';
+        } else {
+          return '${color} Dress';
+        }
+      default:
+        return '${color} ${analysis.itemType}';
+    }
+  }
+
   Future<void> _saveOutfit(OutfitPairing pairing) async {
     try {
       final savedOutfit = SavedOutfit(
@@ -2416,6 +2796,17 @@ class _OccasionOutfitSuggestionsScreenState
         title: Text('${widget.occasion} Outfit Ideas'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () async {
+              // Regenerate outfit suggestions
+              Navigator.of(context).pop();
+              // The parent will regenerate when we pop back
+            },
+            tooltip: 'Refresh suggestions',
+          ),
+        ],
       ),
       body: widget.pairings.isEmpty
           ? Center(
@@ -2498,7 +2889,7 @@ class _OccasionOutfitSuggestionsScreenState
                         ),
                         const SizedBox(height: 12),
 
-                        // Items in this outfit
+                        // Items in this outfit with images
                         Text(
                           'Items:',
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -2506,36 +2897,53 @@ class _OccasionOutfitSuggestionsScreenState
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: pairing.items.map((item) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primaryContainer
-                                    .withOpacity(0.3),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: theme.colorScheme.primary.withOpacity(
-                                    0.2,
-                                  ),
-                                  width: 1,
+                        // Show item images in a row
+                        SizedBox(
+                          height: 80,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: pairing.items.length,
+                            itemBuilder: (context, itemIndex) {
+                              final item = pairing.items[itemIndex];
+                              return Container(
+                                width: 80,
+                                margin: const EdgeInsets.only(right: 12),
+                                child: Column(
+                                  children: [
+                                    // Item image
+                                    Container(
+                                      height: 50,
+                                      width: 50,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: theme.colorScheme.primary
+                                              .withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: _buildItemImage(item, theme),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Item name
+                                    Text(
+                                      _getSpecificItemName(item),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              child: Text(
-                                item.analysis.itemType,
-                                style: TextStyle(
-                                  color: theme.colorScheme.primary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                              );
+                            },
+                          ),
                         ),
 
                         // Description

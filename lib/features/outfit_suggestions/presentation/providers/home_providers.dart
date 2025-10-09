@@ -385,10 +385,13 @@ class TodaysPicksNotifier extends StateNotifier<TodaysPicksState> {
 
 /// Provider for Wardrobe Snapshot state
 final wardrobeSnapshotProvider =
-    StateNotifierProvider<WardrobeSnapshotNotifier, WardrobeSnapshotState>((
-      ref,
-    ) {
-      return WardrobeSnapshotNotifier();
+    StateNotifierProvider.autoDispose<
+      WardrobeSnapshotNotifier,
+      WardrobeSnapshotState
+    >((ref) {
+      final notifier = WardrobeSnapshotNotifier();
+      notifier.loadSnapshot(); // Ensure it loads on creation
+      return notifier;
     });
 
 class WardrobeSnapshotNotifier extends StateNotifier<WardrobeSnapshotState> {

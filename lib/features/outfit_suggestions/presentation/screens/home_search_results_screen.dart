@@ -64,11 +64,13 @@ class _HomeSearchResultsScreenState
 
   Future<void> _startVoiceSearch() async {
     AppLogger.info('🎤 Starting voice search');
-    
+
     final available = await _voiceSearch.isAvailable();
     if (!available) {
       if (mounted) {
-        final errorMsg = _voiceSearch.lastError ?? 'Voice search is not available on this device';
+        final errorMsg =
+            _voiceSearch.lastError ??
+            'Voice search is not available on this device';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMsg),
@@ -121,7 +123,10 @@ class _HomeSearchResultsScreenState
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(_voiceSearch.lastError ?? 'Voice search failed. Please try again.'),
+              content: Text(
+                _voiceSearch.lastError ??
+                    'Voice search failed. Please try again.',
+              ),
               backgroundColor: Colors.red,
             ),
           );

@@ -263,15 +263,15 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
       'items': [
         {
           'name': widget.item.type == ClothingType.top
-              ? 'Blue Top'
+              ? '${widget.item.color} Relaxed Tee'
               : 'Your Item',
           'color': Colors.blue[200]!,
         },
-        {'name': 'Black Bottom', 'color': Colors.black87},
-        {'name': 'White Shoes', 'color': Colors.white},
+        {'name': 'Black Denim Jeans', 'color': Colors.black87},
+        {'name': 'White Canvas Sneakers', 'color': Colors.white},
       ],
       'explanation':
-          'This outfit combines complementary colors that work well together. The ${_getItemDescription(widget.item)} pairs perfectly with black bottoms, creating a balanced look that\'s suitable for casual day out occasions.',
+          'This outfit combines complementary colors that work well together. The ${_getItemDescription(widget.item)} pairs perfectly with black denim, creating a balanced look that\'s suitable for casual day out occasions.',
     });
 
     // Outfit 2: Weekend Brunch
@@ -280,12 +280,12 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
       'items': [
         {
           'name': widget.item.type == ClothingType.top
-              ? 'Blue Top'
+              ? '${widget.item.color} Flowy Blouse'
               : 'Your Item',
           'color': Colors.blue[200]!,
         },
-        {'name': 'Beige Bottom', 'color': const Color(0xFFE3D0B9)},
-        {'name': 'Brown Shoes', 'color': Colors.brown},
+        {'name': 'Beige Wide-Leg Pants', 'color': const Color(0xFFE3D0B9)},
+        {'name': 'Brown Leather Loafers', 'color': Colors.brown},
       ],
       'explanation':
           'This color palette creates a warm, inviting look perfect for weekend brunches. The ${_getItemDescription(widget.item)} brings a nice pop of color to the neutral tones of the other pieces.',
@@ -297,12 +297,12 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
       'items': [
         {
           'name': widget.item.type == ClothingType.top
-              ? 'Blue Top'
+              ? '${widget.item.color} Comfortable Sweatshirt'
               : 'Your Item',
           'color': Colors.blue[200]!,
         },
-        {'name': 'White Bottom', 'color': Colors.white},
-        {'name': 'Sneakers', 'color': Colors.grey[300]!},
+        {'name': 'White High-Waist Jeans', 'color': Colors.white},
+        {'name': 'Gray Running Sneakers', 'color': Colors.grey[300]!},
       ],
       'explanation':
           'A fresh, light combination that\'s comfortable for a day of shopping. The ${_getItemDescription(widget.item)} works beautifully with white to create a clean, crisp look that\'s easy to accessorize.',

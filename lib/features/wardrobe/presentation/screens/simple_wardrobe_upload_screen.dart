@@ -16,18 +16,29 @@ class SimpleWardrobeUploadScreen extends ConsumerStatefulWidget {
   const SimpleWardrobeUploadScreen({super.key});
 
   @override
-  ConsumerState<SimpleWardrobeUploadScreen> createState() => _SimpleWardrobeUploadScreenState();
+  ConsumerState<SimpleWardrobeUploadScreen> createState() =>
+      _SimpleWardrobeUploadScreenState();
 }
 
-class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploadScreen> {
+class _SimpleWardrobeUploadScreenState
+    extends ConsumerState<SimpleWardrobeUploadScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isProcessing = false;
   String _processingStatus = '';
+  int _currentProgress = 0;
+  int _totalToProcess = 0;
+
+  // Upload tracking for cooldown
+  static int _uploadCount = 0;
+  static DateTime? _lastUploadBatch;
+  static const int _maxPerBatch = 4;
+  static const int _maxBeforeCooldown = 8;
+  static const Duration _cooldownDuration = Duration(minutes: 2);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add to Wardrobe'),
@@ -74,33 +85,33 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Upload options
             if (!_isProcessing) ...[
               _buildUploadOption(
                 context,
                 icon: Icons.camera_alt,
                 title: 'Take Photo',
-                subtitle: 'Capture with camera',
-                onTap: () => _pickImage(ImageSource.camera),
+                subtitle: 'Capture up to 4 items',
+                onTap: () => _pickImages(ImageSource.camera),
               ),
               const SizedBox(height: 16),
               _buildUploadOption(
                 context,
                 icon: Icons.photo_library,
                 title: 'Choose from Gallery',
-                subtitle: 'Select existing photo',
-                onTap: () => _pickImage(ImageSource.gallery),
+                subtitle: 'Select up to 4 photos (${_uploadCount}/8 uploaded)',
+                onTap: () => _pickImages(ImageSource.gallery),
               ),
             ] else ...[
               // Processing state
               _buildProcessingState(theme),
             ],
-            
+
             const Spacer(),
-            
+
             // Info note
             Container(
               padding: const EdgeInsets.all(16),
@@ -131,16 +142,14 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
   }
 
   Widget _buildUploadOption(
-    BuildContext context,
-    {
-      required IconData icon,
-      required String title,
-      required String subtitle,
-      required VoidCallback onTap,
-    }
-  ) {
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     final theme = Theme.of(context);
-    
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -169,11 +178,7 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
                     color: theme.colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    icon,
-                    color: theme.colorScheme.primary,
-                    size: 24,
-                  ),
+                  child: Icon(icon, color: theme.colorScheme.primary, size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -210,6 +215,10 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
   }
 
   Widget _buildProcessingState(ThemeData theme) {
+    final progress = _totalToProcess > 0
+        ? _currentProgress / _totalToProcess
+        : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -221,14 +230,33 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
           SizedBox(
             width: 60,
             height: 60,
-            child: CircularProgressIndicator(
-              strokeWidth: 4,
-              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 4,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colorScheme.primary,
+                  ),
+                  backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                ),
+                if (_totalToProcess > 1)
+                  Text(
+                    '$_currentProgress/$_totalToProcess',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
           Text(
-            'Processing Your Item',
+            _totalToProcess > 1
+                ? 'Processing Your Items'
+                : 'Processing Your Item',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w600,
             ),
@@ -241,82 +269,228 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
               color: Colors.grey[600],
             ),
           ),
+          if (_totalToProcess > 1) ...[
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.colorScheme.primary,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImages(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
-
-      if (image != null) {
-        await _processAndSaveImage(File(image.path));
+      // Check cooldown first
+      if (_lastUploadBatch != null) {
+        final timeSinceLastBatch = DateTime.now().difference(_lastUploadBatch!);
+        if (_uploadCount >= _maxBeforeCooldown &&
+            timeSinceLastBatch < _cooldownDuration) {
+          final remainingSeconds =
+              (_cooldownDuration - timeSinceLastBatch).inSeconds;
+          final minutes = remainingSeconds ~/ 60;
+          final seconds = remainingSeconds % 60;
+          _showErrorSnackBar(
+            'Upload limit reached. Please wait ${minutes}m ${seconds}s before uploading more items.',
+          );
+          return;
+        } else if (timeSinceLastBatch >= _cooldownDuration) {
+          // Reset counter after cooldown
+          _uploadCount = 0;
+          _lastUploadBatch = null;
+        }
       }
+
+      List<XFile> images = [];
+
+      if (source == ImageSource.gallery) {
+        // Gallery: Pick multiple images (max 4)
+        final List<XFile> selectedImages = await _picker.pickMultiImage(
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+
+        if (selectedImages.isEmpty) return;
+
+        // Limit to 4 per batch
+        if (selectedImages.length > _maxPerBatch) {
+          _showErrorSnackBar(
+            'You can only upload ${_maxPerBatch} images at once. Only first 4 will be processed.',
+          );
+          images = selectedImages.take(_maxPerBatch).toList();
+        } else {
+          images = selectedImages;
+        }
+      } else {
+        // Camera: Take multiple photos (up to 4)
+        images = await _captureMultiplePhotos();
+        if (images.isEmpty) return;
+      }
+
+      // Process all images in parallel
+      await _processMultipleImages(images);
     } catch (e) {
-      AppLogger.error('❌ Failed to pick image', error: e);
-      _showErrorSnackBar('Failed to select image. Please try again.');
+      AppLogger.error('❌ Failed to pick images', error: e);
+      _showErrorSnackBar('Failed to select images. Please try again.');
     }
   }
 
-  Future<void> _processAndSaveImage(File imageFile) async {
+  Future<List<XFile>> _captureMultiplePhotos() async {
+    final List<XFile> capturedImages = [];
+
+    for (int i = 0; i < _maxPerBatch; i++) {
+      final result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Photo ${i + 1} of 4'),
+          content: Text(
+            i == 0
+                ? 'Tap "Take Photo" to start capturing items'
+                : 'You have ${i} photo(s). Take another or finish?',
+          ),
+          actions: [
+            if (i > 0)
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Finish'),
+              ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(i == 0 ? 'Take Photo' : 'Take Another'),
+            ),
+          ],
+        ),
+      );
+
+      if (result != true) break;
+
+      try {
+        final XFile? photo = await _picker.pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+
+        if (photo != null) {
+          capturedImages.add(photo);
+        } else {
+          break;
+        }
+      } catch (e) {
+        AppLogger.error('❌ Failed to capture photo', error: e);
+        break;
+      }
+    }
+
+    return capturedImages;
+  }
+
+  Future<void> _processMultipleImages(List<XFile> images) async {
+    if (images.isEmpty) return;
+
     setState(() {
       _isProcessing = true;
-      _processingStatus = 'Analyzing your item...';
+      _currentProgress = 0;
+      _totalToProcess = images.length;
+      _processingStatus =
+          'Analyzing ${images.length} item${images.length > 1 ? "s" : ""}...';
     });
 
     try {
-      // Step 1: Analyze the clothing item
-      final analysisResult = await GeminiApiService.analyzeClothingItemDetailed(imageFile);
-      
-      if (analysisResult == null) {
-        throw Exception('Failed to analyze clothing item');
+      final imageFiles = images.map((xfile) => File(xfile.path)).toList();
+
+      // Process all images in parallel for speed
+      AppLogger.info('📸 Processing ${images.length} images in parallel');
+
+      final results = await Future.wait(
+        imageFiles.asMap().entries.map((entry) async {
+          final index = entry.key;
+          final file = entry.value;
+
+          try {
+            // Step 1: Analyze
+            final analysisResult =
+                await GeminiApiService.analyzeClothingItemDetailed(file);
+
+            if (analysisResult == null) {
+              AppLogger.warning('⚠️ Analysis failed for image ${index + 1}');
+              return null;
+            }
+
+            setState(() {
+              _currentProgress = index + 1;
+              _processingStatus =
+                  'Analyzing ${_currentProgress}/${_totalToProcess}...';
+            });
+
+            // Step 2: Process image
+            final itemId =
+                'wardrobe_${DateTime.now().millisecondsSinceEpoch}_$index';
+            final settings = getIt<AppSettingsService>();
+            final enablePolishing = settings.isPremiumPolishingEnabled;
+
+            final imageResult =
+                await ImageProcessingService.processUploadedImage(
+                  imageFile: file,
+                  itemId: itemId,
+                  enablePolishing: enablePolishing,
+                  itemType: analysisResult.itemType,
+                  color: analysisResult.primaryColor,
+                );
+
+            // Step 3: Create wardrobe item
+            final wardrobeItem = WardrobeItem.fromAnalysis(
+              id: itemId,
+              analysis: analysisResult,
+              originalImagePath: imageResult.originalPath,
+              polishedImagePath: imageResult.polishedPath,
+            );
+
+            return wardrobeItem;
+          } catch (e) {
+            AppLogger.error('❌ Failed to process image ${index + 1}', error: e);
+            return null;
+          }
+        }),
+      );
+
+      // Filter out failed analyses
+      final successfulItems = results.whereType<WardrobeItem>().toList();
+
+      if (successfulItems.isEmpty) {
+        throw Exception('Failed to analyze any items');
       }
-      
-      // Step 2: Process and enhance the image
-      final itemId = 'wardrobe_${DateTime.now().millisecondsSinceEpoch}';
-      final settings = getIt<AppSettingsService>();
-      final enablePolishing = settings.isPremiumPolishingEnabled;
-      
-      setState(() {
-        _processingStatus = enablePolishing 
-            ? 'Enhancing image quality...' 
-            : 'Processing image...';
-      });
-      
-      final imageResult = await ImageProcessingService.processUploadedImage(
-        imageFile: imageFile,
-        itemId: itemId,
-        enablePolishing: enablePolishing,
-        itemType: analysisResult.itemType,
-        color: analysisResult.primaryColor,
-      );
 
+      // Save all items
       setState(() {
-        _processingStatus = 'Saving to your wardrobe...';
+        _processingStatus =
+            'Saving ${successfulItems.length} item${successfulItems.length > 1 ? "s" : ""} to wardrobe...';
       });
-
-      // Step 3: Create wardrobe item and save
-      final wardrobeItem = WardrobeItem.fromAnalysis(
-        id: itemId,
-        analysis: analysisResult,
-        originalImagePath: imageResult.originalPath,
-        polishedImagePath: imageResult.polishedPath,
-      );
 
       final storage = getIt<EnhancedWardrobeStorageService>();
-      await storage.saveWardrobeItem(wardrobeItem);
+      for (final item in successfulItems) {
+        await storage.saveWardrobeItem(item);
+      }
 
-      AppLogger.info('✅ Wardrobe item saved successfully', data: {
-        'itemId': itemId,
-        'type': analysisResult.itemType,
-        'hasPolished': imageResult.polishedPath != null,
-      });
+      // Update upload tracking
+      _uploadCount += successfulItems.length;
+      _lastUploadBatch = DateTime.now();
+
+      AppLogger.info(
+        '✅ Successfully saved ${successfulItems.length} items (Total: $_uploadCount/8)',
+      );
+
+      // Show cooldown warning if approaching limit
+      if (_uploadCount >= _maxBeforeCooldown) {
+        AppLogger.info('⚠️ Upload limit reached. Starting 2-minute cooldown.');
+      }
 
       // Success! Go back to closet and refresh
       if (mounted) {
@@ -324,30 +498,34 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
         ref.invalidate(wardrobeStorageProvider);
         ref.invalidate(wardrobeItemsProvider);
         ref.invalidate(filteredWardrobeItemsProvider);
-        
-        // Also refresh the specific providers
-        ref.refresh(wardrobeItemsProvider);
-        ref.refresh(filteredWardrobeItemsProvider);
-        
+
         Navigator.of(context).pop();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${analysisResult.itemType} added to your wardrobe!'),
+            content: Text(
+              '${successfulItems.length} item${successfulItems.length > 1 ? "s" : ""} added to your wardrobe! '
+              '(${_uploadCount}/8 uploads${_uploadCount >= _maxBeforeCooldown ? " - 2min cooldown active" : ""})',
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
-
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to process wardrobe item', error: e, stackTrace: stackTrace);
-      
+      AppLogger.error(
+        '❌ Failed to process wardrobe items',
+        error: e,
+        stackTrace: stackTrace,
+      );
+
       if (mounted) {
         setState(() {
           _isProcessing = false;
           _processingStatus = '';
         });
-        _showErrorSnackBar('Failed to process item. Please try again.');
+        _showErrorSnackBar('Failed to process items. Please try again.');
       }
     }
   }
