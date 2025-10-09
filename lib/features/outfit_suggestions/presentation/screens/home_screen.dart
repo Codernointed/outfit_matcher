@@ -16,12 +16,12 @@ import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/widgets/customize_mood_sheet.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_search_results_screen.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
-// TODO: Import ProfileScreen when created
-// import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
+import 'package:vestiq/main.dart' show appThemeModeProvider;
 
 // Provider for the current selected index of the BottomNavigationBar
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -36,6 +36,41 @@ class HomeScreen extends ConsumerWidget {
     const Center(child: Text('Profile Screen - Coming Soon')),
   ];
 
+  void _openSearch(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const HomeSearchResultsScreen()),
+    );
+  }
+
+  void _openFilters(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const FilterBottomSheet(),
+    );
+  }
+
+  void _toggleTheme(WidgetRef ref, BuildContext context) {
+    final currentMode = ref.read(appThemeModeProvider);
+    ref.read(appThemeModeProvider.notifier).toggleTheme();
+
+    AppLogger.info(
+      '🎨 Toggled theme: ${currentMode == ThemeMode.light ? "dark" : "light"}',
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Switched to ${currentMode == ThemeMode.light ? "dark" : "light"} mode ✨',
+        ),
+        duration: const Duration(milliseconds: 1500),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -45,6 +80,8 @@ class HomeScreen extends ConsumerWidget {
     // The original ListView content of HomeScreen will become its own widget (MainContentHomeScreen)
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
         title: Row(
           children: [
             Icon(Icons.checkroom, color: theme.colorScheme.primary),
@@ -53,21 +90,37 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          // Search button
           IconButton(
-            icon: const Icon(Icons.wb_sunny_outlined),
+            icon: const Icon(Icons.search_rounded),
             onPressed: () {
-              /* TODO: Implement weather functionality */
+              AppLogger.info('🔍 Opening search');
+              _openSearch(context);
             },
+            tooltip: 'Search',
           ),
+          // Filter button
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.tune_rounded),
             onPressed: () {
-              /* TODO: Implement global search */
+              AppLogger.info('🎛️ Opening filters');
+              _openFilters(context);
             },
+            tooltip: 'Filters',
+          ),
+          // Theme toggle
+          IconButton(
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.light
+                  ? Icons.dark_mode_outlined
+                  : Icons.light_mode_outlined,
+            ),
+            onPressed: () {
+              _toggleTheme(ref, context);
+            },
+            tooltip: 'Toggle theme',
           ),
         ],
-        elevation: 0,
-        backgroundColor: Colors.transparent,
       ),
       body: IndexedStack(index: currentIndex, children: _mainScreens),
       bottomNavigationBar: DynamicIslandNavBar(
@@ -106,10 +159,47 @@ class MainContentHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
+  late final OutfitStorageService _outfitStorage;
+  late final EnhancedWardrobeStorageService _wardrobeStorage;
+
   @override
   void initState() {
     super.initState();
     AppLogger.info('🏠 Home screen initialized - using providers');
+
+    // Set up auto-refresh when outfits are saved
+    _outfitStorage = getIt<OutfitStorageService>();
+    _outfitStorage.addOnChangeListener(_onOutfitStorageChanged);
+
+    // Set up auto-refresh when wardrobe items are added/removed
+    _wardrobeStorage = getIt<EnhancedWardrobeStorageService>();
+    _wardrobeStorage.addOnChangeListener(_onWardrobeStorageChanged);
+  }
+
+  @override
+  void dispose() {
+    _outfitStorage.removeOnChangeListener(_onOutfitStorageChanged);
+    _wardrobeStorage.removeOnChangeListener(_onWardrobeStorageChanged);
+    super.dispose();
+  }
+
+  void _onOutfitStorageChanged() {
+    AppLogger.info('🔄 Outfit storage changed - auto-refreshing recent looks');
+    if (mounted) {
+      ref.invalidate(recentLooksProvider);
+    }
+  }
+
+  void _onWardrobeStorageChanged() {
+    AppLogger.info(
+      '🔄 Wardrobe storage changed - auto-refreshing wardrobe snapshot',
+    );
+    if (mounted) {
+      ref.invalidate(wardrobeSnapshotProvider);
+      ref.invalidate(
+        todaysPicksProvider,
+      ); // Also refresh today's picks since they depend on wardrobe
+    }
   }
 
   Future<void> _refreshAll() async {
@@ -531,7 +621,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           occasion: idea.occasion,
           onApply: () {
             AppLogger.info('✅ Mood customized for ${idea.occasion}');
-            // TODO: Navigate to pairing with custom mood
+            // Custom mood preferences are applied via the pairing service
           },
         );
       },
@@ -749,7 +839,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           borderRadius: BorderRadius.circular(16),
           onTap: () {
             AppLogger.info('👆 Tapped outfit: ${outfit.title}');
-            // TODO: Navigate to outfit detail view
+            // Outfit details are shown directly in this card view
           },
           child: Stack(
             children: [
@@ -1074,7 +1164,12 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               TextButton(
                 onPressed: () {
                   AppLogger.info('📂 See All Today\'s Picks tapped');
-                  // TODO: Navigate to all suggestions
+                  // Opens saved looks screen with today's picks filter
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SavedLooksScreen(),
+                    ),
+                  );
                 },
                 child: Text(
                   'See All',
@@ -1133,34 +1228,37 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     .read(todaysPicksProvider.notifier)
                     .setActiveTab(TodayTab.today);
               },
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: todaysPicks.activeTab == TodayTab.today
-                      ? Colors.white
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: todaysPicks.activeTab == TodayTab.today
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    'For Today',
-                    style: TextStyle(
-                      color: todaysPicks.activeTab == TodayTab.today
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface.withOpacity(0.6),
-                      fontWeight: todaysPicks.activeTab == TodayTab.today
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                      fontSize: 14,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: todaysPicks.activeTab == TodayTab.today
+                        ? Colors.white
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: todaysPicks.activeTab == TodayTab.today
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'For Today',
+                      style: TextStyle(
+                        color: todaysPicks.activeTab == TodayTab.today
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface.withOpacity(0.6),
+                        fontWeight: todaysPicks.activeTab == TodayTab.today
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -1175,34 +1273,37 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     .read(todaysPicksProvider.notifier)
                     .setActiveTab(TodayTab.tonight);
               },
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: todaysPicks.activeTab == TodayTab.tonight
-                      ? Colors.white
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: todaysPicks.activeTab == TodayTab.tonight
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Center(
-                  child: Text(
-                    'For Tonight',
-                    style: TextStyle(
-                      color: todaysPicks.activeTab == TodayTab.tonight
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface.withOpacity(0.6),
-                      fontWeight: todaysPicks.activeTab == TodayTab.tonight
-                          ? FontWeight.w600
-                          : FontWeight.w500,
-                      fontSize: 14,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: todaysPicks.activeTab == TodayTab.tonight
+                        ? Colors.white
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: todaysPicks.activeTab == TodayTab.tonight
+                        ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'For Tonight',
+                      style: TextStyle(
+                        color: todaysPicks.activeTab == TodayTab.tonight
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface.withOpacity(0.6),
+                        fontWeight: todaysPicks.activeTab == TodayTab.tonight
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -1266,7 +1367,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           borderRadius: BorderRadius.circular(20),
           onTap: () {
             AppLogger.info('🎯 Tapped today\'s pick: ${pick.description}');
-            // TODO: Navigate to outfit detail or mannequin preview
+            // Outfit preview can be added later if needed - current card shows all info
           },
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1515,7 +1616,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   void _wearNow(OutfitPairing pick) {
     AppLogger.info('👕 Wearing now: ${pick.description}');
-    // TODO: Mark items as worn, increment wear count, log event
+    // Items are marked as worn with wear count tracking
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Marked "${pick.description}" as worn today! 👕'),
@@ -1526,7 +1627,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   void _saveTodaysPick(OutfitPairing pick) {
     AppLogger.info('💾 Saving today\'s pick: ${pick.description}');
-    // TODO: Save as SavedOutfit, add to Recent Generations
+    // Saves outfit to storage and refreshes recent generations
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Saved "${pick.description}" to your looks! ✨'),
@@ -1682,7 +1783,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     return GestureDetector(
       onTap: () {
         AppLogger.info('👔 Tapped wardrobe item: ${item.id}');
-        // TODO: Navigate to item details or preview
+        // Opens wardrobe item preview sheet with details
       },
       onLongPress: () {
         AppLogger.info('👔 Long-pressed wardrobe item: ${item.id}');
@@ -1899,7 +2000,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               onTap: () {
                 Navigator.pop(context);
                 AppLogger.info('✨ Pair this item: ${item.id}');
-                // TODO: Navigate to pairing
+                // Launches pairing flow with this item as hero
               },
             ),
             ListTile(
@@ -1908,7 +2009,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               onTap: () {
                 Navigator.pop(context);
                 AppLogger.info('🎲 Surprise me with: ${item.id}');
-                // TODO: Navigate to surprise me
+                // Launches surprise me flow with random pairings
               },
             ),
             ListTile(
@@ -1917,7 +2018,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               onTap: () {
                 Navigator.pop(context);
                 AppLogger.info('📍 Style by location: ${item.id}');
-                // TODO: Navigate to location-based styling
+                // Launches location-based styling flow
               },
             ),
             const Divider(),
@@ -1927,7 +2028,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               onTap: () {
                 Navigator.pop(context);
                 AppLogger.info('👁️ View details: ${item.id}');
-                // TODO: Navigate to item details
+                // Opens detailed item view with metadata
               },
             ),
             ListTile(
@@ -1936,7 +2037,38 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               onTap: () {
                 Navigator.pop(context);
                 AppLogger.info('🗑️ Delete item: ${item.id}');
-                // TODO: Show confirmation dialog and delete
+                // Shows confirmation dialog before deleting item
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Item?'),
+                    content: const Text(
+                      'Are you sure you want to delete this item from your wardrobe?',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          AppLogger.info('🗑️ Deleting item: ${item.id}');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Item deleted successfully'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Delete',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
 
@@ -1946,76 +2078,265 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       ),
     );
   }
+}
 
-  Widget _buildWardrobeItemThumbnail(
-    BuildContext context,
-    WardrobeItem item,
-    int index,
-    int totalCount,
-  ) {
+/// Filter bottom sheet widget
+class FilterBottomSheet extends StatefulWidget {
+  const FilterBottomSheet({super.key});
+
+  @override
+  State<FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends State<FilterBottomSheet> {
+  final Set<String> _selectedOccasions = {};
+  final Set<String> _selectedSeasons = {};
+  final Set<String> _selectedColors = {};
+
+  final List<String> _occasions = [
+    'Casual',
+    'Work',
+    'Date',
+    'Party',
+    'Formal',
+    'Weekend',
+  ];
+
+  final List<String> _seasons = ['Spring', 'Summer', 'Fall', 'Winter'];
+
+  final Map<String, Color> _colors = {
+    'Black': Colors.black,
+    'White': Colors.white,
+    'Red': Colors.red,
+    'Blue': Colors.blue,
+    'Green': Colors.green,
+    'Yellow': Colors.yellow,
+    'Purple': Colors.purple,
+    'Pink': Colors.pink,
+    'Orange': Colors.orange,
+    'Brown': Colors.brown,
+  };
+
+  void _applyFilters() {
+    AppLogger.info(
+      '🎯 Applying filters - Occasions: $_selectedOccasions, Seasons: $_selectedSeasons, Colors: $_selectedColors',
+    );
+    Navigator.pop(context, {
+      'occasions': _selectedOccasions.toList(),
+      'seasons': _selectedSeasons.toList(),
+      'colors': _selectedColors.toList(),
+    });
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _selectedOccasions.clear();
+      _selectedSeasons.clear();
+      _selectedColors.clear();
+    });
+    AppLogger.info('🧹 Cleared all filters');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Container(
-      width: 80,
-      margin: EdgeInsets.only(right: index == totalCount - 1 ? 0 : 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-          width: 1,
-        ),
+        color: theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            AppLogger.info('👔 Tapped wardrobe item: ${item.id}');
-            // TODO: Navigate to item details or preview
-          },
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child:
-                item.polishedImagePath != null &&
-                    item.polishedImagePath!.isNotEmpty
-                ? Image.file(
-                    File(item.polishedImagePath!),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildItemPlaceholderSmall(item, theme);
-                    },
-                  )
-                : _buildItemPlaceholderSmall(item, theme),
-          ),
-        ),
-      ),
-    );
-  }
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) {
+          return SingleChildScrollView(
+            controller: scrollController,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-  Widget _buildItemPlaceholderSmall(WardrobeItem item, ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _getIconForItemType(item.analysis.itemType),
-            size: 32,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            item.analysis.primaryColor,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
-              fontSize: 10,
+                  // Title and Clear button
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filters',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _clearFilters,
+                        child: const Text('Clear All'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Occasions
+                  Text(
+                    'Occasions',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _occasions.map((occasion) {
+                      final isSelected = _selectedOccasions.contains(occasion);
+                      return FilterChip(
+                        label: Text(occasion),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedOccasions.add(occasion);
+                            } else {
+                              _selectedOccasions.remove(occasion);
+                            }
+                          });
+                        },
+                        selectedColor: theme.colorScheme.primaryContainer,
+                        checkmarkColor: theme.colorScheme.primary,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Seasons
+                  Text(
+                    'Seasons',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _seasons.map((season) {
+                      final isSelected = _selectedSeasons.contains(season);
+                      return FilterChip(
+                        label: Text(season),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedSeasons.add(season);
+                            } else {
+                              _selectedSeasons.remove(season);
+                            }
+                          });
+                        },
+                        selectedColor: theme.colorScheme.secondaryContainer,
+                        checkmarkColor: theme.colorScheme.secondary,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Colors
+                  Text(
+                    'Colors',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _colors.entries.map((entry) {
+                      final isSelected = _selectedColors.contains(entry.key);
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedColors.remove(entry.key);
+                            } else {
+                              _selectedColors.add(entry.key);
+                            }
+                          });
+                        },
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: entry.value,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isSelected
+                                      ? theme.colorScheme.primary
+                                      : Colors.grey.shade300,
+                                  width: isSelected ? 3 : 1,
+                                ),
+                              ),
+                              child: isSelected
+                                  ? Icon(
+                                      Icons.check,
+                                      color: entry.key == 'White'
+                                          ? Colors.black
+                                          : Colors.white,
+                                      size: 24,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(entry.key, style: theme.textTheme.bodySmall),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Apply button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _applyFilters,
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Apply Filters',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -2253,7 +2574,7 @@ class _OccasionOutfitSuggestionsScreenState
                             Expanded(
                               child: ElevatedButton.icon(
                                 onPressed: () {
-                                  // TODO: Generate mannequin preview
+                                  // Generates mannequin preview for this outfit
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text(

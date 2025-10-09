@@ -19,18 +19,41 @@ Future main() async {
 }
 
 /// The main app widget
-class VestiqApp extends StatelessWidget {
+class VestiqApp extends ConsumerWidget {
   /// Default constructor
   const VestiqApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(appThemeModeProvider);
+
     return MaterialApp(
       title: AppConstants.appName,
       theme: AppTheme.getLightTheme(),
+      darkTheme: AppTheme.getDarkTheme(),
+      themeMode: themeMode,
       debugShowCheckedModeBanner: false,
       initialRoute: AppRouter.splash,
       routes: AppRouter.getBasicRoutes(),
     );
+  }
+}
+
+/// Global theme mode provider
+final appThemeModeProvider =
+    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+      return ThemeModeNotifier();
+    });
+
+/// Theme mode notifier
+class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+  ThemeModeNotifier() : super(ThemeMode.light);
+
+  void toggleTheme() {
+    state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    state = mode;
   }
 }

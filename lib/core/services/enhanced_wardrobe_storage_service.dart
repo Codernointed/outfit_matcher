@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
@@ -28,8 +29,28 @@ class EnhancedWardrobeStorageService {
   List<WardrobeLook>? _cachedLooks;
   DateTime? _lastCacheUpdate;
 
+  /// Callbacks to notify when wardrobe changes
+  final List<VoidCallback> _onChangeCallbacks = [];
+
   EnhancedWardrobeStorageService(this._prefs, this._legacyStorage) {
     _initializeStorage();
+  }
+
+  /// Add a callback to be notified when wardrobe changes
+  void addOnChangeListener(VoidCallback callback) {
+    _onChangeCallbacks.add(callback);
+  }
+
+  /// Remove a callback
+  void removeOnChangeListener(VoidCallback callback) {
+    _onChangeCallbacks.remove(callback);
+  }
+
+  /// Notify all listeners that data has changed
+  void _notifyListeners() {
+    for (final callback in _onChangeCallbacks) {
+      callback();
+    }
   }
 
   /// Initialize storage and handle migrations
@@ -118,7 +139,10 @@ class EnhancedWardrobeStorageService {
           final compatibilityCache = getIt<CompatibilityCacheService>();
           await compatibilityCache.precomputeCompatibilityMatrix(items);
         } catch (e) {
-          AppLogger.warning('⚠️ Failed to precompute compatibility matrix', error: e);
+          AppLogger.warning(
+            '⚠️ Failed to precompute compatibility matrix',
+            error: e,
+          );
         }
       }
 
@@ -151,6 +175,7 @@ class EnhancedWardrobeStorageService {
 
       await _saveWardrobeItems(items);
       _invalidateCache(); // Invalidate cache after modification
+      _notifyListeners(); // Notify listeners after save
 
       AppLogger.info(
         '💾 Wardrobe item saved',
@@ -189,8 +214,9 @@ class EnhancedWardrobeStorageService {
       }
 
       final itemsJson = jsonDecode(itemsString) as List;
-      final items =
-          itemsJson.map((json) => WardrobeItem.fromJson(json)).toList();
+      final items = itemsJson
+          .map((json) => WardrobeItem.fromJson(json))
+          .toList();
 
       // Update cache
       _cachedItems = items;
@@ -323,8 +349,12 @@ class EnhancedWardrobeStorageService {
 
       await _saveWardrobeItems(items);
       _invalidateCache();
+      _notifyListeners(); // Notify listeners after delete
 
-      AppLogger.info('🗑️ Wardrobe item deleted with image cleanup', data: {'id': itemId});
+      AppLogger.info(
+        '🗑️ Wardrobe item deleted with image cleanup',
+        data: {'id': itemId},
+      );
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ Failed to delete wardrobe item',
@@ -348,7 +378,9 @@ class EnhancedWardrobeStorageService {
       final originalFile = File(item.originalImagePath);
       if (await originalFile.exists()) {
         await originalFile.delete();
-        AppLogger.debug('🗑️ Deleted original image file: ${item.originalImagePath}');
+        AppLogger.debug(
+          '🗑️ Deleted original image file: ${item.originalImagePath}',
+        );
       }
 
       // Delete polished image file if exists
@@ -356,11 +388,16 @@ class EnhancedWardrobeStorageService {
         final polishedFile = File(item.polishedImagePath!);
         if (await polishedFile.exists()) {
           await polishedFile.delete();
-          AppLogger.debug('🗑️ Deleted polished image file: ${item.polishedImagePath}');
+          AppLogger.debug(
+            '🗑️ Deleted polished image file: ${item.polishedImagePath}',
+          );
         }
       }
     } catch (e) {
-      AppLogger.warning('⚠️ Failed to cleanup image files for item ${item.id}', error: e);
+      AppLogger.warning(
+        '⚠️ Failed to cleanup image files for item ${item.id}',
+        error: e,
+      );
       // Don't throw - cleanup failure shouldn't prevent item deletion
     }
   }
@@ -386,7 +423,9 @@ class EnhancedWardrobeStorageService {
 
           processedCount++;
 
-          AppLogger.debug('📦 Processed item $processedCount/${imageFiles.length}');
+          AppLogger.debug(
+            '📦 Processed item $processedCount/${imageFiles.length}',
+          );
         } catch (e, stackTrace) {
           AppLogger.warning(
             '⚠️ Failed to process item ${processedCount + 1}',
@@ -402,7 +441,11 @@ class EnhancedWardrobeStorageService {
       );
       return successCount;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Batch upload failed', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Batch upload failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -433,7 +476,11 @@ class EnhancedWardrobeStorageService {
       AppLogger.debug('✅ Created wardrobe item from file: ${imageFile.path}');
       return wardrobeItem;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to create wardrobe item from file', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to create wardrobe item from file',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
@@ -484,8 +531,9 @@ class EnhancedWardrobeStorageService {
       }
 
       final looksJson = jsonDecode(looksString) as List;
-      final looks =
-          looksJson.map((json) => WardrobeLook.fromJson(json)).toList();
+      final looks = looksJson
+          .map((json) => WardrobeLook.fromJson(json))
+          .toList();
 
       // Update cache
       _cachedLooks = looks;
@@ -595,10 +643,12 @@ class EnhancedWardrobeStorageService {
   /// Export data for backup
   Future<Map<String, dynamic>> exportData() async {
     return {
-      'wardrobeItems':
-          (await getWardrobeItems()).map((i) => i.toJson()).toList(),
-      'wardrobeLooks':
-          (await getWardrobeLooks()).map((l) => l.toJson()).toList(),
+      'wardrobeItems': (await getWardrobeItems())
+          .map((i) => i.toJson())
+          .toList(),
+      'wardrobeLooks': (await getWardrobeLooks())
+          .map((l) => l.toJson())
+          .toList(),
       'userPreferences': await getUserPreferences(),
       'exportedAt': DateTime.now().toIso8601String(),
       'version': _currentStorageVersion,
@@ -610,19 +660,17 @@ class EnhancedWardrobeStorageService {
     try {
       // Import wardrobe items
       if (data['wardrobeItems'] != null) {
-        final items =
-            (data['wardrobeItems'] as List)
-                .map((json) => WardrobeItem.fromJson(json))
-                .toList();
+        final items = (data['wardrobeItems'] as List)
+            .map((json) => WardrobeItem.fromJson(json))
+            .toList();
         await _saveWardrobeItems(items);
       }
 
       // Import wardrobe looks
       if (data['wardrobeLooks'] != null) {
-        final looks =
-            (data['wardrobeLooks'] as List)
-                .map((json) => WardrobeLook.fromJson(json))
-                .toList();
+        final looks = (data['wardrobeLooks'] as List)
+            .map((json) => WardrobeLook.fromJson(json))
+            .toList();
         final looksJson = looks.map((l) => l.toJson()).toList();
         await _prefs.setString(_wardrobeLooksKey, jsonEncode(looksJson));
       }

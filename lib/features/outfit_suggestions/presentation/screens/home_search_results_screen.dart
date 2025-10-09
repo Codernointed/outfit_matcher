@@ -7,8 +7,10 @@ import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/voice_search_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 /// Screen for displaying search results across items, looks, and inspiration
 class HomeSearchResultsScreen extends ConsumerStatefulWidget {
@@ -30,10 +32,12 @@ class _HomeSearchResultsScreenState
   final EnhancedWardrobeStorageService _wardrobeStorage =
       getIt<EnhancedWardrobeStorageService>();
   final OutfitStorageService _outfitStorage = getIt<OutfitStorageService>();
+  final VoiceSearchService _voiceSearch = getIt<VoiceSearchService>();
 
   List<WardrobeItem> _itemResults = [];
   List<SavedOutfit> _lookResults = [];
   bool _isSearching = false;
+  bool _isListening = false;
 
   @override
   void initState() {
@@ -54,7 +58,83 @@ class _HomeSearchResultsScreenState
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _voiceSearch.cancel();
     super.dispose();
+  }
+
+  Future<void> _startVoiceSearch() async {
+    AppLogger.info('🎤 Starting voice search');
+    
+    final available = await _voiceSearch.isAvailable();
+    if (!available) {
+      if (mounted) {
+        final errorMsg = _voiceSearch.lastError ?? 'Voice search is not available on this device';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Settings',
+              textColor: Colors.white,
+              onPressed: () {
+                openAppSettings();
+              },
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isListening = true;
+    });
+
+    await _voiceSearch.startListening(
+      onResult: (text) {
+        AppLogger.info('🎤 Voice result: $text');
+        if (text.isNotEmpty) {
+          setState(() {
+            _searchController.text = text;
+            _isListening = false;
+          });
+          _performSearch(text);
+        } else {
+          setState(() {
+            _isListening = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No speech detected. Please try again.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      },
+      onError: () {
+        AppLogger.error('🎤 Voice search error: ${_voiceSearch.lastError}');
+        if (mounted) {
+          setState(() {
+            _isListening = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_voiceSearch.lastError ?? 'Voice search failed. Please try again.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _stopVoiceSearch() async {
+    await _voiceSearch.stopListening();
+    setState(() {
+      _isListening = false;
+    });
   }
 
   Future<void> _performSearch(String query) async {
@@ -130,6 +210,15 @@ class _HomeSearchResultsScreenState
           onSubmitted: _performSearch,
         ),
         actions: [
+          // Voice search button
+          IconButton(
+            icon: Icon(
+              _isListening ? Icons.mic : Icons.mic_none_outlined,
+              color: _isListening ? Colors.red : null,
+            ),
+            onPressed: _isListening ? _stopVoiceSearch : _startVoiceSearch,
+            tooltip: _isListening ? 'Stop listening' : 'Voice search',
+          ),
           if (_searchController.text.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.clear),

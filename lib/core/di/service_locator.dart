@@ -9,6 +9,7 @@ import 'package:vestiq/core/services/mannequin_cache_service.dart';
 import 'package:vestiq/core/services/compatibility_cache_service.dart';
 import 'package:vestiq/core/utils/image_cache_manager.dart';
 import 'package:vestiq/core/services/file_based_storage_service.dart';
+import 'package:vestiq/core/services/voice_search_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;
@@ -25,14 +26,14 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<OutfitStorageService>(
     () => OutfitStorageService(sharedPreferences),
   );
-  
+
   getIt.registerLazySingleton<EnhancedWardrobeStorageService>(
     () => EnhancedWardrobeStorageService(
       sharedPreferences,
       getIt<OutfitStorageService>(),
     ),
   );
-  
+
   getIt.registerLazySingleton<AppSettingsService>(
     () => AppSettingsService(sharedPreferences),
   );
@@ -41,15 +42,15 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<ImageProcessingService>(
     () => ImageProcessingService(),
   );
-  
+
   getIt.registerLazySingleton<CompatibilityCacheService>(
     () => CompatibilityCacheService(),
   );
-  
+
   getIt.registerLazySingleton<MannequinCacheService>(
     () => MannequinCacheService(sharedPreferences),
   );
-  
+
   getIt.registerLazySingleton<WardrobePairingService>(
     () => WardrobePairingService(
       compatibilityCache: getIt<CompatibilityCacheService>(),
@@ -63,6 +64,8 @@ Future<void> setupServiceLocator() async {
   getIt.registerLazySingleton<FileBasedStorageService>(
     () => FileBasedStorageService.instance,
   );
+
+  getIt.registerLazySingleton<VoiceSearchService>(() => VoiceSearchService());
 
   // Controllers
 

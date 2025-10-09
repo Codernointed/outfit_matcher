@@ -922,11 +922,11 @@ class WardrobePairingService {
         final shoesColor = shoes.analysis.primaryColor.toLowerCase();
         if (_colorsMatchFamily(heroColor, shoesColor)) {
           tips.add(
-            'Your ${shoesColor} shoes complement this ${heroColor} dress beautifully',
+            'Your $shoesColor shoes complement this $heroColor dress beautifully',
           );
         } else {
           tips.add(
-            'The ${shoesColor} shoes create nice contrast with the ${heroColor} dress',
+            'The $shoesColor shoes create nice contrast with the $heroColor dress',
           );
         }
       }
@@ -938,10 +938,10 @@ class WardrobePairingService {
       if (bottomColor.isNotEmpty) {
         if (_colorsMatchFamily(topColor, bottomColor)) {
           tips.add(
-            'Monochrome ${topColor} look - add a colorful accessory for pop',
+            'Monochrome $topColor look - add a colorful accessory for pop',
           );
         } else {
-          tips.add('The ${topColor} top pairs well with ${bottomColor}');
+          tips.add('The $topColor top pairs well with $bottomColor');
         }
       }
 
@@ -1027,20 +1027,23 @@ class WardrobePairingService {
     // Blue family
     final blues = ['blue', 'navy', 'denim', 'indigo', 'teal', 'turquoise'];
     if (blues.any((c) => color1.contains(c)) &&
-        blues.any((c) => color2.contains(c)))
+        blues.any((c) => color2.contains(c))) {
       return true;
+    }
 
     // Red family
     final reds = ['red', 'burgundy', 'maroon', 'wine', 'crimson'];
     if (reds.any((c) => color1.contains(c)) &&
-        reds.any((c) => color2.contains(c)))
+        reds.any((c) => color2.contains(c))) {
       return true;
+    }
 
     // Green family
     final greens = ['green', 'olive', 'emerald', 'forest'];
     if (greens.any((c) => color1.contains(c)) &&
-        greens.any((c) => color2.contains(c)))
+        greens.any((c) => color2.contains(c))) {
       return true;
+    }
 
     return false;
   }

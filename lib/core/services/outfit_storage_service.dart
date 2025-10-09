@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 
@@ -20,6 +21,9 @@ class OutfitStorageService {
 
   final SharedPreferences _preferences;
 
+  /// Callbacks to notify when outfits are saved/deleted
+  final List<VoidCallback> _onChangeCallbacks = [];
+
   Future<List<SavedOutfit>> fetchAll() async {
     final rawList = _preferences.getStringList(_savedOutfitsKey);
     if (rawList == null) return const [];
@@ -38,6 +42,23 @@ class OutfitStorageService {
         .toList(growable: false);
   }
 
+  /// Add a callback to be notified when outfits change
+  void addOnChangeListener(VoidCallback callback) {
+    _onChangeCallbacks.add(callback);
+  }
+
+  /// Remove a callback
+  void removeOnChangeListener(VoidCallback callback) {
+    _onChangeCallbacks.remove(callback);
+  }
+
+  /// Notify all listeners that data has changed
+  void _notifyListeners() {
+    for (final callback in _onChangeCallbacks) {
+      callback();
+    }
+  }
+
   Future<SavedOutfit> save(SavedOutfit outfit) async {
     final allOutfits = await fetchAll();
     final updated = [outfit, ...allOutfits.where((o) => o.id != outfit.id)];
@@ -45,6 +66,7 @@ class OutfitStorageService {
       _savedOutfitsKey,
       updated.map((o) => o.toJsonString()).toList(growable: false),
     );
+    _notifyListeners(); // Notify listeners after save
     return outfit;
   }
 
@@ -57,6 +79,7 @@ class OutfitStorageService {
           .map((o) => o.toJsonString())
           .toList(growable: false),
     );
+    _notifyListeners(); // Notify listeners after delete
   }
 
   Future<void> clear() async {

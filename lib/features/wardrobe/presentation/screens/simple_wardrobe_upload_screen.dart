@@ -46,7 +46,7 @@ class _SimpleWardrobeUploadScreenState extends ConsumerState<SimpleWardrobeUploa
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                // color: theme.colorScheme.primaryContainer.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(

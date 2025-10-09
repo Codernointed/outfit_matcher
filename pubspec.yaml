@@ -73,6 +73,9 @@ dependencies:
   # Permissions
   permission_handler: ^11.3.1
   camera: ^0.10.5+9 # For camera access
+  
+  # Voice search
+  speech_to_text: ^7.0.0
 
 dev_dependencies:
   flutter_test:
