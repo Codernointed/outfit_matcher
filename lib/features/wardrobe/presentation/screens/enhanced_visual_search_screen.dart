@@ -1437,7 +1437,7 @@ class _EnhancedVisualSearchScreenState
                           Text(
                             inspiration.source,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues (
+                              color: theme.colorScheme.onSurface.withValues(
                                 alpha: 0.7,
                               ),
                             ),
@@ -1513,16 +1513,18 @@ class _EnhancedVisualSearchScreenState
                               Text(
                                 'Source',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               Text(
                                 inspiration.source,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withValues(alpha: 0.8),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.8,
+                                  ),
                                 ),
                               ),
                             ],
