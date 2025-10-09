@@ -85,24 +85,24 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
                 child: ListView(
                   controller: scrollController,
                   padding: const EdgeInsets.all(0),
-                      children: [
+                  children: [
                     // Hero Image
                     _buildHeroImage(context, theme),
 
                     Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           // Title & Favorite
                           _buildHeader(context, theme),
 
-                                const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
                           // Quick Details
                           _buildQuickDetails(theme),
 
-                                const SizedBox(height: 32),
+                          const SizedBox(height: 32),
 
                           // Primary Action - Pair This Item
                           _buildPrimaryAction(context, theme),
@@ -166,7 +166,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -233,7 +233,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
           ),
         ),
         IconButton(
-            icon: Icon(
+          icon: Icon(
             _currentItem.isFavorite ? Icons.favorite : Icons.favorite_border,
             color: _currentItem.isFavorite ? Colors.red : null,
           ),
@@ -305,11 +305,11 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
           const SizedBox(width: 6),
           Text(
             label,
-              style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: isPrimary
                   ? theme.colorScheme.primary
                   : theme.colorScheme.onSurface.withAlpha(204),
-                fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -443,7 +443,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Yesterday';
     if (difference < 7) return '$difference days ago';
@@ -510,14 +510,14 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
           Text(
             'Add custom styling instructions for the AI',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(

@@ -14,6 +14,7 @@ import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/mannequin_skeleton_loader.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/services.dart';
@@ -487,7 +488,9 @@ class _EnhancedVisualSearchScreenState
             Icons.arrow_back_ios_rounded,
             color: theme.colorScheme.onSurface,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          ),
         ),
         backgroundColor: Colors.transparent,
         actions: [
@@ -1289,19 +1292,25 @@ class _EnhancedVisualSearchScreenState
         // Main image - takes full space
         AspectRatio(
           aspectRatio: 3 / 4, // Portrait aspect ratio for fashion
-          child: hasValidImage
-              ? (imageUrl.startsWith('data:')
-                    ? Image.memory(_dataUrlToBytes(imageUrl), fit: BoxFit.cover)
-                    : CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => _buildElegantLoading(),
-                        errorWidget: (context, url, error) =>
-                            _buildImageError(),
-                      ))
-              : _isGeneratingMannequins
-              ? _buildElegantLoading()
-              : _buildImageError(),
+          child: Container(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: hasValidImage
+                ? (imageUrl.startsWith('data:')
+                      ? Image.memory(
+                          _dataUrlToBytes(imageUrl),
+                          fit: BoxFit.contain,
+                        )
+                      : CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => _buildElegantLoading(),
+                          errorWidget: (context, url, error) =>
+                              _buildImageError(),
+                        ))
+                : _isGeneratingMannequins
+                ? _buildElegantLoading()
+                : _buildImageError(),
+          ),
         ),
 
         // Very subtle download hint - only visible on hover/press
@@ -1539,7 +1548,7 @@ class _EnhancedVisualSearchScreenState
                                   'Photographer',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.onSurface
-                                        .withOpacity(0.6),
+                                        .withValues(alpha: 0.6),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -1547,7 +1556,7 @@ class _EnhancedVisualSearchScreenState
                                   inspiration.photographer!,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.onSurface
-                                        .withOpacity(0.8),
+                                        .withValues(alpha: 0.8),
                                   ),
                                 ),
                               ],

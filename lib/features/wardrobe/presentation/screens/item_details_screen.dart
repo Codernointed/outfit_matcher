@@ -388,7 +388,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           Text(
             _isAnalyzing ? 'Analyzing your items...' : 'Loading...',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              color: theme.colorScheme.onSurface.withValues(alpha:0.8),
             ),
           ),
           if (_isAnalyzing) ...[
@@ -426,7 +426,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Text(
               _error ?? 'Please try again',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha:0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -463,7 +463,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha:0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -519,7 +519,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                       borderRadius: BorderRadius.circular(4),
                       color: index == _currentIndex
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface.withOpacity(0.2),
+                          : theme.colorScheme.onSurface.withValues(alpha:0.2),
                     ),
                   ),
                 ),
@@ -533,7 +533,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             child: Text(
               'Item ${_currentIndex + 1} of ${widget.imagePaths.length}',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha:0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -549,7 +549,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -688,7 +688,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         color: theme.scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha:0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -754,7 +754,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(
                           context,
-                        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        ).colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
@@ -812,18 +812,18 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.6),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha:0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha:0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -836,7 +836,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             filled: true,
             fillColor: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha:0.3),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -911,7 +911,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(
                           context,
-                        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        ).colorScheme.surfaceContainerHighest.withValues(alpha:0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
@@ -940,21 +940,29 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
 
   Widget _buildGenderSelectionSection(ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primaryContainer.withOpacity(0.3),
-            theme.colorScheme.secondaryContainer.withOpacity(0.2),
+            theme.colorScheme.primary.withValues(alpha:0.08),
+            theme.colorScheme.primaryContainer.withValues(alpha:0.4),
+            theme.colorScheme.secondaryContainer.withValues(alpha:0.2),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.2),
-          width: 1,
+          color: theme.colorScheme.primary.withValues(alpha:0.2),
+          width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha:0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -962,33 +970,46 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withValues(alpha:0.8),
+                    ],
+                  ),
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha:0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.person_outline,
-                  color: theme.colorScheme.primary,
-                  size: 20,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Mannequin Style Preference',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       'Choose the mannequin style for outfit previews',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha:0.7),
                       ),
                     ),
                   ],
@@ -996,7 +1017,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Row(
             children: [
               Expanded(
@@ -1007,7 +1028,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                   theme: theme,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: _buildGenderCard(
                   gender: 'female',
@@ -1040,42 +1061,48 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         AppLogger.info('👤 Gender toggled to: $_currentGender');
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        height: 140,
+        height: 160,
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
                   colors: [
                     theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.85),
+                    theme.colorScheme.primary.withValues(alpha:0.85),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
-              : null,
-          color: isSelected ? null : theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+              : LinearGradient(
+                  colors: [
+                    theme.colorScheme.surface,
+                    theme.colorScheme.surfaceContainerHighest,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withOpacity(0.3),
-            width: isSelected ? 2.5 : 1.5,
+                : theme.colorScheme.outline.withValues(alpha:0.2),
+            width: isSelected ? 3 : 2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
+                    color: theme.colorScheme.primary.withValues(alpha:0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                     spreadRadius: 0,
                   ),
                 ]
               : [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withValues(alpha:0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
                 ],
         ),
@@ -1084,38 +1111,67 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           children: [
             // Icon with background
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Colors.white.withOpacity(0.2)
-                    : theme.colorScheme.primary.withOpacity(0.08),
+                    ? Colors.white.withValues(alpha:0.25)
+                    : theme.colorScheme.primary.withValues(alpha:0.12),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: isSelected
+                        ? Colors.white.withValues(alpha:0.3)
+                        : theme.colorScheme.primary.withValues(alpha:0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Icon(
                 icon,
-                size: 40,
+                size: 48,
                 color: isSelected
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             // Label
             Text(
               label,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
                 color: isSelected
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurface,
               ),
             ),
             if (isSelected) ...[
-              const SizedBox(height: 6),
-              Icon(
-                Icons.check_circle,
-                color: theme.colorScheme.onPrimary,
-                size: 18,
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha:0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: theme.colorScheme.onPrimary,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Selected',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ],

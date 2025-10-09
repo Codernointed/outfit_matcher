@@ -364,7 +364,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           Text(
             _isAnalyzing ? 'Analyzing your items...' : 'Loading...',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
             ),
           ),
           if (_isAnalyzing) ...[
@@ -372,7 +372,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Text(
               'Our AI is examining each item to understand its vibe and styling potential.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -402,7 +402,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Text(
               _error ?? 'Please try again',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),
@@ -439,7 +439,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -495,7 +495,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                       borderRadius: BorderRadius.circular(4),
                       color: index == _currentIndex
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface.withOpacity(0.2),
+                          : theme.colorScheme.onSurface.withValues(alpha: 0.2),
                     ),
                   ),
                 ),
@@ -509,7 +509,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             child: Text(
               'Item ${_currentIndex + 1} of ${widget.imagePaths.length}',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -525,7 +525,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -660,7 +660,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         color: theme.scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withOpacity(0.1),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -724,9 +724,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                 decoration: BoxDecoration(
                   color: isSelected
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      : Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected
@@ -784,18 +783,24 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -808,7 +813,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             filled: true,
             fillColor: Theme.of(
               context,
-            ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -881,9 +886,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                 decoration: BoxDecoration(
                   color: isSelected
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      : Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected

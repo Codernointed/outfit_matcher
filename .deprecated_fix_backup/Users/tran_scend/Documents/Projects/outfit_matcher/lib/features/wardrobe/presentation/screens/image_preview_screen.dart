@@ -7,9 +7,9 @@ import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 class ImagePreviewScreen extends ConsumerWidget {
   final String imagePath;
   final bool fromCamera;
-  
+
   const ImagePreviewScreen({
-    super.key, 
+    super.key,
     required this.imagePath,
     this.fromCamera = false,
   });
@@ -62,7 +62,9 @@ class ImagePreviewScreen extends ConsumerWidget {
             ),
             color:
                 Theme.of(context).bottomAppBarTheme.color ??
-                Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -130,9 +132,9 @@ class ImagePreviewScreen extends ConsumerWidget {
 class ProcessingScreen extends ConsumerStatefulWidget {
   final String imagePath;
   final bool fromCamera;
-  
+
   const ProcessingScreen({
-    super.key, 
+    super.key,
     required this.imagePath,
     this.fromCamera = false,
   });
@@ -141,7 +143,8 @@ class ProcessingScreen extends ConsumerStatefulWidget {
   ConsumerState<ProcessingScreen> createState() => _ProcessingScreenState();
 }
 
-class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with SingleTickerProviderStateMixin {
+class _ProcessingScreenState extends ConsumerState<ProcessingScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   double _progress = 0.0;
   String _statusMessage = 'Initializing...';
@@ -153,7 +156,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
     {'message': 'Preparing recommendations...', 'icon': Icons.auto_awesome},
     {'message': 'Done!', 'icon': Icons.check_circle},
   ];
-  
+
   // Analysis results
   Map<String, dynamic>? _analysisResults;
 
@@ -164,11 +167,11 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat();
-    
+
     // Start processing after a short delay to allow animation to begin
     Future.delayed(const Duration(milliseconds: 300), _startProcessing);
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
@@ -182,7 +185,9 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
         if (i == _stages.length - 1) {
           // Last stage - perform actual analysis
           try {
-            final result = await GeminiApiService.analyzeClothingItem(File(widget.imagePath));
+            final result = await GeminiApiService.analyzeClothingItem(
+              File(widget.imagePath),
+            );
             if (result != null) {
               _analysisResults = result;
               debugPrint('Analysis results: $_analysisResults');
@@ -194,25 +199,25 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
             return;
           }
         }
-        
+
         if (!mounted) return;
-        
+
         // Update UI for current stage
         setState(() {
           _progress = (i + 1) / _stages.length;
           _statusMessage = _stages[i]['message'] as String;
         });
-        
+
         // Add variable delay based on stage
-        final delay = i < _stages.length - 1 
+        final delay = i < _stages.length - 1
             ? Duration(milliseconds: 500 + (i * 200))
             : Duration.zero;
-            
+
         await Future.delayed(delay);
       }
 
       if (!mounted) return;
-      
+
       // Navigate to results
       if (_analysisResults != null) {
         _navigateToResults();
@@ -227,7 +232,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
 
   void _navigateToResults() {
     if (!mounted) return;
-    
+
     // Convert the analysis results to the expected format for VisualSearchScreen
     final analysis = _analysisResults!;
     Navigator.of(context).pushReplacement(
@@ -244,7 +249,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
 
   void _showError(String message) {
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -267,7 +272,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
       (stage) => stage['message'] == _statusMessage,
       orElse: () => _stages.first,
     );
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Analyzing Your Item'),
@@ -291,11 +296,11 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
                     width: 180,
                     height: 180,
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
-                  
+
                   // Progress indicator
                   CircularProgressIndicator(
                     value: _progress,
@@ -305,7 +310,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
                       theme.colorScheme.primary,
                     ),
                   ),
-                  
+
                   // Current stage icon
                   Icon(
                     currentStage['icon'] as IconData? ?? Icons.auto_awesome,
@@ -315,9 +320,9 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Status message
             Text(
               _statusMessage,
@@ -326,9 +331,9 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Progress percentage
             Text(
               '${(_progress * 100).toInt()}% complete',
@@ -336,9 +341,9 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> with Single
                 color: theme.textTheme.bodySmall?.color,
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Progress bar
             LinearProgressIndicator(
               value: _progress,

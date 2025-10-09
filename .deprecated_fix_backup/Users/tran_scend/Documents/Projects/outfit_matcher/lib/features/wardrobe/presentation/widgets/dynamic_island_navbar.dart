@@ -29,20 +29,20 @@ class DynamicIslandNavBar extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface.withOpacity(0.95),
+        color: theme.colorScheme.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: theme.colorScheme.onSurface.withOpacity(0.06),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.05),
+            color: theme.colorScheme.primary.withValues(alpha: 0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -82,7 +82,7 @@ class DynamicIslandNavBar extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isActive
-              ? theme.colorScheme.primary.withOpacity(0.15)
+              ? theme.colorScheme.primary.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
         ),
@@ -97,7 +97,7 @@ class DynamicIslandNavBar extends StatelessWidget {
                 size: 24,
                 color: isActive
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.5),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
             if (isActive) ...[

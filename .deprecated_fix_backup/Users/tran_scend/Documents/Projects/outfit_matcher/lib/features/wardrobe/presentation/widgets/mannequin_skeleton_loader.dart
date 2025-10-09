@@ -7,7 +7,8 @@ class MannequinSkeletonLoader extends StatefulWidget {
   const MannequinSkeletonLoader({super.key, this.count = 3});
 
   @override
-  State<MannequinSkeletonLoader> createState() => _MannequinSkeletonLoaderState();
+  State<MannequinSkeletonLoader> createState() =>
+      _MannequinSkeletonLoaderState();
 }
 
 class _MannequinSkeletonLoaderState extends State<MannequinSkeletonLoader>
@@ -50,7 +51,7 @@ class _MannequinSkeletonLoaderState extends State<MannequinSkeletonLoader>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.shadow.withOpacity(0.08),
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.08),
                       blurRadius: 16,
                       offset: const Offset(0, 8),
                     ),
@@ -66,7 +67,7 @@ class _MannequinSkeletonLoaderState extends State<MannequinSkeletonLoader>
                         aspectRatio: 3 / 4,
                         child: Container(
                           color: theme.colorScheme.surfaceContainerHighest
-                              .withOpacity(_animation.value),
+                              .withValues(alpha: _animation.value),
                         ),
                       ),
                       // Content skeleton
@@ -81,7 +82,7 @@ class _MannequinSkeletonLoaderState extends State<MannequinSkeletonLoader>
                               height: 20,
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surfaceContainerHighest
-                                    .withOpacity(_animation.value),
+                                    .withValues(alpha: _animation.value),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -92,7 +93,7 @@ class _MannequinSkeletonLoaderState extends State<MannequinSkeletonLoader>
                               height: 14,
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surfaceContainerHighest
-                                    .withOpacity(_animation.value * 0.7),
+                                    .withValues(alpha: _animation.value * 0.7),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -102,7 +103,7 @@ class _MannequinSkeletonLoaderState extends State<MannequinSkeletonLoader>
                               height: 48,
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surfaceContainerHighest
-                                    .withOpacity(_animation.value * 0.5),
+                                    .withValues(alpha: _animation.value * 0.5),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                             ),
@@ -173,8 +174,9 @@ class _MannequinGridSkeletonLoaderState
           builder: (context, child) {
             return Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withOpacity(_animation.value),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: _animation.value,
+                ),
                 borderRadius: BorderRadius.circular(16),
               ),
             );

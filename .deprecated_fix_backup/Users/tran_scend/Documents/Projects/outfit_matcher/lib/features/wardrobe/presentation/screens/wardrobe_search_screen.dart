@@ -14,7 +14,8 @@ class WardrobeSearchScreen extends ConsumerStatefulWidget {
   const WardrobeSearchScreen({super.key});
 
   @override
-  ConsumerState<WardrobeSearchScreen> createState() => _WardrobeSearchScreenState();
+  ConsumerState<WardrobeSearchScreen> createState() =>
+      _WardrobeSearchScreenState();
 }
 
 class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
@@ -55,10 +56,12 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       appBar: AppBar(
         title: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.3,
+            ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: theme.colorScheme.primary.withOpacity(0.3),
+              color: theme.colorScheme.primary.withValues(alpha: 0.3),
             ),
           ),
           child: TextField(
@@ -68,13 +71,15 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
               hintText: 'Search your wardrobe...',
               prefixIcon: Icon(
                 Icons.search,
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: Icon(
                         Icons.clear,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       onPressed: () {
                         _searchController.clear();
@@ -127,7 +132,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(60),
             ),
             child: Icon(
@@ -147,7 +152,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
           Text(
             'Type to search by color, type, brand, or occasion',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -181,10 +186,12 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Text(
@@ -240,7 +247,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
           Text(
             'Failed to search wardrobe items',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 16),
@@ -264,13 +271,15 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
               borderRadius: BorderRadius.circular(60),
             ),
             child: Icon(
               Icons.search_off,
               size: 60,
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 24),
@@ -284,7 +293,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
           Text(
             'Try searching for a different term or check your spelling',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -347,7 +356,7 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
                   Text(
                     item.analysis.primaryColor,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
 
@@ -433,7 +442,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
     if (item.tags.any((tag) => tag.toLowerCase().contains(query))) {
       matches.add('Tags');
     }
-    if (item.occasions.any((occasion) => occasion.toLowerCase().contains(query))) {
+    if (item.occasions.any(
+      (occasion) => occasion.toLowerCase().contains(query),
+    )) {
       matches.add('Occasions');
     }
 
@@ -451,7 +462,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       final storage = getIt<EnhancedWardrobeStorageService>();
       final results = await storage.searchWardrobeItems(query);
 
-      AppLogger.debug('🔍 Search completed: "$query" -> ${results.length} results');
+      AppLogger.debug(
+        '🔍 Search completed: "$query" -> ${results.length} results',
+      );
       return results;
     } catch (e, stackTrace) {
       AppLogger.error('❌ Search failed', error: e, stackTrace: stackTrace);

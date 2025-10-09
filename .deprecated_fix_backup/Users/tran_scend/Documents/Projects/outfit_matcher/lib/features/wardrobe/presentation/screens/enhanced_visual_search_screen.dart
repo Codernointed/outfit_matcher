@@ -58,9 +58,9 @@ class _EnhancedVisualSearchScreenState
     AppLogger.info(
       '🚀 EnhancedVisualSearchScreen initialized',
       data: {
-      'analyses_count': widget.analyses.length,
-      'item_images_count': widget.itemImages.length,
-      'search_query': widget.searchQuery,
+        'analyses_count': widget.analyses.length,
+        'item_images_count': widget.itemImages.length,
+        'search_query': widget.searchQuery,
         'user_notes_length': widget.userNotes?.length,
       },
     );
@@ -75,8 +75,8 @@ class _EnhancedVisualSearchScreenState
       AppLogger.info(
         '📱 Tab switched',
         data: {
-        'tab_index': _tabController.index,
-        'tab_name': tabNames[_tabController.index],
+          'tab_index': _tabController.index,
+          'tab_name': tabNames[_tabController.index],
         },
       );
     }
@@ -95,7 +95,7 @@ class _EnhancedVisualSearchScreenState
     try {
       // Load inspirations first (fast) - don't wait for mannequins
       _loadFashionInspirations();
-      
+
       // Start mannequin generation in background with streaming
       _loadMannequinOutfitsStreamed();
 
@@ -171,8 +171,8 @@ class _EnhancedVisualSearchScreenState
     AppLogger.info(
       '🎨 Starting mannequin generation',
       data: {
-      'analyses_count': widget.analyses.length,
-      'item_images_count': widget.itemImages.length,
+        'analyses_count': widget.analyses.length,
+        'item_images_count': widget.itemImages.length,
       },
     );
 
@@ -187,22 +187,22 @@ class _EnhancedVisualSearchScreenState
     try {
       final generatedOutfits =
           await GeminiApiService.generateEnhancedMannequinOutfits(
-        widget.analyses,
+            widget.analyses,
             userNotes: widget.userNotes,
-        onProgress: (status) {
-          if (mounted) {
-            setState(() => _generationStatus = status);
-          }
-        },
-        onProgressUpdate: (completed, total) {
-          if (mounted) {
-            setState(() {
-              _generationProgress = completed;
-              _totalPoses = total;
-            });
-          }
-        },
-      );
+            onProgress: (status) {
+              if (mounted) {
+                setState(() => _generationStatus = status);
+              }
+            },
+            onProgressUpdate: (completed, total) {
+              if (mounted) {
+                setState(() {
+                  _generationProgress = completed;
+                  _totalPoses = total;
+                });
+              }
+            },
+          );
 
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
@@ -213,8 +213,8 @@ class _EnhancedVisualSearchScreenState
       AppLogger.info(
         '✅ Generated mannequin outfits successfully',
         data: {
-        'count': generatedOutfits.length,
-        'duration_ms': duration.inMilliseconds,
+          'count': generatedOutfits.length,
+          'duration_ms': duration.inMilliseconds,
         },
       );
 
@@ -234,20 +234,19 @@ class _EnhancedVisualSearchScreenState
           final pose = _getPoseForIndex(i);
           outfits.add(
             MannequinOutfit(
-            id: 'mannequin_$i',
+              id: 'mannequin_$i',
               items: [fallbackAnalysis],
               imageUrl:
                   'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=600&fit=crop&crop=center',
-            pose: pose,
-              style:
-                  [
-                    'casual chic',
-                    'business sharp',
-                    'weekend relaxed',
-                    'evening glam',
-                    'streetwear edge',
-                    'party ready',
-                  ][i],
+              pose: pose,
+              style: [
+                'casual chic',
+                'business sharp',
+                'weekend relaxed',
+                'evening glam',
+                'streetwear edge',
+                'party ready',
+              ][i],
               confidence: 0.75,
               metadata: {
                 'description':
@@ -262,7 +261,7 @@ class _EnhancedVisualSearchScreenState
         '✅ Created fallback mannequin outfits',
         data: {'count': outfits.length},
       );
-    return outfits;
+      return outfits;
     }
   }
 
@@ -283,7 +282,7 @@ class _EnhancedVisualSearchScreenState
     if (!mounted) return;
 
     final startTime = DateTime.now();
-    
+
     setState(() {
       _isGeneratingMannequins = true;
       _generationStatus = 'Checking cache...';
@@ -296,7 +295,7 @@ class _EnhancedVisualSearchScreenState
       final cacheService = getIt<MannequinCacheService>();
       final itemIds = widget.analyses.map((a) => a.id).toList();
       final cachedOutfits = await cacheService.getCachedMannequins(itemIds);
-      
+
       if (cachedOutfits != null && cachedOutfits.isNotEmpty) {
         final cacheDuration = DateTime.now().difference(startTime);
         AppLogger.performance(
@@ -308,7 +307,7 @@ class _EnhancedVisualSearchScreenState
           '⚡ Cache hit! Loaded ${cachedOutfits.length} mannequins instantly',
           data: {'duration_ms': cacheDuration.inMilliseconds},
         );
-        
+
         if (mounted) {
           setState(() {
             _mannequinOutfits = cachedOutfits;
@@ -318,11 +317,11 @@ class _EnhancedVisualSearchScreenState
         }
         return;
       }
-      
+
       // Cache miss - generate with streaming
       AppLogger.info('💫 Cache miss - generating mannequins with streaming');
       setState(() => _generationStatus = 'Generating your looks...');
-      
+
       final stream = GeminiApiService.generateEnhancedMannequinOutfitsStream(
         widget.analyses,
         userNotes: widget.userNotes,
@@ -335,7 +334,7 @@ class _EnhancedVisualSearchScreenState
 
       await for (final outfit in stream) {
         if (!mounted) break;
-        
+
         setState(() {
           _mannequinOutfits.add(outfit);
           _generationProgress = _mannequinOutfits.length;
@@ -358,8 +357,8 @@ class _EnhancedVisualSearchScreenState
         '✅ Streamed ${_mannequinOutfits.length} mannequin outfits',
         data: {
           'duration_ms': totalDuration.inMilliseconds,
-          'avg_per_outfit_ms': _mannequinOutfits.isEmpty 
-              ? 0 
+          'avg_per_outfit_ms': _mannequinOutfits.isEmpty
+              ? 0
               : totalDuration.inMilliseconds ~/ _mannequinOutfits.length,
         },
       );
@@ -382,7 +381,7 @@ class _EnhancedVisualSearchScreenState
         errorDuration,
         result: 'error',
       );
-      
+
       if (mounted) {
         setState(() {
           _isGeneratingMannequins = false;
@@ -445,7 +444,9 @@ class _EnhancedVisualSearchScreenState
         bottom: TabBar(
           controller: _tabController,
           labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+          unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+            alpha: 0.6,
+          ),
           indicatorColor: theme.colorScheme.primary,
           tabs: const [
             Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
@@ -477,7 +478,7 @@ class _EnhancedVisualSearchScreenState
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.primary.withOpacity(0.7),
+                theme.colorScheme.primary.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -485,7 +486,7 @@ class _EnhancedVisualSearchScreenState
           Text(
             message,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -501,10 +502,9 @@ class _EnhancedVisualSearchScreenState
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
-                widthFactor:
-                    _totalPoses == 0
-                        ? 0
-                        : (_generationProgress / _totalPoses).clamp(0.0, 1.0),
+                widthFactor: _totalPoses == 0
+                    ? 0
+                    : (_generationProgress / _totalPoses).clamp(0.0, 1.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: theme.colorScheme.primary,
@@ -517,7 +517,7 @@ class _EnhancedVisualSearchScreenState
             Text(
               '$_generationProgress of $_totalPoses looks crafted',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             if (_generationStatus.isNotEmpty) ...[
@@ -535,7 +535,7 @@ class _EnhancedVisualSearchScreenState
             Text(
               'This may take a moment...',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),
@@ -582,7 +582,7 @@ class _EnhancedVisualSearchScreenState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -599,17 +599,15 @@ class _EnhancedVisualSearchScreenState
                 child: CachedNetworkImage(
                   imageUrl: inspiration.imageUrl,
                   fit: BoxFit.cover,
-                  placeholder:
-                      (context, url) => Container(
+                  placeholder: (context, url) => Container(
                     color: theme.colorScheme.surface,
-                        child: const Center(child: CircularProgressIndicator()),
-                    ),
-                  errorWidget:
-                      (context, url, error) => Container(
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
                     color: theme.colorScheme.surface,
                     child: Icon(
                       Icons.image_not_supported,
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -643,13 +641,17 @@ class _EnhancedVisualSearchScreenState
                         Icon(
                           Icons.source,
                           size: 14,
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           inspiration.source,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                         const Spacer(),
@@ -659,7 +661,9 @@ class _EnhancedVisualSearchScreenState
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -733,26 +737,28 @@ class _EnhancedVisualSearchScreenState
     final theme = Theme.of(context);
 
     return DecoratedBox(
-        decoration: BoxDecoration(
+      decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.08),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
+          ),
+        ],
+      ),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
+          children: [
+            AspectRatio(
               aspectRatio: 3 / 4,
-                  child: Container(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              child: Container(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -763,17 +769,19 @@ class _EnhancedVisualSearchScreenState
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.primary.withOpacity(0.7),
+                            theme.colorScheme.primary.withValues(alpha: 0.7),
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        _generationStatus.isNotEmpty 
-                            ? _generationStatus 
+                        _generationStatus.isNotEmpty
+                            ? _generationStatus
                             : 'Crafting your next look...',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -805,11 +813,11 @@ class _EnhancedVisualSearchScreenState
       padding: const EdgeInsets.only(bottom: 24),
       child: DecoratedBox(
         decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
+          color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.08),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -817,9 +825,9 @@ class _EnhancedVisualSearchScreenState
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-                    child: Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+            children: [
               AspectRatio(
                 aspectRatio: 3 / 4,
                 child: _buildMannequinImage(outfit.imageUrl),
@@ -829,7 +837,7 @@ class _EnhancedVisualSearchScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                        Text(
+                    Text(
                       'Look $index: ${_formatStyleLabel(outfit.style)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -839,7 +847,9 @@ class _EnhancedVisualSearchScreenState
                     Text(
                       'Featuring ${outfit.items.map((item) => item.itemType.toLowerCase()).join(', ')}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                     if (description != null && description.isNotEmpty) ...[
@@ -847,7 +857,9 @@ class _EnhancedVisualSearchScreenState
                       Text(
                         description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ],
@@ -859,8 +871,8 @@ class _EnhancedVisualSearchScreenState
                     const SizedBox(height: 16),
                     _buildMannequinActions(outfit, index),
                   ],
-                  ),
                 ),
+              ),
             ],
           ),
         ),
@@ -882,7 +894,7 @@ class _EnhancedVisualSearchScreenState
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.primary.withOpacity(0.6),
+                theme.colorScheme.primary.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -890,7 +902,7 @@ class _EnhancedVisualSearchScreenState
           Text(
             'Creating your look...',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -902,20 +914,20 @@ class _EnhancedVisualSearchScreenState
   Widget _buildImageError() {
     final theme = Theme.of(context);
     return Container(
-      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.image_not_supported_outlined,
             size: 48,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
             'Image unavailable',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -958,14 +970,14 @@ class _EnhancedVisualSearchScreenState
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: onAction,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
-                        shape: RoundedRectangleBorder(
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -1058,10 +1070,9 @@ class _EnhancedVisualSearchScreenState
     final now = DateTime.now();
     final savedOutfit = SavedOutfit(
       id: 'saved_${now.millisecondsSinceEpoch}',
-      title:
-          outfit.style != null
-              ? 'Look $index • ${_formatStyleLabel(outfit.style)}'
-              : 'Look $index',
+      title: outfit.style != null
+          ? 'Look $index • ${_formatStyleLabel(outfit.style)}'
+          : 'Look $index',
       items: analysisItems,
       mannequinImages: [outfit.imageUrl],
       notes: widget.userNotes ?? '',
@@ -1101,7 +1112,7 @@ class _EnhancedVisualSearchScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -1112,7 +1123,7 @@ class _EnhancedVisualSearchScreenState
             child: Text(
               notes,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -1126,10 +1137,9 @@ class _EnhancedVisualSearchScreenState
     return style
         .split(RegExp(r'[_\-]'))
         .map(
-          (word) =>
-              word.isEmpty
-                  ? ''
-                  : '${word[0].toUpperCase()}${word.substring(1)}',
+          (word) => word.isEmpty
+              ? ''
+              : '${word[0].toUpperCase()}${word.substring(1)}',
         )
         .join(' ');
   }
@@ -1218,23 +1228,19 @@ class _EnhancedVisualSearchScreenState
         // Main image - takes full space
         AspectRatio(
           aspectRatio: 3 / 4, // Portrait aspect ratio for fashion
-          child:
-              hasValidImage
-                  ? (imageUrl.startsWith('data:')
-                      ? Image.memory(
-                        _dataUrlToBytes(imageUrl),
-                        fit: BoxFit.cover,
-                      )
-                      : CachedNetworkImage(
+          child: hasValidImage
+              ? (imageUrl.startsWith('data:')
+                    ? Image.memory(_dataUrlToBytes(imageUrl), fit: BoxFit.cover)
+                    : CachedNetworkImage(
                         imageUrl: imageUrl,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => _buildElegantLoading(),
-                        errorWidget:
-                            (context, url, error) => _buildImageError(),
+                        errorWidget: (context, url, error) =>
+                            _buildImageError(),
                       ))
-                  : _isGeneratingMannequins
-                  ? _buildElegantLoading()
-                  : _buildImageError(),
+              : _isGeneratingMannequins
+              ? _buildElegantLoading()
+              : _buildImageError(),
         ),
 
         // Very subtle download hint - only visible on hover/press
@@ -1246,21 +1252,20 @@ class _EnhancedVisualSearchScreenState
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap:
-                      () => _downloadMannequinImage(
-                        MannequinOutfit(
-                          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-                          items: [],
-                          imageUrl: imageUrl,
-                        ),
-                      ),
+                  onTap: () => _downloadMannequinImage(
+                    MannequinOutfit(
+                      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+                      items: [],
+                      imageUrl: imageUrl,
+                    ),
+                  ),
                   child: const Icon(
                     Icons.download_rounded,
                     color: Colors.white,
@@ -1284,7 +1289,7 @@ class _EnhancedVisualSearchScreenState
                     size: 48,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.4),
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1292,7 +1297,7 @@ class _EnhancedVisualSearchScreenState
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1301,7 +1306,7 @@ class _EnhancedVisualSearchScreenState
                     style: TextButton.styleFrom(
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.1),
+                      ).colorScheme.primary.withValues(alpha: 0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -1327,8 +1332,7 @@ class _EnhancedVisualSearchScreenState
 
     showDialog(
       context: context,
-      builder:
-          (context) => Dialog(
+      builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.all(16),
         child: Container(
@@ -1344,10 +1348,10 @@ class _EnhancedVisualSearchScreenState
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(24),
-                      ),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -1372,8 +1376,9 @@ class _EnhancedVisualSearchScreenState
                           Text(
                             inspiration.source,
                             style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.7),
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ),
                         ],
@@ -1383,7 +1388,9 @@ class _EnhancedVisualSearchScreenState
                       onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(
                         Icons.close,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                   ],
@@ -1396,9 +1403,9 @@ class _EnhancedVisualSearchScreenState
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: PhotoView(
-                        imageProvider: CachedNetworkImageProvider(
-                          inspiration.imageUrl,
-                        ),
+                    imageProvider: CachedNetworkImageProvider(
+                      inspiration.imageUrl,
+                    ),
                     minScale: PhotoViewComputedScale.contained,
                     maxScale: PhotoViewComputedScale.covered * 2,
                     backgroundDecoration: BoxDecoration(
@@ -1426,9 +1433,9 @@ class _EnhancedVisualSearchScreenState
                       Text(
                         inspiration.description!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.8,
-                              ),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.8,
+                          ),
                           height: 1.4,
                         ),
                       ),
@@ -1445,16 +1452,18 @@ class _EnhancedVisualSearchScreenState
                               Text(
                                 'Source',
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withOpacity(0.6),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               Text(
                                 inspiration.source,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurface
-                                          .withOpacity(0.8),
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.8,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1467,19 +1476,17 @@ class _EnhancedVisualSearchScreenState
                               children: [
                                 Text(
                                   'Photographer',
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withOpacity(0.6),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.6),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 Text(
                                   inspiration.photographer!,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: theme.colorScheme.onSurface
-                                                .withOpacity(0.8),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withValues(alpha: 0.8),
                                   ),
                                 ),
                               ],
@@ -1496,12 +1503,11 @@ class _EnhancedVisualSearchScreenState
                         Icon(
                           Icons.verified,
                           size: 16,
-                              color:
-                                  inspiration.confidence > 0.8
+                          color: inspiration.confidence > 0.8
                               ? Colors.green
                               : inspiration.confidence > 0.6
-                                  ? Colors.orange
-                                  : Colors.red,
+                              ? Colors.orange
+                              : Colors.red,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -1524,8 +1530,7 @@ class _EnhancedVisualSearchScreenState
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                            onPressed:
-                                () => _downloadInspirationImage(inspiration),
+                        onPressed: () => _downloadInspirationImage(inspiration),
                         icon: const Icon(Icons.download, size: 18),
                         label: const Text('Download'),
                         style: ElevatedButton.styleFrom(

@@ -129,7 +129,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -140,19 +140,20 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           child: Image.file(
                             File(widget.imagePath),
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.image_outlined,
-                                  color: Colors.grey,
-                                  size: 60,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.image_outlined,
+                                      color: Colors.grey,
+                                      size: 60,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
                           ),
                         ),
                       ),
@@ -209,14 +210,16 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         Icons.store_outlined,
                       ),
                       const SizedBox(height: 24),
-                      
+
                       _buildOptionalField(
                         'Any special notes?',
                         'Fit, comfort, styling tips...',
                         Icons.note_outlined,
                         maxLines: 3,
                       ),
-                      const SizedBox(height: 100), // Extra space for floating button
+                      const SizedBox(
+                        height: 100,
+                      ), // Extra space for floating button
                     ],
                   ),
                 ),
@@ -254,7 +257,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            textStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           child: const Text('Save & Get Outfit Suggestions'),
         ),
@@ -280,9 +286,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
             Expanded(
               child: Text(
                 question,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -297,25 +303,29 @@ class _AddItemScreenState extends State<AddItemScreen> {
               onTap: () => onChanged(option),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: isSelected 
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.transparent,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.transparent,
                     width: 1,
                   ),
                 ),
                 child: Text(
                   option,
                   style: TextStyle(
-                    color: isSelected 
-                      ? Theme.of(context).colorScheme.onPrimary
-                      : Theme.of(context).colorScheme.onSurface,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.onSurface,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
@@ -344,9 +354,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
             Expanded(
               child: Text(
                 question,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -369,16 +379,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected 
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  color: isSelected
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1)
+                      : Theme.of(context).colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
-                    color: isSelected 
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.transparent,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.transparent,
                     width: 1.5,
                   ),
                 ),
@@ -396,10 +412,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     Text(
                       option,
                       style: TextStyle(
-                        color: isSelected 
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurface,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                     ),
                   ],
@@ -416,9 +434,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
   Widget _buildOptionalField(
     String question,
     String hint,
-    IconData icon,
-    {int maxLines = 1}
-  ) {
+    IconData icon, {
+    int maxLines = 1,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -429,9 +447,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
             Expanded(
               child: Text(
                 question,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -442,18 +460,24 @@ class _AddItemScreenState extends State<AddItemScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -464,8 +488,13 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            fillColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],

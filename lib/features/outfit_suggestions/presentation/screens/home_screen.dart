@@ -1,18 +1,18 @@
-﻿import 'package:flutter/cupertino.dart';
+﻿import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
-import 'dart:typed_data';
-import 'dart:convert';
-import 'dart:io';
 import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
 // import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
-import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/widgets/customize_mood_sheet.dart';
@@ -997,16 +997,112 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       return _buildImageError(theme);
     }
 
-    // Show up to 4 items in a grid
     final itemsToShow = outfit.items.take(4).toList();
 
     if (itemsToShow.length == 1) {
       return _buildSingleItemImage(itemsToShow[0], theme);
     }
 
+    // Improved grid layout for 2-4 items
+    if (itemsToShow.length == 2) {
+      return SizedBox(
+        height: 80, // Fixed height to prevent overflow
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: _buildSingleItemImage(itemsToShow[0], theme),
+              ),
+            ),
+            Container(
+              width: 1,
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            ),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: _buildSingleItemImage(itemsToShow[1], theme),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (itemsToShow.length == 3) {
+      return Column(
+        children: [
+          // Top row - single item spanning full width
+          Expanded(
+            flex: 1,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  width: 0.5,
+                ),
+              ),
+              child: _buildSingleItemImage(itemsToShow[0], theme),
+            ),
+          ),
+          Container(
+            height: 1,
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          ),
+          // Bottom row - two items side by side
+          Expanded(
+            flex: 1,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: _buildSingleItemImage(itemsToShow[1], theme),
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                        width: 0.5,
+                      ),
+                    ),
+                    child: _buildSingleItemImage(itemsToShow[2], theme),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 4 items - 2x2 grid
     return GridView.count(
       crossAxisCount: 2,
       physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 1.0,
       children: itemsToShow.map((item) {
         return Container(
           decoration: BoxDecoration(
@@ -1024,17 +1120,24 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   Widget _buildSingleItemImage(ClothingAnalysis item, ThemeData theme) {
     // Try to show actual image first
     if (item.imagePath != null && item.imagePath!.isNotEmpty) {
-      return Container(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Image.file(
-          File(item.imagePath!),
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            // Fall back to icon if image fails to load
-            return _buildItemPlaceholder(item, theme);
-          },
-        ),
-      );
+      try {
+        final file = File(item.imagePath!);
+        if (file.existsSync()) {
+          return Container(
+            color: theme.colorScheme.surfaceContainerHighest,
+            child: Image.file(
+              file,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fall back to icon if image fails to load
+                return _buildItemPlaceholder(item, theme);
+              },
+            ),
+          );
+        }
+      } catch (e) {
+        // File doesn't exist or can't be read
+      }
     }
 
     // Show placeholder with item info if no image path
@@ -1077,22 +1180,51 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   Widget _buildItemPlaceholder(ClothingAnalysis item, ThemeData theme) {
     return Container(
-      color: theme.colorScheme.surfaceContainerHighest,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.1),
+            theme.colorScheme.secondary.withValues(alpha: 0.05),
+          ],
+        ),
+      ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              _getIconForItemType(item.itemType),
-              size: 24,
-              color: theme.colorScheme.primary,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getIconForItemType(item.itemType),
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               item.primaryColor,
               style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 10,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              item.itemType.toUpperCase(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 7,
                 fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -1370,7 +1502,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
         : todaysPicks.tonightPicks;
 
     return SizedBox(
-      height: 280,
+      height: 300, // Increased to accommodate new card height
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: activePicks.length.clamp(0, 5),
@@ -1386,6 +1518,145 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     );
   }
 
+  Widget _buildTodaysPickImage(OutfitPairing pick, ThemeData theme) {
+    // Try to show mannequin image first if available
+    if (pick.mannequinImageUrl != null && pick.mannequinImageUrl!.isNotEmpty) {
+      return Image.network(
+        pick.mannequinImageUrl!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) =>
+            _buildTodaysPickFallback(pick, theme),
+      );
+    }
+
+    // Fallback to showing item images in a grid
+    return _buildTodaysPickFallback(pick, theme);
+  }
+
+  Widget _buildTodaysPickFallback(OutfitPairing pick, ThemeData theme) {
+    if (pick.items.isEmpty) {
+      return Container(
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: Center(
+          child: Icon(
+            Icons.checkroom_rounded,
+            size: 48,
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+          ),
+        ),
+      );
+    }
+
+    // Show up to 4 items in a grid
+    final itemsToShow = pick.items.take(4).toList();
+
+    if (itemsToShow.length == 1) {
+      return _buildWardrobeItemImage(itemsToShow[0], theme);
+    }
+
+    return GridView.count(
+      crossAxisCount: 2,
+      physics: const NeverScrollableScrollPhysics(),
+      children: itemsToShow.map((item) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+              width: 0.5,
+            ),
+          ),
+          child: _buildWardrobeItemImage(item, theme),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildWardrobeItemImage(WardrobeItem item, ThemeData theme) {
+    // Try to show actual image first
+    if (item.originalImagePath.isNotEmpty) {
+      try {
+        return Image.file(
+          File(item.originalImagePath),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) =>
+              _buildItemImagePlaceholder(item, theme),
+        );
+      } catch (e) {
+        // Fall through to placeholder
+      }
+    }
+
+    // Show placeholder with item info
+    return _buildItemImagePlaceholder(item, theme);
+  }
+
+  Widget _buildItemImagePlaceholder(WardrobeItem item, ThemeData theme) {
+    return Container(
+      color: theme.colorScheme.surfaceContainerHighest,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _getItemTypeIcon(item.analysis.itemType),
+            size: 24,
+            color: theme.colorScheme.primary.withValues(alpha: 0.6),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            item.analysis.itemType.toUpperCase(),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.primary.withValues(alpha: 0.8),
+              fontWeight: FontWeight.w600,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getItemTypeIcon(String itemType) {
+    switch (itemType.toLowerCase()) {
+      case 'top':
+      case 'shirt':
+      case 'blouse':
+      case 't-shirt':
+      case 'tshirt':
+        return Icons.checkroom;
+      case 'bottom':
+      case 'pants':
+      case 'jeans':
+      case 'trousers':
+      case 'shorts':
+      case 'skirt':
+        return Icons.airline_seat_flat;
+      case 'dress':
+      case 'jumpsuit':
+        return Icons.woman;
+      case 'shoes':
+      case 'sneakers':
+      case 'boots':
+      case 'sandals':
+        return Icons.directions_walk;
+      case 'accessory':
+      case 'bag':
+      case 'watch':
+      case 'jewelry':
+        return Icons.watch;
+      case 'outerwear':
+      case 'jacket':
+      case 'coat':
+      case 'blazer':
+        return Icons.ac_unit;
+      default:
+        return Icons.checkroom;
+    }
+  }
+
   Widget _buildTodaysPickCard(
     BuildContext context,
     OutfitPairing pick,
@@ -1394,6 +1665,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   ) {
     return Container(
       width: 180,
+      height: 260, // Fixed height to prevent overflow
       margin: EdgeInsets.only(right: index == 4 ? 0 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1419,7 +1691,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
             children: [
               // Image area with weather chip
               Expanded(
-                flex: 3,
+                flex: 2,
                 child: Stack(
                   children: [
                     Container(
@@ -1427,23 +1699,13 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(20),
                         ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            theme.colorScheme.primary.withValues(alpha: 0.1),
-                            theme.colorScheme.secondary.withValues(alpha: 0.05),
-                          ],
-                        ),
+                        color: theme.colorScheme.surfaceContainerHighest,
                       ),
-                      child: Center(
-                        child: Icon(
-                          Icons.checkroom_rounded,
-                          size: 60,
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.3,
-                          ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
                         ),
+                        child: _buildTodaysPickImage(pick, theme),
                       ),
                     ),
                     // Weather chip
@@ -1488,81 +1750,69 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
               // Content area
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         pick.description,
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
+                          fontSize: 13,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
 
-                      // Match score
+                      // Bottom row with items count and score
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: LinearProgressIndicator(
-                              value: pick.compatibilityScore,
-                              backgroundColor: Colors.grey.shade200,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                _getScoreColor(pick.compatibilityScore),
-                              ),
-                              minHeight: 4,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${(pick.compatibilityScore * 100).round()}%',
-                            style: TextStyle(
-                              color: _getScoreColor(pick.compatibilityScore),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Action buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => _wearNow(pick),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.checkroom_outlined,
+                                size: 12,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
-                                minimumSize: Size.zero,
                               ),
-                              child: const Text(
-                                'Wear Now',
-                                style: TextStyle(fontSize: 10),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => _saveTodaysPick(pick),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 6,
+                              const SizedBox(width: 2),
+                              Text(
+                                '${pick.items.length}',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                  fontSize: 10,
                                 ),
-                                minimumSize: Size.zero,
                               ),
-                              child: const Text(
-                                'Save',
-                                style: TextStyle(fontSize: 10),
+                            ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome,
+                                size: 12,
+                                color: _getScoreColor(pick.compatibilityScore),
                               ),
-                            ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${(pick.compatibilityScore * 100).toInt()}%',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: _getScoreColor(
+                                    pick.compatibilityScore,
+                                  ),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -1657,28 +1907,6 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _wearNow(OutfitPairing pick) {
-    AppLogger.info('👕 Wearing now: ${pick.description}');
-    // Items are marked as worn with wear count tracking
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Marked "${pick.description}" as worn today! 👕'),
-        backgroundColor: Colors.green,
-      ),
-    );
-  }
-
-  void _saveTodaysPick(OutfitPairing pick) {
-    AppLogger.info('💾 Saving today\'s pick: ${pick.description}');
-    // Saves outfit to storage and refreshes recent generations
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Saved "${pick.description}" to your looks! ✨'),
-        backgroundColor: Colors.blue,
       ),
     );
   }

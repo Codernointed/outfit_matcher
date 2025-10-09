@@ -208,7 +208,7 @@ class _HomeSearchResultsScreenState
             hintText: 'Search wardrobe, outfits...',
             border: InputBorder.none,
             hintStyle: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
           style: theme.textTheme.bodyLarge,
@@ -310,7 +310,7 @@ class _HomeSearchResultsScreenState
         trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: theme.colorScheme.onSurface.withOpacity(0.5),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
         ),
         onTap: () {
           AppLogger.info('👆 [SEARCH] Tapped item: ${item.id}');
@@ -373,7 +373,7 @@ class _HomeSearchResultsScreenState
                   child: Icon(
                     Icons.auto_awesome,
                     size: 48,
-                    color: theme.colorScheme.primary.withOpacity(0.5),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
                   ),
                 ),
               ),
@@ -393,7 +393,7 @@ class _HomeSearchResultsScreenState
                   Text(
                     '${look.items.length} items',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -429,13 +429,13 @@ class _HomeSearchResultsScreenState
             Icon(
               icon,
               size: 80,
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 24),
             Text(
               title,
               style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -443,7 +443,7 @@ class _HomeSearchResultsScreenState
             Text(
               subtitle,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),

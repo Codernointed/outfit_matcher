@@ -133,8 +133,9 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest
-                    .withOpacity(0.3),
+                fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -164,8 +165,9 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest
-                        .withOpacity(0.5),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: DropdownButton<String>(
@@ -412,7 +414,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                         decoration: BoxDecoration(
                           color: _getScoreColor(
                             look.matchScore,
-                          ).withOpacity(0.2),
+                          ).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
