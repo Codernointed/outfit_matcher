@@ -67,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color:
                           index == _currentPage
                               ? Theme.of(context).colorScheme.primary
-                              : Colors.grey[300],
+                              : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(4.0),
                     ),
                   ),
@@ -169,7 +169,7 @@ class _OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final availableHeight = screenSize.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom;
+    final availableHeight = screenSize.height - MediaQuery.paddingOf(context).top - MediaQuery.paddingOf(context).bottom;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -224,7 +224,7 @@ class _OnboardingPage extends StatelessWidget {
                 minHeight: 200, // Minimum height
               ),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: Colors.grey.shade200,
                 borderRadius: BorderRadius.circular(
                   AppConstants.defaultBorderRadius,
                 ),

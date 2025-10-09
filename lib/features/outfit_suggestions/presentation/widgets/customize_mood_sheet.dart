@@ -20,7 +20,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Container(
       height: screenHeight * 0.6,
@@ -36,7 +36,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
             height: 4,
             margin: const EdgeInsets.only(top: 12, bottom: 8),
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withOpacity(0.2),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -57,7 +57,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                 Text(
                   'Fine-tune your ${widget.occasion.toLowerCase()} outfit style',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -83,7 +83,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             Text(
                               'Relaxed',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 
                                   0.6,
                                 ),
                               ),
@@ -91,7 +91,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             Text(
                               'Polished',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 
                                   0.6,
                                 ),
                               ),
@@ -109,7 +109,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             );
                           },
                           activeColor: theme.colorScheme.primary,
-                          inactiveColor: theme.colorScheme.primary.withOpacity(
+                          inactiveColor: theme.colorScheme.primary.withValues(alpha: 
                             0.2,
                           ),
                         ),
@@ -178,7 +178,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             Text(
                               'Safe',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 
                                   0.6,
                                 ),
                               ),
@@ -186,7 +186,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             Text(
                               'Bold',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withOpacity(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 
                                   0.6,
                                 ),
                               ),
@@ -204,7 +204,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             );
                           },
                           activeColor: theme.colorScheme.primary,
-                          inactiveColor: theme.colorScheme.primary.withOpacity(
+                          inactiveColor: theme.colorScheme.primary.withValues(alpha: 
                             0.2,
                           ),
                         ),
@@ -295,13 +295,13 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isSelected
-              ? theme.colorScheme.primary.withOpacity(0.1)
+              ? theme.colorScheme.primary.withValues(alpha: 0.1)
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withOpacity(0.2),
+                : theme.colorScheme.outline.withValues(alpha: 0.2),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -321,7 +321,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                     border: Border.all(color: Colors.white, width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 2,
                         offset: const Offset(0, 1),
                       ),
@@ -337,7 +337,7 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.8),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
           ],

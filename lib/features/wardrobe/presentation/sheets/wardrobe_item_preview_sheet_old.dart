@@ -67,7 +67,7 @@ class _WardrobeItemPreviewSheetState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Material(
       color: Colors.black54,
@@ -97,7 +97,7 @@ class _WardrobeItemPreviewSheetState
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 20,
                           offset: const Offset(0, -4),
                         ),
@@ -143,7 +143,7 @@ class _WardrobeItemPreviewSheetState
       width: 40,
       height: 4,
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withOpacity(0.3),
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -179,7 +179,7 @@ class _WardrobeItemPreviewSheetState
         Container(
           decoration: BoxDecoration(
             color: widget.item.isFavorite
-                ? Colors.red.withOpacity(0.1)
+                ? Colors.red.withValues(alpha: 0.1)
                 : theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -209,7 +209,7 @@ class _WardrobeItemPreviewSheetState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -321,7 +321,7 @@ class _WardrobeItemPreviewSheetState
             child: Text(
               label,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -406,11 +406,11 @@ class _WardrobeItemPreviewSheetState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isPrimary ? color : color.withOpacity(0.1),
+            color: isPrimary ? color : color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(24),
             border: isPrimary
                 ? null
-                : Border.all(color: color.withOpacity(0.3)),
+                : Border.all(color: color.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -435,7 +435,7 @@ class _WardrobeItemPreviewSheetState
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -465,7 +465,7 @@ class _WardrobeItemPreviewSheetState
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.7),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
       ],

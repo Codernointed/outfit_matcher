@@ -57,7 +57,7 @@ class _SimpleWardrobeUploadScreenState
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                // color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                // color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Column(
@@ -79,7 +79,7 @@ class _SimpleWardrobeUploadScreenState
                     'Upload photos of your actual clothes to build your digital wardrobe',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: Colors.grey.shade600,
                     ),
                   ),
                 ],
@@ -116,9 +116,9 @@ class _SimpleWardrobeUploadScreenState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
+                color: Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -157,7 +157,7 @@ class _SimpleWardrobeUploadScreenState
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -195,7 +195,7 @@ class _SimpleWardrobeUploadScreenState
                       Text(
                         subtitle,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ],
@@ -203,7 +203,7 @@ class _SimpleWardrobeUploadScreenState
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.grey[400],
+                  color: Colors.grey.shade400,
                   size: 16,
                 ),
               ],
@@ -222,7 +222,7 @@ class _SimpleWardrobeUploadScreenState
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -239,7 +239,7 @@ class _SimpleWardrobeUploadScreenState
                   valueColor: AlwaysStoppedAnimation<Color>(
                     theme.colorScheme.primary,
                   ),
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
                 ),
                 if (_totalToProcess > 1)
                   Text(
@@ -266,14 +266,14 @@ class _SimpleWardrobeUploadScreenState
             _processingStatus,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
+              color: Colors.grey.shade600,
             ),
           ),
           if (_totalToProcess > 1) ...[
             const SizedBox(height: 16),
             LinearProgressIndicator(
               value: progress,
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
                 theme.colorScheme.primary,
               ),

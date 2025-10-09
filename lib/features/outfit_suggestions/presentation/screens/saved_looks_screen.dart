@@ -242,8 +242,8 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
         });
         AppLogger.info('🏷️ Filter changed to: $label');
       },
-      selectedColor: theme.colorScheme.primary.withOpacity(0.2),
-      backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(
+      selectedColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 
         0.3,
       ),
       labelStyle: TextStyle(
@@ -258,7 +258,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
         side: BorderSide(
           color: isSelected
               ? theme.colorScheme.primary
-              : theme.colorScheme.outline.withOpacity(0.2),
+              : theme.colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -342,7 +342,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withOpacity(0.9),
+                            color: theme.colorScheme.surface.withValues(alpha: 0.9),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -350,7 +350,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                             size: 16,
                             color: isFavorite
                                 ? Colors.red
-                                : theme.colorScheme.onSurface.withOpacity(0.6),
+                                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ),
@@ -380,13 +380,13 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                       Icon(
                         Icons.checkroom,
                         size: 12,
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${look.items.length} items',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 11,
                         ),
                       ),
@@ -446,7 +446,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
         child: Icon(
           Icons.image_not_supported_outlined,
           size: 48,
-          color: theme.colorScheme.onSurface.withOpacity(0.3),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
         ),
       );
     }
@@ -516,7 +516,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
           Icon(
             Icons.auto_awesome_outlined,
             size: 80,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
@@ -524,7 +524,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                 ? 'No looks match your search'
                 : 'No saved looks yet',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -534,7 +534,7 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                 ? 'Try a different search term'
                 : 'Start creating outfits to see them here',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             textAlign: TextAlign.center,
           ),

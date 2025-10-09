@@ -185,7 +185,7 @@ class HomeScreen extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(
                 AppConstants.smallBorderRadius,
               ),
@@ -229,11 +229,11 @@ class HomeScreen extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Colors.grey.shade200,
               borderRadius: BorderRadius.circular(
                 AppConstants.smallBorderRadius,
               ),
-              border: Border.all(color: Colors.grey[300]!, width: 1),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
             ),
             child: Center(
               child: Icon(Icons.add, color: Theme.of(context).primaryColor),
@@ -276,7 +276,7 @@ class HomeScreen extends StatelessWidget {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(
                     AppConstants.smallBorderRadius,
                   ),

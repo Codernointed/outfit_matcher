@@ -198,7 +198,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Text(
@@ -240,7 +240,7 @@ class CameraFramePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = Colors.white.withOpacity(0.6)
+          ..color = Colors.white.withValues(alpha: 0.6)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0;
 

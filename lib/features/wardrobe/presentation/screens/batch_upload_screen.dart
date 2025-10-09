@@ -40,7 +40,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
               style: TextStyle(
                 color: _selectedImages.isNotEmpty && !_isUploading
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface.withOpacity(0.5),
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -53,7 +53,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               border: Border(
                 bottom: BorderSide(color: theme.dividerColor),
               ),
@@ -76,7 +76,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
                 Text(
                   'Select multiple photos of your clothing items',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -112,7 +112,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(60),
             ),
             child: Icon(
@@ -132,7 +132,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           Text(
             'Tap the button below to select multiple photos',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -169,7 +169,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: Colors.grey[300],
+                  color: Colors.grey.shade300,
                   child: const Icon(Icons.broken_image, color: Colors.grey),
                 );
               },
@@ -228,7 +228,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: Border(
           top: BorderSide(color: theme.dividerColor),
         ),
@@ -251,7 +251,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
                     Text(
                       '$_uploadProgress of ${_selectedImages.length} items uploaded',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],

@@ -184,7 +184,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       //   color: theme.colorScheme.surface,
       //   boxShadow: [
       //     BoxShadow(
-      //       color: Colors.black.withOpacity(0.05),
+      //       color: Colors.black.withValues(alpha: 0.05),
       //       blurRadius: 10,
       //       offset: const Offset(0, 2),
       //     ),
@@ -211,7 +211,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                     Text(
                       'Your digital wardrobe',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -254,7 +254,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: showFavoritesOnly
-                          ? Colors.red.withOpacity(0.1)
+                          ? Colors.red.withValues(alpha: 0.1)
                           : theme.colorScheme.surfaceContainerHighest
                                 .withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
@@ -302,12 +302,12 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 
                   0.3,
                 ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: TextField(
@@ -317,7 +317,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   hintText: 'Search your wardrobe...',
                   prefixIcon: Icon(
                     Icons.search,
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -377,13 +377,13 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? theme.colorScheme.primaryContainer
-                        : theme.colorScheme.surfaceContainerHighest.withOpacity(
+                        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 
                             0.3,
                           ),
                     borderRadius: BorderRadius.circular(20),
                     border: isSelected
                         ? Border.all(
-                            color: theme.colorScheme.primary.withOpacity(0.3),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
                           )
                         : null,
                   ),
@@ -395,7 +395,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                         size: 18,
                         color: isSelected
                             ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -528,7 +528,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   Text(
                     item.analysis.primaryColor,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
 
@@ -589,7 +589,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   Widget _buildPlaceholderImage() {
     final theme = Theme.of(context);
     return Container(
-      color: Colors.grey[200],
+      color: Colors.grey.shade200,
       child: Center(
         child: Icon(
           Icons.checkroom,
@@ -634,7 +634,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(60),
             ),
             child: Icon(icon, size: 60, color: theme.colorScheme.primary),
@@ -659,7 +659,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             message,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               height: 1.5,
             ),
           ),
@@ -672,13 +672,13 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                 gradient: LinearGradient(
                   colors: [
                     theme.colorScheme.primary,
-                    theme.colorScheme.primary.withOpacity(0.8),
+                    theme.colorScheme.primary.withValues(alpha: 0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -718,7 +718,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             // Text(
             //   'or',
             //   style: theme.textTheme.bodyMedium?.copyWith(
-            //     color: theme.colorScheme.onSurface.withOpacity(0.5),
+            //     color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             //   ),
             // ),
 
@@ -764,7 +764,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           Text(
             'Failed to load your wardrobe items',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[600],
+              color: Colors.grey.shade600,
             ),
           ),
           const SizedBox(height: 16),
@@ -870,14 +870,14 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           Text(
             'Add custom styling instructions for the AI',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -1039,7 +1039,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       width: 42,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface.withOpacity(0.15),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -1050,7 +1050,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                             : Icons.auto_awesome_outlined,
                         color: premiumEnabled
                             ? Colors.amber
-                            : theme.colorScheme.onSurface.withOpacity(0.7),
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       title: const Text('Premium image polishing'),
                       subtitle: const Text(
@@ -1073,7 +1073,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                               behavior: SnackBarBehavior.floating,
                               backgroundColor: value
                                   ? Colors.amber
-                                  : Colors.grey[700],
+                                  : Colors.grey.shade700,
                             ),
                           );
                         },

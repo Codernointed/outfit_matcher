@@ -91,7 +91,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                       gradient: LinearGradient(
                         colors: [
                           theme.colorScheme.primary,
-                          theme.colorScheme.primary.withOpacity(0.8),
+                          theme.colorScheme.primary.withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -281,7 +281,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                 Text(
                   'Start by taking a photo or choosing from your gallery',
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -289,7 +289,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
           : Text(
               'Add details for your items',
               style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
     );
@@ -314,7 +314,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -326,7 +326,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                         File(_selectedImages[index]),
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(
-                          color: Colors.grey[200],
+                          color: Colors.grey.shade200,
                           child: const Icon(Icons.error),
                         ),
                       ),
@@ -361,7 +361,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
       Text(
         'Tap on an image to remove it',
         style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.onSurface.withOpacity(0.6),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
         ),
       ),
       const SizedBox(height: 16),
@@ -417,7 +417,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: isDisabled ? null : [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -437,7 +437,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                   width: _selectedImages.isNotEmpty ? 48 : 60,
                   height: _selectedImages.isNotEmpty ? 48 : 60,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
@@ -471,7 +471,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: isDisabled 
                                 ? Colors.grey.shade500 
-                                : Colors.white.withOpacity(0.8),
+                                : Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -485,7 +485,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                   size: 16,
                   color: isDisabled 
                       ? Colors.grey.shade500 
-                      : Colors.white.withOpacity(0.8),
+                      : Colors.white.withValues(alpha: 0.8),
                 ),
               ],
             ),

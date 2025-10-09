@@ -445,7 +445,7 @@ class _EnhancedVisualSearchScreenState
         bottom: TabBar(
           controller: _tabController,
           labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+          unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           indicatorColor: theme.colorScheme.primary,
           tabs: const [
             Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
@@ -477,7 +477,7 @@ class _EnhancedVisualSearchScreenState
             child: CircularProgressIndicator(
               strokeWidth: 3,
               valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.primary.withOpacity(0.7),
+                theme.colorScheme.primary.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -485,7 +485,7 @@ class _EnhancedVisualSearchScreenState
           Text(
             message,
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.8),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -517,7 +517,7 @@ class _EnhancedVisualSearchScreenState
             Text(
               '$_generationProgress of $_totalPoses looks crafted',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             if (_generationStatus.isNotEmpty) ...[
@@ -535,7 +535,7 @@ class _EnhancedVisualSearchScreenState
             Text(
               'This may take a moment...',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),
@@ -582,7 +582,7 @@ class _EnhancedVisualSearchScreenState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -609,7 +609,7 @@ class _EnhancedVisualSearchScreenState
                     color: theme.colorScheme.surface,
                     child: Icon(
                       Icons.image_not_supported,
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -643,13 +643,13 @@ class _EnhancedVisualSearchScreenState
                         Icon(
                           Icons.source,
                           size: 14,
-                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           inspiration.source,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.6),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                         const Spacer(),
@@ -659,7 +659,7 @@ class _EnhancedVisualSearchScreenState
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            color: theme.colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -738,7 +738,7 @@ class _EnhancedVisualSearchScreenState
         borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-            color: theme.colorScheme.shadow.withOpacity(0.08),
+            color: theme.colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
             ),
@@ -752,7 +752,7 @@ class _EnhancedVisualSearchScreenState
               AspectRatio(
               aspectRatio: 3 / 4,
                   child: Container(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -763,7 +763,7 @@ class _EnhancedVisualSearchScreenState
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.primary.withOpacity(0.7),
+                            theme.colorScheme.primary.withValues(alpha: 0.7),
                           ),
                         ),
                       ),
@@ -773,7 +773,7 @@ class _EnhancedVisualSearchScreenState
                             ? _generationStatus 
                             : 'Crafting your next look...',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -809,7 +809,7 @@ class _EnhancedVisualSearchScreenState
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.08),
+              color: theme.colorScheme.shadow.withValues(alpha: 0.08),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -839,7 +839,7 @@ class _EnhancedVisualSearchScreenState
                     Text(
                       'Featuring ${outfit.items.map((item) => item.itemType.toLowerCase()).join(', ')}',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                     if (description != null && description.isNotEmpty) ...[
@@ -847,7 +847,7 @@ class _EnhancedVisualSearchScreenState
                       Text(
                         description,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -882,7 +882,7 @@ class _EnhancedVisualSearchScreenState
             child: CircularProgressIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.primary.withOpacity(0.6),
+                theme.colorScheme.primary.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -890,7 +890,7 @@ class _EnhancedVisualSearchScreenState
           Text(
             'Creating your look...',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -902,20 +902,20 @@ class _EnhancedVisualSearchScreenState
   Widget _buildImageError() {
     final theme = Theme.of(context);
     return Container(
-      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             Icons.image_not_supported_outlined,
             size: 48,
-            color: theme.colorScheme.onSurface.withOpacity(0.3),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
           Text(
             'Image unavailable',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -942,7 +942,7 @@ class _EnhancedVisualSearchScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[400]),
+          Icon(Icons.search_off_rounded, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             title,
@@ -952,7 +952,7 @@ class _EnhancedVisualSearchScreenState
           Text(
             message,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 20),
@@ -1101,7 +1101,7 @@ class _EnhancedVisualSearchScreenState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.35),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -1112,7 +1112,7 @@ class _EnhancedVisualSearchScreenState
             child: Text(
               notes,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -1246,7 +1246,7 @@ class _EnhancedVisualSearchScreenState
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Material(
@@ -1284,7 +1284,7 @@ class _EnhancedVisualSearchScreenState
                     size: 48,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.4),
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -1292,7 +1292,7 @@ class _EnhancedVisualSearchScreenState
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1301,7 +1301,7 @@ class _EnhancedVisualSearchScreenState
                     style: TextButton.styleFrom(
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.1),
+                      ).colorScheme.primary.withValues(alpha: 0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -1344,7 +1344,7 @@ class _EnhancedVisualSearchScreenState
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1383,7 +1383,7 @@ class _EnhancedVisualSearchScreenState
                       onPressed: () => Navigator.of(context).pop(),
                       icon: Icon(
                         Icons.close,
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -1426,7 +1426,7 @@ class _EnhancedVisualSearchScreenState
                       Text(
                         inspiration.description!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 
                                 0.8,
                               ),
                           height: 1.4,

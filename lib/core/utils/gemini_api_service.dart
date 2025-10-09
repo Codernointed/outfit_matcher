@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/clothing_analysis.dart';
+import '../utils/logger.dart';
 
 class GeminiApiService {
   static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
@@ -62,7 +63,7 @@ class GeminiApiService {
       }
       return null;
     } catch (e) {
-      print('Gemini API error: $e');
+      AppLogger.error('Gemini API error: $e');
       return null;
     }
   }
@@ -245,7 +246,7 @@ class GeminiApiService {
         ));
       }
     } catch (e) {
-      print('Error generating mannequin outfits: $e');
+      AppLogger.error('Error generating mannequin outfits: $e');
       // Return mock data as fallback
       return _getMockMannequinOutfits(items);
     }
@@ -286,7 +287,7 @@ class GeminiApiService {
         return content['candidates']?[0]?['content']?['parts']?[0]?['text'];
       }
     } catch (e) {
-      print('Mannequin generation error: $e');
+      AppLogger.error('Mannequin generation error: $e');
     }
     
     return null;

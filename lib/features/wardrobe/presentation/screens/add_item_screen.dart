@@ -129,7 +129,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -142,7 +142,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) => Container(
                               decoration: BoxDecoration(
-                                color: Colors.grey[100],
+                                color: Colors.grey.shade100,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const Center(
@@ -301,7 +301,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 decoration: BoxDecoration(
                   color: isSelected 
                     ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
                     color: isSelected 
@@ -372,8 +372,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected 
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                    : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                    : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(25),
                   border: Border.all(
                     color: isSelected 
@@ -442,18 +442,18 @@ class _AddItemScreenState extends State<AddItemScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -464,7 +464,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
             ),
             filled: true,
-            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           ),
         ),

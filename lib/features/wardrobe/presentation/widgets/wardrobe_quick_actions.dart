@@ -146,12 +146,12 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -164,7 +164,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
@@ -175,7 +175,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -200,7 +200,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                       Text(
                         widget.item.analysis.primaryColor,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -245,7 +245,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: action.color.withOpacity(0.15),
+                    color: action.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(action.icon, color: action.color, size: 18),
@@ -261,7 +261,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: theme.colorScheme.onSurface.withOpacity(0.4),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                   size: 14,
                 ),
               ],

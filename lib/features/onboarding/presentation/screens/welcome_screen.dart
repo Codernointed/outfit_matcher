@@ -127,7 +127,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget _buildGridItem([String? imagePath]) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
       ),
       child:
