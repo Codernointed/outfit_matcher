@@ -162,7 +162,10 @@ class FavoritesCarousel extends StatelessWidget {
           children: [
             // Look preview (mannequin or items grid)
             if (look.mannequinImages.isNotEmpty)
-              Image.memory(look.mannequinImages.first as Uint8List, fit: BoxFit.cover)
+              Image.memory(
+                look.mannequinImages.first as Uint8List,
+                fit: BoxFit.cover,
+              )
             else
               Container(
                 color: theme.colorScheme.surfaceContainerHighest,

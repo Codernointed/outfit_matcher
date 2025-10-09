@@ -22,8 +22,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() =>
-      _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
@@ -66,6 +65,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _toggleNotifications(bool value) async {
     HapticFeedback.lightImpact();
     await _profileService.updateNotificationsEnabled(value);
+    _refreshProfile();
+  }
+
+  Future<void> _updateGender(Gender gender) async {
+    HapticFeedback.lightImpact();
+    await _profileService.updateGenderPreference(gender);
     _refreshProfile();
   }
 
@@ -182,9 +187,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Clear'),
           ),
         ],
@@ -220,9 +223,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
             child: const Text('Reset'),
           ),
         ],
@@ -233,7 +234,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       HapticFeedback.mediumImpact();
       await ResetUtils.resetOnboardingState();
       AppLogger.info('⚠️ Onboarding reset');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -412,12 +413,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ProfileSectionTile(
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
-                subtitle: profile.notificationsEnabled
-                    ? 'Enabled'
-                    : 'Disabled',
+                subtitle: profile.notificationsEnabled ? 'Enabled' : 'Disabled',
                 trailing: Switch(
                   value: profile.notificationsEnabled,
                   onChanged: _toggleNotifications,
+                ),
+              ),
+
+              ProfileSectionTile(
+                icon: Icons.person_outline,
+                title: 'Gender Preference',
+                subtitle: 'For mannequin generation',
+                onTap: null,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildGenderChip(
+                      Gender.male,
+                      profile.preferredGender,
+                      theme,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildGenderChip(
+                      Gender.female,
+                      profile.preferredGender,
+                      theme,
+                    ),
+                  ],
                 ),
               ),
 
@@ -547,5 +569,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return Colors.orange;
     }
   }
-}
 
+  Widget _buildGenderChip(
+    Gender gender,
+    Gender currentGender,
+    ThemeData theme,
+  ) {
+    final isSelected = gender == currentGender;
+    return GestureDetector(
+      onTap: () => _updateGender(gender),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          gender.displayName,
+          style: TextStyle(
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+}

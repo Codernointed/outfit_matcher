@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/theme/app_theme.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
+import 'package:vestiq/features/onboarding/presentation/screens/gender_selection_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// The onboarding screen widget showing the app features to new users
 class OnboardingScreen extends StatefulWidget {
@@ -27,18 +29,45 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
+  /// Navigate to gender selection screen
+  void _goToGenderSelection() {
+    AppLogger.info('🎨 Navigating to Gender Selection Screen');
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) =>
+            GenderSelectionScreen(onComplete: _completeOnboarding),
+      ),
+    );
+  }
+
   /// Navigate to the main screen and mark onboarding as completed
   void _completeOnboarding() async {
-    // Save that onboarding has been completed
-    final prefs = getIt<SharedPreferences>();
-    await prefs.setBool(AppConstants.onboardingCompletedKey, true);
+    AppLogger.info('🎉 Completing onboarding flow');
 
-    if (!mounted) return;
+    try {
+      // Save that onboarding has been completed
+      final prefs = getIt<SharedPreferences>();
+      await prefs.setBool(AppConstants.onboardingCompletedKey, true);
+      AppLogger.info('✅ Onboarding completion flag saved');
 
-    // Navigate to main screen
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
+      if (!mounted) {
+        AppLogger.warning('⚠️ Widget not mounted, aborting navigation');
+        return;
+      }
+
+      AppLogger.info('🏠 Navigating to Home Screen');
+      // Navigate to main screen
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen()));
+      AppLogger.info('✅ Successfully navigated to Home Screen');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Error completing onboarding',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   @override
@@ -64,10 +93,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     width: index == _currentPage ? 24.0 : 8.0,
                     height: 8.0,
                     decoration: BoxDecoration(
-                      color:
-                          index == _currentPage
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.grey.shade300,
+                      color: index == _currentPage
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(4.0),
                     ),
                   ),
@@ -123,15 +151,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       } else {
-                        // Go to home screen
-                        _completeOnboarding();
+                        // Go to gender selection before completing onboarding
+                        _goToGenderSelection();
                       }
                     },
                     child: Text(_currentPage == 2 ? 'Get Started' : 'Continue'),
                   ),
                   if (_currentPage < 2)
                     TextButton(
-                      onPressed: _completeOnboarding,
+                      onPressed: _goToGenderSelection,
                       child: const Text('Skip'),
                     ),
                 ],
@@ -169,7 +197,10 @@ class _OnboardingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final availableHeight = screenSize.height - MediaQuery.paddingOf(context).top - MediaQuery.paddingOf(context).bottom;
+    final availableHeight =
+        screenSize.height -
+        MediaQuery.paddingOf(context).top -
+        MediaQuery.paddingOf(context).bottom;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -246,7 +277,11 @@ class _OnboardingPage extends StatelessWidget {
           ),
 
           // Bottom spacing
-          SizedBox(height: screenSize.width < 400 ? AppConstants.smallSpacing : AppConstants.defaultSpacing),
+          SizedBox(
+            height: screenSize.width < 400
+                ? AppConstants.smallSpacing
+                : AppConstants.defaultSpacing,
+          ),
         ],
       ),
     );

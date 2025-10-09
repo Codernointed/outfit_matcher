@@ -68,6 +68,13 @@ class ProfileService {
     await updateProfile(profile.copyWith(notificationsEnabled: enabled));
   }
 
+  /// Update gender preference
+  Future<void> updateGenderPreference(Gender gender) async {
+    final profile = await getProfile();
+    await updateProfile(profile.copyWith(preferredGender: gender));
+    AppLogger.info('👤 Gender preference updated: ${gender.displayName}');
+  }
+
   /// Clear profile data (for sign out or reset)
   Future<void> clearProfile() async {
     try {

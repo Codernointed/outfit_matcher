@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/compatibility_cache_service.dart';
+import 'package:vestiq/core/services/profile_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
@@ -661,12 +663,18 @@ class WardrobePairingService {
         // Convert WardrobeItems to ClothingAnalysis for Gemini API
         final analyses = pairing.items.map((item) => item.analysis).toList();
 
+        // Get current gender preference
+        final profileService = getIt<ProfileService>();
+        final profile = await profileService.getProfile();
+        final gender = profile.preferredGender.apiValue;
+
         final mannequinOutfits =
             await GeminiApiService.generateEnhancedMannequinOutfits(
               analyses,
               userNotes:
                   pairing.metadata['stylingNotes'] as String? ??
                   'Create a polished wardrobe pairing showcasing these items together.',
+              gender: gender,
             );
 
         if (mannequinOutfits.isNotEmpty) {

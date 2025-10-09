@@ -1,3 +1,12 @@
+/// Gender preference enum for mannequin generation
+enum Gender {
+  male,
+  female;
+
+  String get displayName => this == Gender.male ? 'Male' : 'Female';
+  String get apiValue => this == Gender.male ? 'male' : 'female';
+}
+
 /// User profile data model
 class ProfileData {
   final String userName;
@@ -7,6 +16,7 @@ class ProfileData {
   final bool notificationsEnabled;
   final String? authProvider; // null = local-only, 'google', 'apple'
   final String? authUserId;
+  final Gender preferredGender; // Gender preference for mannequin generation
 
   const ProfileData({
     required this.userName,
@@ -16,6 +26,7 @@ class ProfileData {
     this.notificationsEnabled = true,
     this.authProvider,
     this.authUserId,
+    this.preferredGender = Gender.female, // Default to male
   });
 
   ProfileData copyWith({
@@ -26,6 +37,7 @@ class ProfileData {
     bool? notificationsEnabled,
     String? authProvider,
     String? authUserId,
+    Gender? preferredGender,
   }) {
     return ProfileData(
       userName: userName ?? this.userName,
@@ -35,6 +47,7 @@ class ProfileData {
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       authProvider: authProvider ?? this.authProvider,
       authUserId: authUserId ?? this.authUserId,
+      preferredGender: preferredGender ?? this.preferredGender,
     );
   }
 
@@ -47,6 +60,7 @@ class ProfileData {
       'notificationsEnabled': notificationsEnabled,
       'authProvider': authProvider,
       'authUserId': authUserId,
+      'preferredGender': preferredGender.name, // Store as string
     };
   }
 
@@ -61,6 +75,12 @@ class ProfileData {
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       authProvider: json['authProvider'] as String?,
       authUserId: json['authUserId'] as String?,
+      preferredGender: json['preferredGender'] != null
+          ? Gender.values.firstWhere(
+              (e) => e.name == json['preferredGender'],
+              orElse: () => Gender.male,
+            )
+          : Gender.male, // Default for existing users
     );
   }
 
@@ -69,6 +89,7 @@ class ProfileData {
       userName: 'Fashion Enthusiast',
       joinedDate: DateTime.now(),
       notificationsEnabled: true,
+      preferredGender: Gender.male,
     );
   }
 }

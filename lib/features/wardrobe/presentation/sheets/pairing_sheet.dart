@@ -10,6 +10,7 @@ import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/logger.dart';
@@ -47,6 +48,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
   late final OutfitStorageService _outfitStorage;
   late final EnhancedWardrobeStorageService _wardrobeStorage;
   late final WardrobePairingService _pairingService;
+  late final ProfileService _profileService;
 
   List<OutfitPairing> _pairings = const [];
   int _selectedIndex = 0;
@@ -64,6 +66,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
     _outfitStorage = getIt<OutfitStorageService>();
     _wardrobeStorage = getIt<EnhancedWardrobeStorageService>();
     _pairingService = getIt<WardrobePairingService>();
+    _profileService = getIt<ProfileService>();
     _loadPairings();
   }
 
@@ -1082,10 +1085,15 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       String? imageUrl = pairing.mannequinImageUrl;
 
       if (imageUrl == null) {
+        // Get current gender preference
+        final profile = await _profileService.getProfile();
+        final gender = profile.preferredGender.apiValue;
+
         final outfits =
             await GeminiApiService.generateEnhancedMannequinOutfits(
               pairing.items.map((item) => item.analysis).toList(),
               userNotes: pairing.metadata['stylingNotes'] as String?,
+              gender: gender,
             ).timeout(
               const Duration(seconds: 30),
               onTimeout: () {
