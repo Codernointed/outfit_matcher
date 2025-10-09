@@ -2906,30 +2906,30 @@ class _OccasionOutfitSuggestionsScreenState
                         const SizedBox(height: 12),
 
                         // Items in this outfit with images
-                        Text(
-                          'Items:',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
+                        // Text(
+                        //   'Items:',
+                        //   style: theme.textTheme.bodySmall?.copyWith(
+                        //     fontWeight: FontWeight.w500,
+                        //   ),
+                        // ),
+                        // const SizedBox(height: 8),
                         // Show item images in a row
                         SizedBox(
-                          height: 80,
+                          height: 100,
                           child: ListView.builder(
                             scrollDirection: Axis.horizontal,
                             itemCount: pairing.items.length,
                             itemBuilder: (context, itemIndex) {
                               final item = pairing.items[itemIndex];
                               return Container(
-                                width: 80,
-                                margin: const EdgeInsets.only(right: 12),
+                                width: 100,
+                                margin: const EdgeInsets.only(right: 8),
                                 child: Column(
                                   children: [
                                     // Item image
                                     Container(
-                                      height: 50,
-                                      width: 50,
+                                      height: 80,
+                                      width: 80,
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
