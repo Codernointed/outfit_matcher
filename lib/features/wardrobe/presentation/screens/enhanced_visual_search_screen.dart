@@ -23,6 +23,7 @@ class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {
   final String? searchQuery;
   final List<String> itemImages;
   final String? userNotes;
+  final String? preferredGender;
 
   const EnhancedVisualSearchScreen({
     super.key,
@@ -30,6 +31,7 @@ class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {
     this.searchQuery,
     this.itemImages = const [],
     this.userNotes,
+    this.preferredGender,
   });
 
   @override
@@ -67,10 +69,16 @@ class _EnhancedVisualSearchScreenState
         'item_images_count': widget.itemImages.length,
         'search_query': widget.searchQuery,
         'user_notes_length': widget.userNotes?.length,
+        'preferred_gender': widget.preferredGender,
       },
     );
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
+    // Use gender from item details screen if provided
+    if (widget.preferredGender != null) {
+      _currentGender = widget.preferredGender!;
+      AppLogger.info('✅ Using gender from item details: $_currentGender');
+    }
     _loadAllData();
   }
 
@@ -1429,8 +1437,8 @@ class _EnhancedVisualSearchScreenState
                           Text(
                             inspiration.source,
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withOpacity(
-                                0.7,
+                              color: theme.colorScheme.onSurface.withValues (
+                                alpha: 0.7,
                               ),
                             ),
                           ),
@@ -1506,7 +1514,7 @@ class _EnhancedVisualSearchScreenState
                                 'Source',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface
-                                      .withOpacity(0.6),
+                                      .withValues(alpha: 0.6),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1514,7 +1522,7 @@ class _EnhancedVisualSearchScreenState
                                 inspiration.source,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurface
-                                      .withOpacity(0.8),
+                                      .withValues(alpha: 0.8),
                                 ),
                               ),
                             ],

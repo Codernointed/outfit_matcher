@@ -47,6 +47,29 @@ class GeminiApiService {
         formality: result['formality'],
         subcategory: result['subcategory'],
         imagePath: imageFile.path,
+        occasions: result['occasions'] != null
+            ? List<String>.from(result['occasions'])
+            : null,
+        locations: result['locations'] != null
+            ? List<String>.from(result['locations'])
+            : null,
+        styleHints: result['styleHints'] != null
+            ? List<String>.from(result['styleHints'])
+            : null,
+        colorUndertone: result['colorUndertone'],
+        complementaryColors: result['complementaryColors'] != null
+            ? List<String>.from(result['complementaryColors'])
+            : null,
+        colorTemperature: result['colorTemperature'],
+        designElements: result['designElements'] != null
+            ? List<String>.from(result['designElements'])
+            : null,
+        visualWeight: result['visualWeight'],
+        pairingHints: result['pairingHints'] != null
+            ? List<String>.from(result['pairingHints'])
+            : null,
+        stylePersonality: result['stylePersonality'],
+        detailLevel: result['detailLevel'],
       );
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -220,7 +243,7 @@ class GeminiApiService {
               },
               {
                 "text":
-                    "You are an expert fashion analyst. Analyze this clothing item with EXTREME PRECISION.\n\nCRITICAL RULES:\n1. FOOTWEAR DETECTION: If you see ANY shoes, sneakers, boots, sandals, heels, flats - ALWAYS classify as 'Shoes' NOT 'Top'\n2. JEANS ANALYSIS: Look carefully at fit - distinguish between 'skinny jeans', 'baggy jeans', 'relaxed fit jeans', 'straight leg jeans'\n3. LOOK CAREFULLY at the actual colors in the image - don't default to common colors\n4. If you see GREEN fabric, say GREEN not blue\n5. If you see formal elements (lapels, structured shoulders, dress pants), classify as business/formal\n6. If you see suits, blazers, dress shirts, classify as 'business formal' or 'formal wear'\n\nReturn ONLY a JSON object with these exact keys:\n{\n  \"itemType\": \"Top|Bottom|Dress|Outerwear|Shoes|Accessory\",\n  \"primaryColor\": \"EXACT color you see (green, navy blue, charcoal gray, burgundy, etc.)\",\n  \"secondaryColors\": [\"array of other colors if any\"],\n  \"patternType\": \"solid|pinstripe|checkered|herringbone|floral|geometric\",\n  \"material\": \"wool|cotton|silk|linen|polyester|leather|denim\",\n  \"fit\": \"slim fit|regular fit|relaxed fit|tailored fit|oversized|baggy|skinny\",\n  \"style\": \"business formal|smart casual|casual|formal wear|streetwear\",\n  \"formality\": \"formal|business|smart casual|casual\",\n  \"subcategory\": \"specific type like 'baggy jeans', 'sneakers', 'boots', 'oxford shirt'\",\n  \"confidence\": 0.95\n}\n\nEXAMPLES:\n- Green suit jacket → {\"primaryColor\": \"green\", \"style\": \"business formal\", \"formality\": \"formal\"}\n- Navy blazer → {\"primaryColor\": \"navy blue\", \"style\": \"business formal\"}\n- Casual t-shirt → {\"primaryColor\": \"white\", \"style\": \"casual\"}\n- Baggy jeans → {\"itemType\": \"Bottom\", \"fit\": \"baggy\", \"subcategory\": \"baggy jeans\"}\n- Sneakers → {\"itemType\": \"Shoes\", \"subcategory\": \"sneakers\"}\n\nLook at the IMAGE carefully and describe what you actually see, not what's common. Pay special attention to footwear and jeans fit.",
+                    "You are an expert fashion analyst. Analyze this clothing item with EXTREME PRECISION for PERFECT OUTFIT PAIRING.\n\nCRITICAL RULES:\n1. FOOTWEAR DETECTION: If you see ANY shoes, sneakers, boots, sandals, heels, flats - ALWAYS classify as 'Shoes' NOT 'Top'\n2. JEANS ANALYSIS: Look carefully at fit - distinguish between 'skinny jeans', 'baggy jeans', 'relaxed fit jeans', 'straight leg jeans'\n3. LOOK CAREFULLY at the actual colors in the image - don't default to common colors\n4. If you see GREEN fabric, say GREEN not blue\n5. If you see formal elements (lapels, structured shoulders, dress pants), classify as business/formal\n6. If you see suits, blazers, dress shirts, classify as 'business formal' or 'formal wear'\n\nReturn ONLY a JSON object with these exact keys:\n{\n  \"itemType\": \"Top|Bottom|Dress|Outerwear|Shoes|Accessory\",\n  \"primaryColor\": \"EXACT color you see (green, navy blue, charcoal gray, burgundy, etc.)\",\n  \"secondaryColors\": [\"array of other colors if any\"],\n  \"patternType\": \"solid|pinstripe|checkered|herringbone|floral|geometric\",\n  \"material\": \"wool|cotton|silk|linen|polyester|leather|denim\",\n  \"fit\": \"slim fit|regular fit|relaxed fit|tailored fit|oversized|baggy|skinny\",\n  \"style\": \"business formal|smart casual|casual|formal wear|streetwear\",\n  \"formality\": \"formal|business|smart casual|casual\",\n  \"subcategory\": \"specific type like 'baggy jeans', 'sneakers', 'boots', 'oxford shirt'\",\n  \"confidence\": 0.95,\n  \"colorUndertone\": \"warm|cool|neutral\" (analyze if colors have warm/cool undertones),\n  \"complementaryColors\": [\"specific colors that pair perfectly with this item\"],\n  \"colorTemperature\": \"warm|cool|neutral\" (overall temperature),\n  \"designElements\": [\"embellishments\", \"hardware\", \"unique features\", \"prints\", \"textures\"],\n  \"visualWeight\": \"light|medium|heavy\" (how visually heavy/busy for balance),\n  \"detailLevel\": \"minimal|moderate|detailed\" (complexity level),\n  \"pairingHints\": [\"specific items that work well (e.g., 'pairs with white sneakers', 'works with high-waisted jeans')\"],\n  \"stylePersonality\": \"edgy|classic|romantic|minimalist|bohemian|sporty|preppy|streetwear|vintage|modern\"\n}\n\nFASHION INTELLIGENCE:\n1. COLOR ANALYSIS: Identify undertones (warm=yellow/orange base, cool=blue/pink base, neutral=balanced)\n2. COMPLEMENTARY COLORS: Suggest 3-5 specific colors that create perfect color harmony\n3. VISUAL WEIGHT: Light=simple/minimal, Medium=moderate detail, Heavy=busy/bold patterns\n4. PAIRING HINTS: Be SPECIFIC (e.g., 'pairs with black ankle boots', not generic advice)\n5. DESIGN ELEMENTS: List ALL visible details (studs, embroidery, distressing, hardware, etc.)\n\nReturn ONLY the JSON, no explanation.",
               },
             ],
           },
@@ -281,6 +304,17 @@ class GeminiApiService {
                 _defaultOccasions(result['formality'] as String?),
             'locations': _extractStringList(result['locations']),
             'styleHints': _extractStringList(result['styleHints']),
+            // Enhanced fashion intelligence fields
+            'colorUndertone': result['colorUndertone'],
+            'complementaryColors': _extractStringList(
+              result['complementaryColors'],
+            ),
+            'colorTemperature': result['colorTemperature'],
+            'designElements': _extractStringList(result['designElements']),
+            'visualWeight': result['visualWeight'],
+            'pairingHints': _extractStringList(result['pairingHints']),
+            'stylePersonality': result['stylePersonality'],
+            'detailLevel': result['detailLevel'],
           };
 
           AppLogger.info(

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
-import 'package:vestiq/core/models/profile_data.dart';
 import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
@@ -108,15 +107,6 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
     } catch (e) {
       AppLogger.error('❌ Error loading gender preference', error: e);
     }
-  }
-
-  Future<void> _toggleGender() async {
-    HapticFeedback.lightImpact();
-    final newGender = _currentGender == 'male' ? 'female' : 'male';
-    setState(() {
-      _currentGender = newGender;
-    });
-    AppLogger.info('👤 Gender toggled to: $_currentGender');
   }
 
   @override
@@ -276,6 +266,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
 
     FocusScope.of(context).unfocus();
 
+    AppLogger.info(
+      '🎯 Navigating to visual search with gender: $_currentGender',
+    );
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => EnhancedVisualSearchScreen(
@@ -283,6 +276,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           searchQuery: searchQuery,
           itemImages: _imagePaths,
           userNotes: userNotes,
+          preferredGender: _currentGender,
         ),
       ),
     );
@@ -366,18 +360,6 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        actions: [
-          // Gender toggle button
-          IconButton(
-            icon: Icon(
-              _currentGender == 'male' ? Icons.man : Icons.woman,
-              color: theme.colorScheme.primary,
-            ),
-            onPressed: _toggleGender,
-            tooltip:
-                'Mannequin style: ${_currentGender == 'male' ? 'Male' : 'Female'}',
-          ),
-        ],
       ),
       body: _isLoading
           ? _buildLoadingState(theme)
@@ -414,7 +396,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Text(
               'Our AI is examining each item to understand its vibe and styling potential.',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               textAlign: TextAlign.center,
             ),
@@ -591,8 +573,12 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
           ],
+
+          // Prominent gender selection section
+          _buildGenderSelectionSection(theme),
+          const SizedBox(height: 24),
 
           _buildSmartSuggestionSection(
             'What type of item is this?',
@@ -949,6 +935,192 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildGenderSelectionSection(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primaryContainer.withOpacity(0.3),
+            theme.colorScheme.secondaryContainer.withOpacity(0.2),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.person_outline,
+                  color: theme.colorScheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Mannequin Style Preference',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Choose the mannequin style for outfit previews',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildGenderCard(
+                  gender: 'male',
+                  icon: Icons.man,
+                  label: 'Male',
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildGenderCard(
+                  gender: 'female',
+                  icon: Icons.woman,
+                  label: 'Female',
+                  theme: theme,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderCard({
+    required String gender,
+    required IconData icon,
+    required String label,
+    required ThemeData theme,
+  }) {
+    final isSelected = _currentGender == gender;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() {
+          _currentGender = gender;
+        });
+        AppLogger.info('👤 Gender toggled to: $_currentGender');
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        height: 140,
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withOpacity(0.85),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline.withOpacity(0.3),
+            width: isSelected ? 2.5 : 1.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                    spreadRadius: 0,
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Icon with background
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? Colors.white.withOpacity(0.2)
+                    : theme.colorScheme.primary.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 40,
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Label
+            Text(
+              label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+            if (isSelected) ...[
+              const SizedBox(height: 6),
+              Icon(
+                Icons.check_circle,
+                color: theme.colorScheme.onPrimary,
+                size: 18,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

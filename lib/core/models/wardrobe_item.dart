@@ -119,6 +119,7 @@ class WardrobeItem {
   }
 
   /// Get compatibility score with another item (0.0 to 1.0)
+  /// Enhanced with AI fashion intelligence for PERFECT pairing
   double getCompatibilityScore(WardrobeItem other) {
     // CRITICAL: Check if items are same category - should NOT pair
     if (_isSameCategory(other)) {
@@ -131,17 +132,23 @@ class WardrobeItem {
 
     double score = 0.0;
 
-    // Color harmony (40% weight)
-    score += _getColorHarmonyScore(other) * 0.4;
+    // Enhanced Color Harmony (35% weight) - using AI color intelligence
+    score += _getEnhancedColorHarmonyScore(other) * 0.35;
 
-    // Formality match (30% weight)
-    score += _getFormalityScore(other) * 0.3;
+    // Formality match (20% weight)
+    score += _getFormalityScore(other) * 0.2;
 
-    // Occasion overlap (20% weight)
-    score += _getOccasionScore(other) * 0.2;
+    // Occasion overlap (15% weight)
+    score += _getOccasionScore(other) * 0.15;
 
     // Season compatibility (10% weight)
     score += _getSeasonScore(other) * 0.1;
+
+    // NEW: Visual Balance (10% weight) - using visual weight
+    score += _getVisualBalanceScore(other) * 0.1;
+
+    // NEW: Style Personality Match (10% weight)
+    score += _getStylePersonalityScore(other) * 0.1;
 
     return score.clamp(0.0, 1.0);
   }
@@ -224,6 +231,116 @@ class WardrobeItem {
     if (myColor == otherColor) return 0.6; // Same color is okay
     if (colorMap[myColor]?.contains(otherColor) == true) return 1.0;
     return 0.3; // Default compatibility
+  }
+
+  /// Enhanced color harmony using AI-analyzed color intelligence
+  double _getEnhancedColorHarmonyScore(WardrobeItem other) {
+    double score = 0.0;
+
+    // Use AI complementary colors if available (highest priority)
+    if (analysis.complementaryColors != null &&
+        analysis.complementaryColors!.isNotEmpty) {
+      final otherColor = other.analysis.primaryColor.toLowerCase();
+      final myComplementaryColors = analysis.complementaryColors!
+          .map((c) => c.toLowerCase())
+          .toList();
+
+      if (myComplementaryColors.any(
+        (c) => otherColor.contains(c) || c.contains(otherColor),
+      )) {
+        score += 0.5; // Perfect AI-suggested color match
+      }
+    }
+
+    // Color temperature matching (warm with warm, cool with cool)
+    if (analysis.colorTemperature != null &&
+        other.analysis.colorTemperature != null) {
+      if (analysis.colorTemperature == other.analysis.colorTemperature) {
+        score += 0.3; // Same temperature = harmonious
+      } else if (analysis.colorTemperature == 'neutral' ||
+          other.analysis.colorTemperature == 'neutral') {
+        score += 0.2; // Neutral works with anything
+      }
+    }
+
+    // Fallback to traditional color harmony if AI data not available
+    if (score == 0.0) {
+      score = _getColorHarmonyScore(other);
+    }
+
+    return score.clamp(0.0, 1.0);
+  }
+
+  /// Visual balance scoring - light items pair with heavy, medium with anything
+  double _getVisualBalanceScore(WardrobeItem other) {
+    if (analysis.visualWeight == null || other.analysis.visualWeight == null) {
+      return 0.7; // Default good score if data not available
+    }
+
+    final myWeight = analysis.visualWeight!.toLowerCase();
+    final otherWeight = other.analysis.visualWeight!.toLowerCase();
+
+    // Perfect balance: light with heavy, medium with anything
+    if ((myWeight == 'light' && otherWeight == 'heavy') ||
+        (myWeight == 'heavy' && otherWeight == 'light')) {
+      return 1.0; // Perfect balance
+    }
+
+    if (myWeight == 'medium' || otherWeight == 'medium') {
+      return 0.9; // Medium works with everything
+    }
+
+    if (myWeight == otherWeight) {
+      // Same weight can work but less ideal
+      return myWeight == 'light'
+          ? 0.8
+          : 0.6; // Light+light better than heavy+heavy
+    }
+
+    return 0.7; // Default
+  }
+
+  /// Style personality matching - similar personalities pair well
+  double _getStylePersonalityScore(WardrobeItem other) {
+    if (analysis.stylePersonality == null ||
+        other.analysis.stylePersonality == null) {
+      return 0.7; // Default good score if data not available
+    }
+
+    final myStyle = analysis.stylePersonality!.toLowerCase();
+    final otherStyle = other.analysis.stylePersonality!.toLowerCase();
+
+    // Exact match
+    if (myStyle == otherStyle) {
+      return 1.0;
+    }
+
+    // Compatible style combinations
+    final compatibleStyles = {
+      'classic': ['minimalist', 'preppy', 'modern'],
+      'minimalist': ['classic', 'modern'],
+      'edgy': ['streetwear', 'modern', 'sporty'],
+      'romantic': ['bohemian', 'vintage'],
+      'bohemian': ['romantic', 'vintage'],
+      'sporty': ['streetwear', 'edgy', 'modern'],
+      'preppy': ['classic', 'modern'],
+      'streetwear': ['sporty', 'edgy', 'modern'],
+      'vintage': ['romantic', 'bohemian', 'classic'],
+      'modern': [
+        'classic',
+        'minimalist',
+        'edgy',
+        'preppy',
+        'streetwear',
+        'sporty',
+      ],
+    };
+
+    if (compatibleStyles[myStyle]?.contains(otherStyle) == true) {
+      return 0.85; // Compatible styles
+    }
+
+    return 0.5; // Different but can work
   }
 
   double _getFormalityScore(WardrobeItem other) {

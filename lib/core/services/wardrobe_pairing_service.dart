@@ -28,10 +28,25 @@ class WardrobePairingService {
 
   /// Get compatibility score with caching
   double _getCompatibilityScore(WardrobeItem item1, WardrobeItem item2) {
-    if (_compatibilityCache != null) {
-      return _compatibilityCache.getCompatibilityScore(item1, item2);
+    final score = _compatibilityCache != null
+        ? _compatibilityCache.getCompatibilityScore(item1, item2)
+        : item1.getCompatibilityScore(item2);
+
+    // Log enhanced AI usage
+    if (item1.analysis.complementaryColors != null ||
+        item1.analysis.visualWeight != null ||
+        item1.analysis.stylePersonality != null) {
+      AppLogger.debug(
+        '🎨 Enhanced AI pairing: ${item1.analysis.itemType} + ${item2.analysis.itemType} = ${(score * 100).toStringAsFixed(0)}%',
+        data: {
+          'color_harmony': item1.analysis.complementaryColors != null,
+          'visual_balance': item1.analysis.visualWeight != null,
+          'style_match': item1.analysis.stylePersonality != null,
+        },
+      );
     }
-    return item1.getCompatibilityScore(item2);
+
+    return score;
   }
 
   /// Generate outfit pairings for a hero item using different modes
@@ -339,7 +354,12 @@ class WardrobePairingService {
       (a, b) => b.compatibilityScore.compareTo(a.compatibilityScore),
     );
 
-    return pairings.take(_maxPairingSuggestions).toList();
+    final finalPairings = pairings.take(_maxPairingSuggestions).toList();
+
+    // Log enhanced AI usage summary
+    _logEnhancedAIUsage(finalPairings, 'Pair This Item');
+
+    return finalPairings;
   }
 
   /// Generate surprise pairings with more creative combinations
@@ -506,7 +526,47 @@ class WardrobePairingService {
       return b.compatibilityScore.compareTo(a.compatibilityScore);
     });
 
+    // Log enhanced AI usage summary
+    _logEnhancedAIUsage(pairings, 'Surprise Me');
+
     return pairings;
+  }
+
+  /// Log enhanced AI feature usage in pairings
+  void _logEnhancedAIUsage(List<OutfitPairing> pairings, String feature) {
+    int itemsWithColorIntel = 0;
+    int itemsWithVisualWeight = 0;
+    int itemsWithStylePersonality = 0;
+    int itemsWithPairingHints = 0;
+    int itemsWithDesignElements = 0;
+
+    for (final pairing in pairings) {
+      for (final item in pairing.items) {
+        if (item.analysis.complementaryColors != null) itemsWithColorIntel++;
+        if (item.analysis.visualWeight != null) itemsWithVisualWeight++;
+        if (item.analysis.stylePersonality != null) itemsWithStylePersonality++;
+        if (item.analysis.pairingHints != null) itemsWithPairingHints++;
+        if (item.analysis.designElements != null) itemsWithDesignElements++;
+      }
+    }
+
+    AppLogger.info(
+      '🎨 [$feature] Enhanced AI Usage Summary',
+      data: {
+        'total_pairings': pairings.length,
+        'items_with_color_intel': itemsWithColorIntel,
+        'items_with_visual_weight': itemsWithVisualWeight,
+        'items_with_style_personality': itemsWithStylePersonality,
+        'items_with_pairing_hints': itemsWithPairingHints,
+        'items_with_design_elements': itemsWithDesignElements,
+        'avg_compatibility_score': pairings.isEmpty
+            ? 0.0
+            : pairings
+                      .map((p) => p.compatibilityScore)
+                      .reduce((a, b) => a + b) /
+                  pairings.length,
+      },
+    );
   }
 
   /// Get the best compatible item from a list based on compatibility score
@@ -974,6 +1034,21 @@ class WardrobePairingService {
     final hero = heroItem ?? items.first;
     final heroColor = hero.analysis.primaryColor.toLowerCase();
     final heroSubcategory = hero.analysis.subcategory?.toLowerCase() ?? '';
+
+    // Add AI-generated pairing hints if available
+    if (hero.analysis.pairingHints != null &&
+        hero.analysis.pairingHints!.isNotEmpty) {
+      tips.addAll(hero.analysis.pairingHints!.take(2)); // Add top 2 AI hints
+      AppLogger.debug('✨ Using AI pairing hints for ${hero.analysis.itemType}');
+    }
+
+    // Add design element tips if available
+    if (hero.analysis.designElements != null &&
+        hero.analysis.designElements!.isNotEmpty) {
+      final elements = hero.analysis.designElements!.take(2).join(', ');
+      tips.add('Features $elements - let these details shine');
+      AppLogger.debug('🎨 Using AI design elements for styling tips');
+    }
 
     // Find what items are actually in the outfit
     final top = items.firstWhere((item) => _isTop(item), orElse: () => hero);

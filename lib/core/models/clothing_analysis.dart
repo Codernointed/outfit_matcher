@@ -27,13 +27,25 @@ class ClothingAnalysis {
 
   // Contextual metadata from AI analysis
   final List<String>?
-      occasions; // suggested occasions (date night, brunch, work)
+  occasions; // suggested occasions (date night, brunch, work)
   final List<String>? locations; // indoor, outdoor, beach, cold_weather, etc.
   final List<String>? styleHints; // quick styling tips from AI
 
   // Fit information
   final String? length; // short, medium, long
   final String? silhouette; // fitted, loose, A-line, etc.
+
+  // Enhanced fashion intelligence for perfect pairing
+  final String? colorUndertone; // warm, cool, neutral
+  final List<String>? complementaryColors; // colors that pair well
+  final String? colorTemperature; // warm, cool, neutral
+  final List<String>?
+  designElements; // embellishments, hardware, unique features
+  final String? visualWeight; // light, medium, heavy - for visual balance
+  final List<String>? pairingHints; // AI suggestions for what pairs well
+  final String? stylePersonality; // edgy, classic, romantic, minimalist, etc.
+  final String?
+  detailLevel; // minimal, moderate, detailed - for pairing complexity
 
   const ClothingAnalysis({
     required this.id,
@@ -60,6 +72,14 @@ class ClothingAnalysis {
     this.occasions,
     this.locations,
     this.styleHints,
+    this.colorUndertone,
+    this.complementaryColors,
+    this.colorTemperature,
+    this.designElements,
+    this.visualWeight,
+    this.pairingHints,
+    this.stylePersonality,
+    this.detailLevel,
   });
 
   ClothingAnalysis copyWith({
@@ -87,6 +107,14 @@ class ClothingAnalysis {
     List<String>? occasions,
     List<String>? locations,
     List<String>? styleHints,
+    String? colorUndertone,
+    List<String>? complementaryColors,
+    String? colorTemperature,
+    List<String>? designElements,
+    String? visualWeight,
+    List<String>? pairingHints,
+    String? stylePersonality,
+    String? detailLevel,
   }) {
     return ClothingAnalysis(
       id: id ?? this.id,
@@ -113,6 +141,14 @@ class ClothingAnalysis {
       occasions: occasions ?? this.occasions,
       locations: locations ?? this.locations,
       styleHints: styleHints ?? this.styleHints,
+      colorUndertone: colorUndertone ?? this.colorUndertone,
+      complementaryColors: complementaryColors ?? this.complementaryColors,
+      colorTemperature: colorTemperature ?? this.colorTemperature,
+      designElements: designElements ?? this.designElements,
+      visualWeight: visualWeight ?? this.visualWeight,
+      pairingHints: pairingHints ?? this.pairingHints,
+      stylePersonality: stylePersonality ?? this.stylePersonality,
+      detailLevel: detailLevel ?? this.detailLevel,
     );
   }
 
@@ -143,18 +179,29 @@ class ClothingAnalysis {
       formality: json['formality'],
       subcategory: json['subcategory'],
       imagePath: json['imagePath'],
-      occasions:
-          json['occasions'] != null
-              ? List<String>.from(json['occasions'] as List<dynamic>)
-              : null,
-      locations:
-          json['locations'] != null
-              ? List<String>.from(json['locations'] as List<dynamic>)
-              : null,
-      styleHints:
-          json['styleHints'] != null
-              ? List<String>.from(json['styleHints'] as List<dynamic>)
-              : null,
+      occasions: json['occasions'] != null
+          ? List<String>.from(json['occasions'] as List<dynamic>)
+          : null,
+      locations: json['locations'] != null
+          ? List<String>.from(json['locations'] as List<dynamic>)
+          : null,
+      styleHints: json['styleHints'] != null
+          ? List<String>.from(json['styleHints'] as List<dynamic>)
+          : null,
+      colorUndertone: json['colorUndertone'],
+      complementaryColors: json['complementaryColors'] != null
+          ? List<String>.from(json['complementaryColors'] as List<dynamic>)
+          : null,
+      colorTemperature: json['colorTemperature'],
+      designElements: json['designElements'] != null
+          ? List<String>.from(json['designElements'] as List<dynamic>)
+          : null,
+      visualWeight: json['visualWeight'],
+      pairingHints: json['pairingHints'] != null
+          ? List<String>.from(json['pairingHints'] as List<dynamic>)
+          : null,
+      stylePersonality: json['stylePersonality'],
+      detailLevel: json['detailLevel'],
     );
     AppLogger.debug(
       '✅ ClothingAnalysis created: ${analysis.itemType} (${analysis.primaryColor})',
@@ -188,6 +235,14 @@ class ClothingAnalysis {
       'occasions': occasions,
       'locations': locations,
       'styleHints': styleHints,
+      'colorUndertone': colorUndertone,
+      'complementaryColors': complementaryColors,
+      'colorTemperature': colorTemperature,
+      'designElements': designElements,
+      'visualWeight': visualWeight,
+      'pairingHints': pairingHints,
+      'stylePersonality': stylePersonality,
+      'detailLevel': detailLevel,
     };
     AppLogger.debug('📤 Serializing ClothingAnalysis: $itemType');
     return data;
@@ -229,10 +284,9 @@ class OutfitSuggestion {
       style: json['style'] ?? '',
       occasion: json['occasion'] ?? '',
       description: json['description'],
-      missingItems:
-          json['missingItems'] != null
-              ? List<String>.from(json['missingItems'])
-              : null,
+      missingItems: json['missingItems'] != null
+          ? List<String>.from(json['missingItems'])
+          : null,
       season: json['season'],
       tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
     );

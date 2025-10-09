@@ -351,12 +351,36 @@ class TodaysPicksNotifier extends StateNotifier<TodaysPicksState> {
         return;
       }
 
-      // TODO: Implement actual pairing generation
-      // For now, return empty lists
-      AppLogger.info('✅ [TODAY PICKS] Generated picks');
+      // Generate outfit pairings using the pairing service with enhanced AI
+      final pairingService = getIt<WardrobePairingService>();
+
+      // Select a hero item for today (prefer recently added or favorites)
+      final heroItem = _selectHeroItemForToday(wardrobeItems);
+
+      // Generate daytime outfits (casual, work-appropriate)
+      AppLogger.info('☀️ [TODAY PICKS] Generating daytime outfits...');
+      final todayOutfits = await pairingService.generatePairings(
+        heroItem: heroItem,
+        wardrobeItems: wardrobeItems,
+        mode: PairingMode.surpriseMe,
+        occasion: 'casual',
+      );
+
+      // Generate evening outfits (date, party-appropriate)
+      AppLogger.info('🌙 [TODAY PICKS] Generating evening outfits...');
+      final tonightOutfits = await pairingService.generatePairings(
+        heroItem: heroItem,
+        wardrobeItems: wardrobeItems,
+        mode: PairingMode.surpriseMe,
+        occasion: 'party',
+      );
+
+      AppLogger.info(
+        '✅ [TODAY PICKS] Generated ${todayOutfits.length} day + ${tonightOutfits.length} night picks',
+      );
       state = state.copyWith(
-        todayPicks: [],
-        tonightPicks: [],
+        todayPicks: todayOutfits.take(3).toList(),
+        tonightPicks: tonightOutfits.take(3).toList(),
         isLoading: false,
       );
     } catch (e, stackTrace) {
@@ -370,6 +394,19 @@ class TodaysPicksNotifier extends StateNotifier<TodaysPicksState> {
         errorMessage: 'Failed to generate picks',
       );
     }
+  }
+
+  /// Select the best hero item for today's picks
+  WardrobeItem _selectHeroItemForToday(List<WardrobeItem> items) {
+    // Prioritize: favorites > recently added > most worn
+    final favorites = items.where((item) => item.isFavorite).toList();
+    if (favorites.isNotEmpty) {
+      return favorites.first;
+    }
+
+    // Sort by creation date (most recent first)
+    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return items.first;
   }
 
   void setActiveTab(TodayTab tab) {

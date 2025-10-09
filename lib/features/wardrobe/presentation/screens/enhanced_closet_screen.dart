@@ -227,7 +227,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       color: _isSearching
                           ? theme.colorScheme.primaryContainer
                           : theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -256,7 +256,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       color: showFavoritesOnly
                           ? Colors.red.withValues(alpha: 0.1)
                           : theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -281,7 +281,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   Container(
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest
-                          .withOpacity(0.5),
+                          .withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: IconButton(
@@ -545,7 +545,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: theme.colorScheme.secondaryContainer
-                                .withOpacity(0.5),
+                                .withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
