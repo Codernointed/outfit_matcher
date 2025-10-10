@@ -576,10 +576,6 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             const SizedBox(height: 24),
           ],
 
-          // Prominent gender selection section
-          _buildGenderSelectionSection(theme),
-          const SizedBox(height: 24),
-
           _buildSmartSuggestionSection(
             'What type of item is this?',
             _itemTypeOptions,
@@ -658,7 +654,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Icons.category_outlined,
           ),
           const SizedBox(height: 24),
-
+          // Prominent gender selection section
+          _buildGenderSelectionSection(theme),
+          const SizedBox(height: 24),
           _buildOptionalField(
             'Brand or store?',
             'e.g., Zara, H&M, vintage...',

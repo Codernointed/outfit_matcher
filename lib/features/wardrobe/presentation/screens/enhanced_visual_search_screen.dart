@@ -14,7 +14,7 @@ import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/di/service_locator.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
+// import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/mannequin_skeleton_loader.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/services.dart';

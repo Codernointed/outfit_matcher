@@ -102,17 +102,7 @@ class FavoritesCarousel extends StatelessWidget {
             // Image
             if (item.polishedImagePath != null)
               Image.file(File(item.polishedImagePath!), fit: BoxFit.cover)
-            else if (item.originalImagePath != null)
-              Image.file(File(item.originalImagePath!), fit: BoxFit.cover)
-            else
-              Container(
-                color: theme.colorScheme.surfaceContainerHighest,
-                child: Icon(
-                  Icons.checkroom,
-                  size: 40,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
-                ),
-              ),
+            else Image.file(File(item.originalImagePath), fit: BoxFit.cover),
 
             // Favorite badge
             Positioned(
