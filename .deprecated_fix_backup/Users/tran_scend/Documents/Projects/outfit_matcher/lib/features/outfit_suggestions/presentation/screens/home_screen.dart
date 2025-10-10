@@ -1393,13 +1393,13 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: Colors.black.withValues(alpha: 0.08),
+        //     blurRadius: 12,
+        //     offset: const Offset(0, 4),
+        //   ),
+        // ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -1483,7 +1483,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
               // Content area
               Expanded(
-                flex: 2,
+                flex: 1,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
