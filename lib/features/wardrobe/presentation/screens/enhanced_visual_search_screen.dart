@@ -1306,16 +1306,24 @@ class _EnhancedVisualSearchScreenState
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
-                  Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
+                  Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.shadow.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -1333,8 +1341,12 @@ class _EnhancedVisualSearchScreenState
                           center: Alignment.center,
                           radius: 1.2,
                           colors: [
-                            Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
-                            Theme.of(context).colorScheme.surface.withValues(alpha: 0.05),
+                            Theme.of(
+                              context,
+                            ).colorScheme.surface.withValues(alpha: 0.1),
+                            Theme.of(
+                              context,
+                            ).colorScheme.surface.withValues(alpha: 0.05),
                           ],
                         ),
                       ),
@@ -1351,7 +1363,8 @@ class _EnhancedVisualSearchScreenState
                           : CachedNetworkImage(
                               imageUrl: imageUrl,
                               fit: BoxFit.contain,
-                              placeholder: (context, url) => _buildElegantLoading(),
+                              placeholder: (context, url) =>
+                                  _buildElegantLoading(),
                               errorWidget: (context, url, error) =>
                                   _buildImageError(),
                             ),
