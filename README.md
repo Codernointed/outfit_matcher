@@ -1,8 +1,8 @@
-# 👗 Outfit Matcher - Your Personal AI Stylist
+# 👗 Vestiq - Your Personal AI Stylist
 
-**Never stress about "what to wear" again.** Outfit Matcher is your intelligent wardrobe companion that learns your style, understands your life, and suggests perfect outfit combinations in seconds.
+**Never stress about "what to wear" again.** Vestiq is your intelligent wardrobe companion that learns your style, understands your life, and suggests perfect outfit combinations in seconds.
 
-![Outfit Matcher Hero](https://via.placeholder.com/800x400/6366f1/ffffff?text=Your+AI+Stylist)
+![Vestiq Hero](https://via.placeholder.com/800x400/6366f1/ffffff?text=Your+AI+Stylist)
 
 ## ✨ What Makes Us Different
 
@@ -19,7 +19,7 @@
 
 This fashion app solves a simple problem: you have clothes but struggle to put them together into outfits that look good and feel appropriate for different occasions.
 
-Instead of staring at your closet for 20 minutes every morning or buying new clothes because you can't figure out how to style what you already own, Outfit Matcher uses AI to suggest outfit combinations from your existing wardrobe.
+Instead of staring at your closet for 20 minutes every morning or buying new clothes because you can't figure out how to style what you already own, Vestiq uses AI to suggest outfit combinations from your existing wardrobe.
 
 Think of it as having a personal stylist who knows exactly what's in your closet and can instantly suggest what goes well together.
 
@@ -73,7 +73,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 - **Surprise Me** – Generate random outfit combinations from your full wardrobe.
 - **Style by Weather** – Get outfit suggestions appropriate for your location's weather and climate.
 
-**Why this is different:** Most styling apps show you inspiration that requires buying new clothes. Outfit Matcher only suggests combinations you can actually create today.
+**Why this is different:** Most styling apps show you inspiration that requires buying new clothes. Vestiq only suggests combinations you can actually create today.
 
 ### 5. Visual Outfit Previews
 **What it does:** Show you how suggested outfits will look together.
@@ -91,7 +91,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 ### The Daily Use Flow
 
 1. **Morning scenario:** You want to get dressed but don't know what goes together.
-2. **Quick option:** Open Outfit Matcher, tap "Surprise Me," get three outfit suggestions from your closet.
+2. **Quick option:** Open Vestiq, tap "Surprise Me," get three outfit suggestions from your closet.
 3. **Specific option:** Upload a photo of the one item you definitely want to wear, ask "What goes with this for work?"
 4. **Visual confirmation:** See how the suggested combination looks in different preview styles.
 5. **Get dressed confidently:** Every suggestion uses clothes you actually own.
@@ -128,7 +128,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 
 ## The Problem It Solves
 
-### Before Outfit Matcher
+### Before Vestiq
 
 - Spending 15–45 minutes every morning choosing outfits.
 - Buying new clothes because you can't style existing ones.
@@ -136,7 +136,7 @@ Think of it as having a personal stylist who knows exactly what's in your closet
 - Relying on the same 3–4 "safe" outfit combinations.
 - Seeing styling inspiration online but not being able to recreate it.
 
-### After Outfit Matcher
+### After Vestiq
 
 - Get dressed in 2–5 minutes with confidence.
 - Discover new ways to wear clothes you already own.
@@ -166,7 +166,7 @@ The core insight: most people don't need more clothes—they need better ways to
 ## 🚀 Meet Amma's Perfect Day
 
 **7:30 AM - The Morning Rush**
-Amma wakes up late for her client meeting. She opens Outfit Matcher—boom! The app already knows it's 22°C and suggests layering options. Three perfect work outfits appear, scored by "client meeting impressiveness." She picks one, gets accessory suggestions, and walks out confident.
+Amma wakes up late for her client meeting. She opens Vestiq—boom! The app already knows it's 22°C and suggests layering options. Three perfect work outfits appear, scored by "client meeting impressiveness." She picks one, gets accessory suggestions, and walks out confident.
 
 **5:15 PM - From Work to Play**
 Friends invite her for drinks. She snaps her current outfit, and the app instantly suggests transformations—roll up sleeves, swap heels for boots, add that statement necklace. Side-by-side before/after. Done in 2 minutes.
