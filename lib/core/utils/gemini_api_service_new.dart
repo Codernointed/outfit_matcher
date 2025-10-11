@@ -557,7 +557,7 @@ class GeminiApiService {
   static Future<List<MannequinOutfit>> generateEnhancedMannequinOutfits(
     List<ClothingAnalysis> items, {
     String? userNotes,
-    String gender = 'male', // 'male' or 'female'
+    String gender = '', // 'male' or 'female'
     void Function(String)? onProgress,
     void Function(int, int)? onProgressUpdate,
   }) async {
@@ -784,7 +784,7 @@ class GeminiApiService {
 
     // Gender requirement
     final genderInstruction = gender.toLowerCase() == 'female'
-        ? 'Female mannequin with feminine styling and fit'
+        ? 'Female curvaceous/semi curvy mannequin with feminine styling and fit'
         : 'Male mannequin with masculine styling and fit';
     buffer.writeln('Gender: $genderInstruction');
     buffer.writeln();
