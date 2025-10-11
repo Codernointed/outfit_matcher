@@ -654,15 +654,17 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Icons.category_outlined,
           ),
           const SizedBox(height: 24),
-          // Prominent gender selection section
-          _buildGenderSelectionSection(theme),
-          const SizedBox(height: 24),
+          
           _buildOptionalField(
             'Brand or store?',
             'e.g., Zara, H&M, vintage...',
             _currentState.brandController,
             Icons.store_outlined,
           ),
+             const SizedBox(height: 24),
+          // Prominent gender selection section
+          _buildGenderSelectionSection(theme),
+       
           const SizedBox(height: 24),
 
           _buildOptionalField(
@@ -944,27 +946,27 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.08),
-            theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
-            theme.colorScheme.secondaryContainer.withValues(alpha: 0.2),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        // gradient: LinearGradient(
+        //   colors: [
+        //     theme.colorScheme.primary.withValues(alpha: 0.08),
+        //     theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+        //     theme.colorScheme.secondaryContainer.withValues(alpha: 0.2),
+        //   ],
+        //   begin: Alignment.topLeft,
+        //   end: Alignment.bottomRight,
+        // ),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.2),
           width: 2,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // boxShadow: [
+        //   BoxShadow(
+        //     color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        //     blurRadius: 12,
+        //     offset: const Offset(0, 4),
+        //   ),
+        // ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -992,7 +994,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                 child: Icon(
                   Icons.person_outline,
                   color: Colors.white,
-                  size: 24,
+                  size: 12,
                 ),
               ),
               const SizedBox(width: 16),
@@ -1003,7 +1005,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
                     Text(
                       'Mannequin Style Preference',
                       style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w500,
                         color: theme.colorScheme.primary,
                       ),
                     ),
@@ -1021,7 +1023,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -1115,7 +1117,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           children: [
             // Icon with background
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isSelected
                     ? Colors.white.withValues(alpha: 0.25)
@@ -1133,18 +1135,18 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
               ),
               child: Icon(
                 icon,
-                size: 48,
+                size: 40,
                 color: isSelected
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.primary,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             // Label
             Text(
               label,
               style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w500,
                 color: isSelected
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurface,
