@@ -5,7 +5,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
-// import 'package:vestiq/core/models/mannequin_outfit.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/api_rate_limiter.dart';
 
@@ -243,7 +242,7 @@ class GeminiApiService {
               },
               {
                 "text":
-                    "You are an expert fashion analyst. Analyze this clothing item with EXTREME PRECISION for PERFECT OUTFIT PAIRING.\n\nCRITICAL RULES:\n1. FOOTWEAR DETECTION: If you see ANY shoes, sneakers, boots, sandals, heels, flats - ALWAYS classify as 'Shoes' NOT 'Top'\n2. JEANS ANALYSIS: Look carefully at fit - distinguish between 'skinny jeans', 'baggy jeans', 'relaxed fit jeans', 'straight leg jeans'\n3. LOOK CAREFULLY at the actual colors in the image - don't default to common colors\n4. If you see GREEN fabric, say GREEN not blue\n5. If you see formal elements (lapels, structured shoulders, dress pants), classify as business/formal\n6. If you see suits, blazers, dress shirts, classify as 'business formal' or 'formal wear'\n\nReturn ONLY a JSON object with these exact keys:\n{\n  \"itemType\": \"Top|Bottom|Dress|Outerwear|Shoes|Accessory\",\n  \"primaryColor\": \"EXACT color you see (green, navy blue, charcoal gray, burgundy, etc.)\",\n  \"secondaryColors\": [\"array of other colors if any\"],\n  \"patternType\": \"solid|pinstripe|checkered|herringbone|floral|geometric\",\n  \"material\": \"wool|cotton|silk|linen|polyester|leather|denim\",\n  \"fit\": \"slim fit|regular fit|relaxed fit|tailored fit|oversized|baggy|skinny\",\n  \"style\": \"business formal|smart casual|casual|formal wear|streetwear\",\n  \"formality\": \"formal|business|smart casual|casual\",\n  \"subcategory\": \"specific type like 'baggy jeans', 'sneakers', 'boots', 'oxford shirt'\",\n  \"confidence\": 0.95,\n  \"colorUndertone\": \"warm|cool|neutral\" (analyze if colors have warm/cool undertones),\n  \"complementaryColors\": [\"specific colors that pair perfectly with this item\"],\n  \"colorTemperature\": \"warm|cool|neutral\" (overall temperature),\n  \"designElements\": [\"embellishments\", \"hardware\", \"unique features\", \"prints\", \"textures\"],\n  \"visualWeight\": \"light|medium|heavy\" (how visually heavy/busy for balance),\n  \"detailLevel\": \"minimal|moderate|detailed\" (complexity level),\n  \"pairingHints\": [\"specific items that work well (e.g., 'pairs with white sneakers', 'works with high-waisted jeans')\"],\n  \"stylePersonality\": \"edgy|classic|romantic|minimalist|bohemian|sporty|preppy|streetwear|vintage|modern\"\n}\n\nFASHION INTELLIGENCE:\n1. COLOR ANALYSIS: Identify undertones (warm=yellow/orange base, cool=blue/pink base, neutral=balanced)\n2. COMPLEMENTARY COLORS: Suggest 3-5 specific colors that create perfect color harmony\n3. VISUAL WEIGHT: Light=simple/minimal, Medium=moderate detail, Heavy=busy/bold patterns\n4. PAIRING HINTS: Be SPECIFIC (e.g., 'pairs with black ankle boots', not generic advice)\n5. DESIGN ELEMENTS: List ALL visible details (studs, embroidery, distressing, hardware, etc.)\n\nReturn ONLY the JSON, no explanation.",
+                    "You are an expert fashion analyst. Analyze this clothing item with EXTREME PRECISION for PERFECT OUTFIT PAIRING.\n\nCRITICAL RULES:\n1. FOOTWEAR DETECTION: If you see ANY shoes, sneakers, boots, sandals, heels, flats, mules, loafers, oxfords, pumps, stilettos, wedges, ankle boots, knee-high boots, combat boots, hiking boots, running shoes, athletic shoes, dress shoes, casual shoes, slippers, flip-flops, crocs, clogs, ballet flats, espadrilles, platform shoes, high heels, low heels, block heels, stiletto heels, kitten heels, chunky heels, wedges, peep-toe shoes, closed-toe shoes, open-toe shoes, lace-up shoes, slip-on shoes, buckle shoes, zipper shoes, velcro shoes, lace shoes, slip-ons, moccasins, boat shoes, driving shoes, work boots, rain boots, snow boots, winter boots, summer shoes, spring shoes, fall shoes, seasonal footwear - ALWAYS classify as 'Footwear' NOT 'Top'\n2. JEANS ANALYSIS: Look carefully at fit - distinguish between 'skinny jeans', 'baggy jeans', 'relaxed fit jeans', 'straight leg jeans'\n3. LOOK CAREFULLY at the actual colors in the image - don't default to common colors\n4. If you see GREEN fabric, say GREEN not blue\n5. If you see formal elements (lapels, structured shoulders, dress pants), classify as business/formal\n6. If you see suits, blazers, dress shirts, classify as 'business formal' or 'formal wear'\n\nReturn ONLY a JSON object with these exact keys:\n{\n  \"itemType\": \"Top|Bottom|Dress|Outerwear|Footwear|Accessory\",\n  \"primaryColor\": \"EXACT color you see (green, navy blue, charcoal gray, burgundy, etc.)\",\n  \"secondaryColors\": [\"array of other colors if any\"],\n  \"patternType\": \"solid|pinstripe|checkered|herringbone|floral|geometric\",\n  \"material\": \"wool|cotton|silk|linen|polyester|leather|denim\",\n  \"fit\": \"slim fit|regular fit|relaxed fit|tailored fit|oversized|baggy|skinny\",\n  \"style\": \"business formal|smart casual|casual|formal wear|streetwear\",\n  \"formality\": \"formal|business|smart casual|casual\",\n  \"subcategory\": \"specific type like 'baggy jeans', 'white sneakers', 'black ankle boots', 'nude heels', 'brown loafers', 'oxford shirt'\",\n  \"confidence\": 0.95,\n  \"colorUndertone\": \"warm|cool|neutral\" (analyze if colors have warm/cool undertones),\n  \"complementaryColors\": [\"specific colors that pair perfectly with this item\"],\n  \"colorTemperature\": \"warm|cool|neutral\" (overall temperature),\n  \"designElements\": [\"embellishments\", \"hardware\", \"unique features\", \"prints\", \"textures\"],\n  \"visualWeight\": \"light|medium|heavy\" (how visually heavy/busy for balance),\n  \"detailLevel\": \"minimal|moderate|detailed\" (complexity level),\n  \"pairingHints\": [\"specific items that work well (e.g., 'pairs with white sneakers', 'works with high-waisted jeans')\"],\n  \"stylePersonality\": \"edgy|classic|romantic|minimalist|bohemian|sporty|preppy|streetwear|vintage|modern\"\n}\n\nFASHION INTELLIGENCE:\n1. COLOR ANALYSIS: Identify undertones (warm=yellow/orange base, cool=blue/pink base, neutral=balanced)\n2. COMPLEMENTARY COLORS: Suggest 3-5 specific colors that create perfect color harmony\n3. VISUAL WEIGHT: Light=simple/minimal, Medium=moderate detail, Heavy=busy/bold patterns\n4. PAIRING HINTS: Be SPECIFIC (e.g., 'pairs with black ankle boots', not generic advice)\n5. DESIGN ELEMENTS: List ALL visible details (studs, embroidery, distressing, hardware, etc.)\n\nReturn ONLY the JSON, no explanation.",
               },
             ],
           },
@@ -484,16 +483,20 @@ class GeminiApiService {
 
       try {
         final prompt = _buildMannequinPrompt(
-          uploadedItems: combo.items,
+          uploadedItemsToUse: combo.uploadedItems,
+          unuploadedCategories: combo.unuploadedCategories,
           userNotes: userNotes,
           desiredStyle: styleLabel,
           pairingNotes: combo.metadata['pairingNotes'] as String?,
           gender: gender,
         );
 
-        final primaryImagePath = combo.items
-            .firstWhere((item) => item.imagePath != null)
-            .imagePath;
+        // Use the first uploaded item's image (most important piece)
+        final primaryImagePath = combo.uploadedItems.isNotEmpty
+            ? combo.uploadedItems.first.imagePath
+            : combo.items
+                  .firstWhere((item) => item.imagePath != null)
+                  .imagePath;
         final imageFile = primaryImagePath != null
             ? File(primaryImagePath)
             : null;
@@ -594,6 +597,22 @@ class GeminiApiService {
     );
 
     final combinations = _composeOutfitCombinations(items);
+
+    // Log distribution for transparency
+    final distributionLog = <String, int>{};
+    for (final combo in combinations.take(6)) {
+      for (final item in combo.uploadedItems) {
+        final key =
+            '${item.itemType}: ${item.primaryColor} ${item.subcategory ?? ""}';
+        distributionLog[key] = (distributionLog[key] ?? 0) + 1;
+      }
+    }
+
+    AppLogger.info(
+      '📊 Outfit distribution across 6 generations:',
+      data: distributionLog,
+    );
+
     final totalLooks = 6; // Always generate 6 looks
     final results = <MannequinOutfit>[];
     int completed = 0;
@@ -610,16 +629,20 @@ class GeminiApiService {
 
       try {
         final prompt = _buildMannequinPrompt(
-          uploadedItems: combo.items,
+          uploadedItemsToUse: combo.uploadedItems,
+          unuploadedCategories: combo.unuploadedCategories,
           userNotes: userNotes,
           desiredStyle: styleLabel,
           pairingNotes: combo.metadata['pairingNotes'] as String?,
+          gender: gender,
         );
 
-        // Use the first available image from the combination
-        final primaryImagePath = combo.items
-            .firstWhere((item) => item.imagePath != null)
-            .imagePath;
+        // Use the first uploaded item's image (most important piece)
+        final primaryImagePath = combo.uploadedItems.isNotEmpty
+            ? combo.uploadedItems.first.imagePath
+            : combo.items
+                  .firstWhere((item) => item.imagePath != null)
+                  .imagePath;
         final imageFile = primaryImagePath != null
             ? File(primaryImagePath)
             : null;
@@ -631,13 +654,14 @@ class GeminiApiService {
 
         // Log which items are being used in this combination
         AppLogger.info(
-          '🎨 Generating mannequin with items',
+          '🎨 Generating mannequin with uploaded items',
           data: {
             'combo_index': i,
-            'items_count': combo.items.length,
-            'items': combo.items
+            'uploaded_items_count': combo.uploadedItems.length,
+            'uploaded_items': combo.uploadedItems
                 .map((item) => '${item.itemType} (${item.primaryColor})')
                 .toList(),
+            'unuploaded_categories': combo.unuploadedCategories,
             'style': styleLabel,
           },
         );
@@ -697,136 +721,98 @@ class GeminiApiService {
   }
 
   static String _buildMannequinPrompt({
-    required List<ClothingAnalysis> uploadedItems,
+    required List<ClothingAnalysis> uploadedItemsToUse,
+    required List<String> unuploadedCategories,
     String? userNotes,
     String? desiredStyle,
     String? pairingNotes,
     String gender = 'male',
   }) {
     final buffer = StringBuffer();
+
     buffer.writeln(
-      'You are a high-fashion stylist creating a FULL-BODY photorealistic mannequin look.',
+      '🚨🚨🚨 CRITICAL: USE ONLY THE UPLOADED ITEMS LISTED BELOW 🚨🚨🚨',
     );
+    buffer.writeln('DO NOT replace uploaded items with similar alternatives.');
+    buffer.writeln('DO NOT blend multiple items from the same category.');
+    buffer.writeln('DO NOT create new versions of uploaded items.');
+    buffer.writeln();
+
+    buffer.writeln('You are creating ONE complete outfit with:');
+    buffer.writeln();
+
+    // List ONLY the items to use in THIS specific outfit
+    buffer.writeln('UPLOADED ITEMS TO USE (MANDATORY - DO NOT CHANGE):');
+    for (final item in uploadedItemsToUse) {
+      buffer.writeln(
+        '✓ ${item.itemType.toUpperCase()}: ${item.primaryColor} ${item.subcategory ?? item.itemType}',
+      );
+      if (item.material != null) {
+        buffer.writeln('  Material: ${item.material}');
+      }
+      if (item.fit != null) {
+        buffer.writeln('  Fit: ${item.fit}');
+      }
+      buffer.writeln('  Pattern: ${item.patternType}');
+      buffer.writeln(
+        '  🚨 USE THIS EXACT ${item.itemType.toUpperCase()} - NO SUBSTITUTIONS',
+      );
+      buffer.writeln();
+    }
+
+    if (unuploadedCategories.isNotEmpty) {
+      buffer.writeln('CATEGORIES TO AI-GENERATE (create matching items):');
+      for (final category in unuploadedCategories) {
+        buffer.writeln(
+          '● ${category.toUpperCase()}: Generate a matching item that complements the uploaded pieces',
+        );
+      }
+      buffer.writeln();
+    }
+
+    buffer.writeln('🚨 CRITICAL RULES:');
     buffer.writeln(
-      '🚨🚨🚨 CRITICAL: Show the COMPLETE mannequin from HEAD TO TOE - NO CROPPING!',
+      '1. The uploaded items listed above MUST appear exactly as described',
     );
+    buffer.writeln('2. DO NOT create alternative versions of uploaded items');
+    buffer.writeln('3. DO NOT merge or blend multiple uploaded items into one');
     buffer.writeln(
-      '🚨🚨🚨 MANDATORY: Include the ENTIRE body - head, torso, legs, AND feet in frame!',
+      '4. For unuploaded categories, generate stylish matching pieces',
     );
-    buffer.writeln(
-      '🚨🚨🚨 NEVER crop out feet, shoes, or footwear - they MUST be FULLY visible!',
-    );
-    buffer.writeln(
-      '🚨🚨🚨 FULL-LENGTH fashion photography framing - complete body shot!',
-    );
+    buffer.writeln('5. Show COMPLETE mannequin from HEAD TO TOE - NO CROPPING');
+    buffer.writeln();
 
     // Gender requirement
     final genderInstruction = gender.toLowerCase() == 'female'
-        ? '''
-🚨 GENDER REQUIREMENT: Female mannequin ONLY.
-- Female body proportions and silhouette
-- Feminine styling and fit
-- Female posing and presentation
-- Women's fashion standards
-'''
-        : '''
-🚨 GENDER REQUIREMENT: Male mannequin ONLY.
-- Male body proportions and silhouette
-- Masculine styling and fit
-- Male posing and presentation
-- Men's fashion standards
-''';
-    buffer.writeln(genderInstruction);
+        ? 'Female mannequin with feminine styling and fit'
+        : 'Male mannequin with masculine styling and fit';
+    buffer.writeln('Gender: $genderInstruction');
+    buffer.writeln();
 
-    buffer.writeln(
-      'Blend the uploaded wardrobe pieces into a cohesive outfit.',
-    );
     if (desiredStyle != null && desiredStyle.isNotEmpty) {
-      buffer.writeln('Desired styling direction: $desiredStyle.');
-    }
-
-    // List all uploaded items
-    buffer.writeln('Uploaded wardrobe pieces:');
-    for (final item in uploadedItems) {
-      buffer.writeln(
-        '- ${item.itemType} in ${item.primaryColor}, style ${item.style}, formality ${item.formality}',
-      );
-      if (item.subcategory != null && item.subcategory!.isNotEmpty) {
-        buffer.writeln('  subcategory: ${item.subcategory}');
-      }
-      if (item.brand != null && item.brand!.isNotEmpty) {
-        buffer.writeln('  brand: ${item.brand}');
-      }
-    }
-
-    if (pairingNotes != null && pairingNotes.isNotEmpty) {
-      buffer.writeln('Pairing guidance: $pairingNotes');
+      buffer.writeln('Style direction: $desiredStyle');
+      buffer.writeln();
     }
 
     if (userNotes != null && userNotes.isNotEmpty) {
-      buffer.writeln('User preferences and notes to honour: $userNotes');
-      buffer.writeln(
-        'CRITICAL: The user specifically mentioned: "$userNotes" - make sure to address this in your styling!',
-      );
+      buffer.writeln('User preferences: $userNotes');
+      buffer.writeln();
     }
 
-    // Add specific instructions for indecisiveness scenarios
-    if (uploadedItems.length > 2) {
-      buffer.writeln(
-        'IMPORTANT: The user uploaded multiple items because they\'re indecisive about pairing.',
-      );
-      buffer.writeln(
-        'Create a complete, harmonious outfit that showcases the best combination of their pieces.',
-      );
-      buffer.writeln(
-        'Add complementary accessories, jewelry, and styling elements to complete the look.',
-      );
+    if (pairingNotes != null && pairingNotes.isNotEmpty) {
+      buffer.writeln('Styling notes: $pairingNotes');
+      buffer.writeln();
     }
 
-    // Special instructions for footwear visibility
-    final hasFootwear = uploadedItems.any(
-      (item) =>
-          item.itemType.toLowerCase().contains('shoe') ||
-          item.itemType.toLowerCase().contains('footwear'),
+    buffer.writeln('Create a professional full-body mannequin image showing:');
+    buffer.writeln('- The exact uploaded items as the core of the outfit');
+    buffer.writeln(
+      '- AI-generated complementary pieces for unuploaded categories',
     );
-    if (hasFootwear) {
-      buffer.writeln(' FOOTWEAR ALERT: The user uploaded footwear items!');
-      buffer.writeln(
-        ' MANDATORY: The shoes/footwear MUST be the main focus of this image!',
-      );
-      buffer.writeln(
-        ' REQUIRED: Show the mannequin from head to toe with shoes prominently displayed!',
-      );
-      buffer.writeln(
-        'CRITICAL: Position the mannequin so footwear is clearly visible and not cropped!',
-      );
-      buffer.writeln(
-        ' Make the footwear a focal point - it\'s what the user wants to see!',
-      );
-    }
+    buffer.writeln('- Complete outfit from head to toe with visible footwear');
+    buffer.writeln('- Professional fashion photography quality');
+    buffer.writeln('- Studio lighting and clean background');
 
-    buffer.writeln(
-      'Render a full-body mannequin in studio lighting with polished styling.',
-    );
-    buffer.writeln(
-      '🚨 CRITICAL FOOTWEAR REQUIREMENT: ALWAYS show the COMPLETE outfit from head to toe!',
-    );
-    buffer.writeln(
-      '🚨 NEVER crop out shoes, feet, or footwear - they must be fully visible!',
-    );
-    buffer.writeln(
-      '🚨 The mannequin must be positioned to show the entire body including shoes!',
-    );
-    buffer.writeln(
-      ' If footwear is mentioned in the outfit, make it a focal point of the image!',
-    );
-    buffer.writeln(
-      'Ensure the outfit is color-harmonized, accessorized appropriately, and photography ready.',
-    );
-    buffer.writeln(
-      'Pay special attention to the user\'s styling notes and preferences when creating the outfit.',
-    );
-    buffer.writeln(' Show the COMPLETE outfit with visible footwear !');
     return buffer.toString();
   }
 
@@ -891,213 +877,360 @@ class GeminiApiService {
   static List<_OutfitCombination> _composeOutfitCombinations(
     List<ClothingAnalysis> items,
   ) {
-    final shoes = items
-        .where(
-          (item) =>
-              item.itemType.toLowerCase().contains('shoe') ||
-              item.itemType.toLowerCase().contains('footwear'),
-        )
-        .toList();
-    final dresses = items
-        .where((item) => item.itemType.toLowerCase().contains('dress'))
-        .toList();
-    final tops = items
-        .where((item) => item.itemType.toLowerCase().contains('top'))
-        .toList();
-    final bottoms = items
-        .where((item) => item.itemType.toLowerCase().contains('bottom'))
-        .toList();
-    final outerwear = items
-        .where((item) => item.itemType.toLowerCase().contains('outer'))
-        .toList();
-    final accessories = items
-        .where((item) => item.itemType.toLowerCase().contains('accessory'))
+    // Step 1: Categorize ALL uploaded items
+    final categoryMap = {
+      'tops': items
+          .where((item) => item.itemType.toLowerCase().contains('top'))
+          .toList(),
+      'bottoms': items
+          .where((item) => item.itemType.toLowerCase().contains('bottom'))
+          .toList(),
+      'dresses': items
+          .where((item) => item.itemType.toLowerCase().contains('dress'))
+          .toList(),
+      'footwears': items
+          .where(
+            (item) =>
+                item.itemType.toLowerCase().contains('shoe') ||
+                item.itemType.toLowerCase().contains('footwear'),
+          )
+          .toList(),
+      'outerwear': items
+          .where((item) => item.itemType.toLowerCase().contains('outer'))
+          .toList(),
+      'accessories': items
+          .where((item) => item.itemType.toLowerCase().contains('accessory'))
+          .toList(),
+    };
+
+    // Step 2: Identify uploaded vs unuploaded categories
+    final uploadedCategories = categoryMap.entries
+        .where((entry) => entry.value.isNotEmpty)
+        .map((entry) => entry.key)
         .toList();
 
+    AppLogger.info(
+      '📋 Categorized uploaded items',
+      data: {
+        'tops': categoryMap['tops']!.length,
+        'bottoms': categoryMap['bottoms']!.length,
+        'dresses': categoryMap['dresses']!.length,
+        'footwears': categoryMap['footwears']!.length,
+        'outerwear': categoryMap['outerwear']!.length,
+        'accessories': categoryMap['accessories']!.length,
+      },
+    );
+
+    // Step 3: Generate exhaustive combinations
+    final combinations = _generateExhaustiveCombinations(
+      categoryMap,
+      uploadedCategories,
+    );
+
+    // Step 4: Balance distribution to ensure all items appear
+    final balancedCombinations = _balanceDistribution(
+      combinations,
+      categoryMap,
+    );
+
+    // Step 5: Limit to 6 outfits
+    return balancedCombinations.take(6).toList();
+  }
+
+  static List<_OutfitCombination> _generateExhaustiveCombinations(
+    Map<String, List<ClothingAnalysis>> categoryMap,
+    List<String> uploadedCategories,
+  ) {
     final combinations = <_OutfitCombination>[];
 
-    // Handle indecisiveness: Multiple shoes + dress scenario
-    if (dresses.isNotEmpty && shoes.length > 1) {
-      AppLogger.info(
-        '🎯 Detected indecisiveness: ${shoes.length} shoes + dress - creating smart pairings',
-      );
-
-      for (final dress in dresses) {
-        // Create multiple dress + shoe combinations for indecisive users
-        for (int i = 0; i < shoes.length && i < 3; i++) {
-          final shoe = shoes[i];
-          final isBestMatch = i == 0; // First shoe is considered "best match"
-
+    // Handle dress as special case (dress replaces top+bottom)
+    if (categoryMap['dresses']!.isNotEmpty) {
+      for (final dress in categoryMap['dresses']!) {
+        // If shoes uploaded, pair with each shoe
+        if (categoryMap['footwears']!.isNotEmpty) {
+          for (final shoe in categoryMap['footwears']!) {
+            combinations.add(
+              _OutfitCombination(
+                items: [dress, shoe],
+                uploadedItems: [dress, shoe],
+                unuploadedCategories: const ['outerwear', 'accessories'],
+                metadata: {
+                  'styleLabel': 'elegant evening',
+                  'description':
+                      '${dress.primaryColor} dress with ${shoe.primaryColor} ${shoe.itemType}',
+                },
+              ),
+            );
+          }
+        } else {
+          // No shoes uploaded, let AI generate
           combinations.add(
             _OutfitCombination(
-              items: [
-                dress,
-                shoe,
-                if (outerwear.isNotEmpty) outerwear.first,
-                if (accessories.isNotEmpty) accessories.first,
+              items: [dress],
+              uploadedItems: [dress],
+              unuploadedCategories: const [
+                'footwears',
+                'outerwear',
+                'accessories',
               ],
               metadata: {
-                'styleLabel': isBestMatch
-                    ? 'perfect pairing'
-                    : 'alternative style',
-                'pose': isBestMatch
-                    ? 'elegant evening pose'
-                    : 'confident runway stance',
-                'occasion': 'evening event',
-                'pairingNotes': isBestMatch
-                    ? 'Perfect harmony between your ${dress.primaryColor} dress and ${shoe.primaryColor} ${shoe.itemType}. This is the ideal pairing!'
-                    : 'Alternative styling with your ${dress.primaryColor} dress and ${shoe.primaryColor} ${shoe.itemType}. A bold choice!',
-                'description': isBestMatch
-                    ? 'The perfect dress and shoe combination - elegant and sophisticated'
-                    : 'Alternative dress pairing - ${shoe.primaryColor} ${shoe.itemType} with ${dress.primaryColor} dress',
+                'styleLabel': 'dress ensemble',
+                'description': '${dress.primaryColor} dress styling',
               },
             ),
           );
         }
       }
     }
-    // Regular dress + shoes pairing
-    else if (dresses.isNotEmpty) {
-      for (final dress in dresses) {
-        final matchingShoes = shoes.isNotEmpty
-            ? shoes
-            : bottoms.isNotEmpty
-            ? [bottoms.first]
-            : [];
-        combinations.add(
-          _OutfitCombination(
-            items: [
-              dress,
-              ...matchingShoes.take(1),
-              if (outerwear.isNotEmpty) outerwear.first,
-              if (accessories.isNotEmpty) accessories.first,
-            ],
-            metadata: {
-              'styleLabel': 'elevated evening',
-              'pose': 'evening runway stance',
-              'occasion': 'evening event',
-              'pairingNotes':
-                  'Highlight the dress silhouette with complementary footwear and sleek layers.',
-              'description':
-                  'A head-turning ensemble built around your ${dress.primaryColor} dress.',
-            },
-          ),
-        );
+    // Handle top + bottom combinations
+    else {
+      final tops = categoryMap['tops']!;
+      final bottoms = categoryMap['bottoms']!;
+      final shoes = categoryMap['footwears']!;
+
+      // Generate all top+bottom pairs
+      if (tops.isNotEmpty && bottoms.isNotEmpty) {
+        for (final top in tops) {
+          for (final bottom in bottoms) {
+            // If shoes uploaded, add each shoe variation
+            if (shoes.isNotEmpty) {
+              for (final shoe in shoes) {
+                combinations.add(
+                  _OutfitCombination(
+                    items: [top, bottom, shoe],
+                    uploadedItems: [top, bottom, shoe],
+                    unuploadedCategories: const ['outerwear', 'accessories'],
+                    metadata: {
+                      'styleLabel': 'complete look',
+                      'description':
+                          '${top.primaryColor} ${top.itemType} with ${bottom.primaryColor} ${bottom.itemType}',
+                    },
+                  ),
+                );
+              }
+            } else {
+              // No shoes uploaded, let AI generate
+              combinations.add(
+                _OutfitCombination(
+                  items: [top, bottom],
+                  uploadedItems: [top, bottom],
+                  unuploadedCategories: const [
+                    'footwears',
+                    'outerwear',
+                    'accessories',
+                  ],
+                  metadata: {
+                    'styleLabel': 'styled pairing',
+                    'description':
+                        '${top.primaryColor} ${top.itemType} paired with ${bottom.primaryColor} ${bottom.itemType}',
+                  },
+                ),
+              );
+            }
+          }
+        }
       }
-    }
-
-    // Handle indecisiveness: Multiple shoes + top scenario
-    if (tops.isNotEmpty && shoes.length > 1 && dresses.isEmpty) {
-      AppLogger.info(
-        '🎯 Detected indecisiveness: ${shoes.length} shoes + top - creating smart pairings',
-      );
-
-      for (final top in tops) {
-        // Create multiple top + shoe combinations
-        for (int i = 0; i < shoes.length && i < 2; i++) {
-          final shoe = shoes[i];
-          final isBestMatch = i == 0;
-
+      // Only tops uploaded (no bottoms)
+      else if (tops.isNotEmpty && bottoms.isEmpty) {
+        for (final top in tops) {
+          // If shoes uploaded, pair each top with each shoe
+          if (shoes.isNotEmpty) {
+            for (final shoe in shoes) {
+              combinations.add(
+                _OutfitCombination(
+                  items: [top, shoe],
+                  uploadedItems: [top, shoe],
+                  unuploadedCategories: const [
+                    'bottoms',
+                    'footwears',
+                    'outerwear',
+                    'accessories',
+                  ],
+                  metadata: {
+                    'styleLabel': 'top + shoe pairing',
+                    'description':
+                        '${top.primaryColor} ${top.itemType} with ${shoe.primaryColor} ${shoe.itemType}',
+                  },
+                ),
+              );
+            }
+          } else {
+            combinations.add(
+              _OutfitCombination(
+                items: [top],
+                uploadedItems: [top],
+                unuploadedCategories: const [
+                  'bottoms',
+                  'footwears',
+                  'outerwear',
+                  'accessories',
+                ],
+                metadata: {
+                  'styleLabel': 'top styling',
+                  'description':
+                      'Outfit featuring ${top.primaryColor} ${top.itemType}',
+                },
+              ),
+            );
+          }
+        }
+      }
+      // Only bottoms uploaded (no tops)
+      else if (bottoms.isNotEmpty && tops.isEmpty) {
+        for (final bottom in bottoms) {
+          if (shoes.isNotEmpty) {
+            for (final shoe in shoes) {
+              combinations.add(
+                _OutfitCombination(
+                  items: [bottom, shoe],
+                  uploadedItems: [bottom, shoe],
+                  unuploadedCategories: const [
+                    'tops',
+                    'footwears',
+                    'outerwear',
+                    'accessories',
+                  ],
+                  metadata: {
+                    'styleLabel': 'bottom + shoe pairing',
+                    'description':
+                        '${bottom.primaryColor} ${bottom.itemType} with ${shoe.primaryColor} ${shoe.itemType}',
+                  },
+                ),
+              );
+            }
+          } else {
+            combinations.add(
+              _OutfitCombination(
+                items: [bottom],
+                uploadedItems: [bottom],
+                unuploadedCategories: const [
+                  'tops',
+                  'footwears',
+                  'outerwear',
+                  'accessories',
+                ],
+                metadata: {
+                  'styleLabel': 'bottom styling',
+                  'description':
+                      'Outfit featuring ${bottom.primaryColor} ${bottom.itemType}',
+                },
+              ),
+            );
+          }
+        }
+      }
+      // Only shoes uploaded
+      else if (shoes.isNotEmpty && tops.isEmpty && bottoms.isEmpty) {
+        for (final shoe in shoes) {
           combinations.add(
             _OutfitCombination(
-              items: [
-                top,
-                shoe,
-                if (bottoms.isNotEmpty) bottoms.first,
-                if (accessories.isNotEmpty) accessories.first,
+              items: [shoe],
+              uploadedItems: [shoe],
+              unuploadedCategories: const [
+                'tops',
+                'bottoms',
+                'footwears',
+                'outerwear',
+                'accessories',
               ],
               metadata: {
-                'styleLabel': isBestMatch
-                    ? 'perfect casual'
-                    : 'alternative casual',
-                'pose': isBestMatch
-                    ? 'relaxed street pose'
-                    : 'dynamic urban stance',
-                'occasion': 'casual day',
-                'pairingNotes': isBestMatch
-                    ? 'Perfect casual pairing with your ${top.primaryColor} ${top.itemType} and ${shoe.primaryColor} ${shoe.itemType}'
-                    : 'Alternative casual look featuring your ${top.primaryColor} ${top.itemType} and ${shoe.primaryColor} ${shoe.itemType}',
-                'description': isBestMatch
-                    ? 'The ideal casual combination - comfortable and stylish'
-                    : 'Alternative casual styling - ${shoe.primaryColor} ${shoe.itemType} with ${top.primaryColor} ${top.itemType}',
+                'styleLabel': 'shoe spotlight',
+                'description':
+                    'Complete look featuring ${shoe.primaryColor} ${shoe.itemType}',
               },
             ),
           );
         }
       }
     }
-    // Regular top + bottom pairing
-    else if (tops.isNotEmpty && bottoms.isNotEmpty) {
-      for (final top in tops) {
-        final bottom = bottoms.first;
-        combinations.add(
-          _OutfitCombination(
-            items: [
-              top,
-              bottom,
-              if (shoes.isNotEmpty) shoes.first,
-              if (accessories.isNotEmpty) accessories.first,
-            ],
-            metadata: {
-              'styleLabel': 'smart casual',
-              'pose': 'confident street pose',
-              'occasion': 'day-to-night',
-              'pairingNotes':
-                  'Balance proportions between the ${top.itemType} and ${bottom.itemType}.',
-              'description':
-                  'A polished pairing featuring your ${top.primaryColor} ${top.itemType}.',
-            },
-          ),
-        );
+
+    AppLogger.info(
+      '🔄 Generated ${combinations.length} exhaustive combinations',
+    );
+
+    return combinations;
+  }
+
+  static List<_OutfitCombination> _balanceDistribution(
+    List<_OutfitCombination> combinations,
+    Map<String, List<ClothingAnalysis>> categoryMap,
+  ) {
+    if (combinations.length >= 6) {
+      // Ensure each uploaded item appears at least once
+      final itemAppearances = <String, int>{};
+      final selectedCombinations = <_OutfitCombination>[];
+
+      // First pass: ensure each item appears at least once
+      for (final category in categoryMap.entries) {
+        if (category.value.isEmpty) continue;
+
+        for (final item in category.value) {
+          final itemId =
+              '${item.itemType}_${item.primaryColor}_${item.subcategory}';
+          if (itemAppearances[itemId] == null ||
+              itemAppearances[itemId]! == 0) {
+            // Find a combination that uses this item
+            final combo = combinations.firstWhere(
+              (c) => c.uploadedItems.contains(item),
+              orElse: () => combinations.first,
+            );
+            selectedCombinations.add(combo);
+
+            // Mark all items in this combo as used
+            for (final usedItem in combo.uploadedItems) {
+              final usedId =
+                  '${usedItem.itemType}_${usedItem.primaryColor}_${usedItem.subcategory}';
+              itemAppearances[usedId] = (itemAppearances[usedId] ?? 0) + 1;
+            }
+          }
+        }
       }
-    }
 
-    // Individual shoe spotlights for remaining unmatched shoes
-    for (final shoe in shoes) {
-      // Skip if this shoe was already used in dress/top combinations
-      final alreadyUsed = combinations.any(
-        (combo) => combo.items.contains(shoe),
-      );
-      if (!alreadyUsed) {
-        combinations.add(
-          _OutfitCombination(
-            items: [
-              shoe,
-              if (dresses.isNotEmpty)
-                dresses.first
-              else if (bottoms.isNotEmpty)
-                bottoms.first,
-            ],
-            metadata: {
-              'styleLabel': 'shoe spotlight',
-              'pose': 'dynamic runway stride',
-              'occasion': 'trend showcase',
-              'pairingNotes':
-                  'Design an outfit that elevates the footwear as the hero piece.',
-              'description':
-                  'A styled look to make your ${shoe.primaryColor} ${shoe.itemType} the hero.',
-            },
-          ),
+      // Second pass: fill remaining slots with best combinations
+      while (selectedCombinations.length < 6 && combinations.isNotEmpty) {
+        // Pick combinations with least-used items
+        final scoredCombos = combinations.map((combo) {
+          var score = 0;
+          for (final item in combo.uploadedItems) {
+            final itemId =
+                '${item.itemType}_${item.primaryColor}_${item.subcategory}';
+            score += itemAppearances[itemId] ?? 0;
+          }
+          return {'combo': combo, 'score': score};
+        }).toList();
+
+        // Sort by score (lower score = less used items = pick this)
+        scoredCombos.sort(
+          (a, b) => (a['score'] as int).compareTo(b['score'] as int),
         );
+
+        final bestCombo = scoredCombos.first['combo'] as _OutfitCombination;
+        selectedCombinations.add(bestCombo);
+
+        // Update appearances
+        for (final item in bestCombo.uploadedItems) {
+          final itemId =
+              '${item.itemType}_${item.primaryColor}_${item.subcategory}';
+          itemAppearances[itemId] = (itemAppearances[itemId] ?? 0) + 1;
+        }
       }
-    }
 
-    if (combinations.isEmpty) {
-      combinations.add(
-        _OutfitCombination(
-          items: items,
-          metadata: {
-            'styleLabel': 'creative mix',
-            'pose': 'studio portrait pose',
-            'occasion': 'creative editorial',
-            'pairingNotes': 'Blend textures and colors harmoniously.',
-            'description': 'An editorial concept using every uploaded item.',
-          },
-        ),
+      AppLogger.info('⚖️ Balanced distribution', data: itemAppearances);
+
+      return selectedCombinations;
+    } else {
+      // Less than 6 combinations, repeat to reach 6
+      final repeated = <_OutfitCombination>[];
+      for (int i = 0; i < 6; i++) {
+        repeated.add(combinations[i % combinations.length]);
+      }
+
+      AppLogger.info(
+        '🔁 Repeated ${combinations.length} combinations to reach 6',
       );
-    }
 
-    return combinations.take(6).toList(growable: false);
+      return repeated;
+    }
   }
 
   static const List<String> _poseLibrary = [
@@ -1614,8 +1747,33 @@ Professional fashion photography style.
 }
 
 class _OutfitCombination {
-  const _OutfitCombination({required this.items, required this.metadata});
+  const _OutfitCombination({
+    required this.items,
+    required this.uploadedItems,
+    required this.unuploadedCategories,
+    required this.metadata,
+  });
 
   final List<ClothingAnalysis> items;
+  final List<ClothingAnalysis> uploadedItems;
+  final List<String> unuploadedCategories;
   final Map<String, Object?> metadata;
+}
+
+class OutfitSuggestion {
+  const OutfitSuggestion({
+    required this.id,
+    required this.items,
+    required this.matchScore,
+    required this.style,
+    required this.occasion,
+    required this.description,
+  });
+
+  final String id;
+  final List<ClothingAnalysis> items;
+  final double matchScore;
+  final String style;
+  final String occasion;
+  final String description;
 }
