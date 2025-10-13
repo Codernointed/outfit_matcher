@@ -7,6 +7,7 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 /// Real-time search screen for wardrobe items
@@ -14,7 +15,8 @@ class WardrobeSearchScreen extends ConsumerStatefulWidget {
   const WardrobeSearchScreen({super.key});
 
   @override
-  ConsumerState<WardrobeSearchScreen> createState() => _WardrobeSearchScreenState();
+  ConsumerState<WardrobeSearchScreen> createState() =>
+      _WardrobeSearchScreenState();
 }
 
 class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
@@ -55,7 +57,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       appBar: AppBar(
         title: Container(
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.3,
+            ),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: theme.colorScheme.primary.withValues(alpha: 0.3),
@@ -74,7 +78,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
                   ? IconButton(
                       icon: Icon(
                         Icons.clear,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                       onPressed: () {
                         _searchController.clear();
@@ -181,7 +187,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
@@ -264,7 +272,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
               borderRadius: BorderRadius.circular(60),
             ),
             child: Icon(
@@ -433,7 +443,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
     if (item.tags.any((tag) => tag.toLowerCase().contains(query))) {
       matches.add('Tags');
     }
-    if (item.occasions.any((occasion) => occasion.toLowerCase().contains(query))) {
+    if (item.occasions.any(
+      (occasion) => occasion.toLowerCase().contains(query),
+    )) {
       matches.add('Occasions');
     }
 
@@ -441,7 +453,136 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
   }
 
   void _showItemPreview(BuildContext context, WardrobeItem item) {
-    showWardrobeItemPreview(context, item, heroTag: 'search_item_${item.id}');
+    showWardrobeItemPreview(
+      context,
+      item,
+      heroTag: 'search_item_${item.id}',
+      onInspirationTap: () => _navigateToInspiration(item),
+    );
+  }
+
+  void _navigateToInspiration(WardrobeItem item) async {
+    // Show dialog to add custom styling notes
+    final customNotes = await showDialog<String>(
+      context: context,
+      builder: (context) => _buildStylingNotesDialog(context, item),
+    );
+
+    // If dialog was dismissed (null), don't navigate
+    if (customNotes == null) {
+      AppLogger.info('👤 User cancelled inspiration dialog');
+      return;
+    }
+
+    if (!mounted) return;
+
+    // Combine default notes with custom notes
+    final finalNotes = [
+      if (item.userNotes != null) item.userNotes!,
+      if (customNotes.isNotEmpty) customNotes,
+    ].join('\n\n');
+
+    AppLogger.info('🎨 Navigating to inspiration with notes: $finalNotes');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EnhancedVisualSearchScreen(
+          analyses: [item.analysis],
+          itemImages: [item.displayImagePath],
+          userNotes: finalNotes.isEmpty ? null : finalNotes,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStylingNotesDialog(BuildContext context, WardrobeItem item) {
+    final theme = Theme.of(context);
+    final controller = TextEditingController();
+
+    // Pre-fill with item context
+    final defaultNotes =
+        'Style this ${item.analysis.primaryColor} ${item.analysis.itemType}';
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          Icon(Icons.auto_awesome, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Add Styling Notes')),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add custom styling instructions for the AI',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    defaultNotes,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: controller,
+            maxLines: 4,
+            decoration: InputDecoration(
+              hintText:
+                  'e.g., "Make it edgy", "Add vintage vibes", "Corporate chic"...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              filled: true,
+            ),
+            autofocus: true,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            AppLogger.info('🔙 Skip button tapped');
+            Navigator.pop(context, '');
+          },
+          child: const Text('Skip'),
+        ),
+        FilledButton.icon(
+          onPressed: () {
+            final notes = controller.text.trim();
+            AppLogger.info('✅ Generate button tapped with notes: "$notes"');
+            Navigator.pop(context, notes);
+          },
+          icon: const Icon(Icons.auto_awesome),
+          label: const Text('Generate'),
+        ),
+      ],
+    );
   }
 
   Future<List<WardrobeItem>> _performSearch(String query) async {
@@ -451,7 +592,9 @@ class _WardrobeSearchScreenState extends ConsumerState<WardrobeSearchScreen> {
       final storage = getIt<EnhancedWardrobeStorageService>();
       final results = await storage.searchWardrobeItems(query);
 
-      AppLogger.debug('🔍 Search completed: "$query" -> ${results.length} results');
+      AppLogger.debug(
+        '🔍 Search completed: "$query" -> ${results.length} results',
+      );
       return results;
     } catch (e, stackTrace) {
       AppLogger.error('❌ Search failed', error: e, stackTrace: stackTrace);

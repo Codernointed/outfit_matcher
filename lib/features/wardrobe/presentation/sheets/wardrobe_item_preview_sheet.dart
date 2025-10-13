@@ -15,23 +15,30 @@ void showWardrobeItemPreview(
   BuildContext context,
   WardrobeItem item, {
   String heroTag = 'wardrobe_item',
+  VoidCallback? onInspirationTap,
 }) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => CleanItemPreviewSheet(item: item, heroTag: heroTag),
+    builder: (_) => CleanItemPreviewSheet(
+      item: item,
+      heroTag: heroTag,
+      onInspirationTap: onInspirationTap,
+    ),
   );
 }
 
 class CleanItemPreviewSheet extends ConsumerStatefulWidget {
   final WardrobeItem item;
   final String heroTag;
+  final VoidCallback? onInspirationTap;
 
   const CleanItemPreviewSheet({
     super.key,
     required this.item,
     required this.heroTag,
+    this.onInspirationTap,
   });
 
   @override
@@ -130,7 +137,9 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
                                   'Inspiration',
                                   Icons.explore,
                                   Colors.orange,
-                                  () => _navigateToInspiration(context),
+                                  () => widget.onInspirationTap != null
+                                      ? widget.onInspirationTap!()
+                                      : _navigateToInspiration(context),
                                 ),
                               ),
                             ],
@@ -482,28 +491,6 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       return;
     }
 
-    // Check if widget is still mounted before navigation
-    if (!mounted) {
-      AppLogger.warning('⚠️ [PREVIEW SHEET] Widget unmounted, cannot navigate');
-      return;
-    }
-
-    // Close the preview sheet first
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context);
-    }
-
-    // Wait a frame to ensure sheet is closed
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    // Check context is still valid
-    if (!context.mounted) {
-      AppLogger.warning(
-        '⚠️ [PREVIEW SHEET] Context unmounted after sheet close',
-      );
-      return;
-    }
-
     // Combine default notes with custom notes
     final finalNotes = [
       if (_currentItem.userNotes != null) _currentItem.userNotes!,
@@ -514,17 +501,32 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       '🚀 [PREVIEW SHEET] Navigating to inspiration with notes: "$finalNotes"',
     );
 
-    // Navigate to inspiration screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EnhancedVisualSearchScreen(
-          analyses: [_currentItem.analysis],
-          itemImages: [_currentItem.displayImagePath],
-          userNotes: finalNotes.isEmpty ? null : finalNotes,
+    // Close the preview sheet first
+    Navigator.pop(context);
+
+    // Wait for the sheet to close completely
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    // Navigate using the parent context (the one that opened the sheet)
+    // This should be the closet screen context
+    final parentContext = Navigator.of(context, rootNavigator: true).context;
+
+    if (parentContext.mounted) {
+      Navigator.push(
+        parentContext,
+        MaterialPageRoute(
+          builder: (context) => EnhancedVisualSearchScreen(
+            analyses: [_currentItem.analysis],
+            itemImages: [_currentItem.displayImagePath],
+            userNotes: finalNotes.isEmpty ? null : finalNotes,
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      AppLogger.warning(
+        '⚠️ [PREVIEW SHEET] Parent context unmounted, cannot navigate',
+      );
+    }
   }
 
   Widget _buildStylingNotesDialog(BuildContext context) {

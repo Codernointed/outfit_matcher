@@ -786,7 +786,12 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   }
 
   void _showItemPreview(BuildContext context, WardrobeItem item) {
-    showWardrobeItemPreview(context, item, heroTag: 'closet_item_${item.id}');
+    showWardrobeItemPreview(
+      context,
+      item,
+      heroTag: 'closet_item_${item.id}',
+      onInspirationTap: () => _navigateToInspiration(item),
+    );
   }
 
   void _showQuickActions(BuildContext context, WardrobeItem item) async {
