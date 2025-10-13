@@ -464,6 +464,7 @@ class EnhancedWardrobeStorageService {
         seasons: ['All Seasons'],
         confidence: 0.8,
         tags: [],
+        rawAttributes: const {},
       );
 
       final wardrobeItem = WardrobeItem(

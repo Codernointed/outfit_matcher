@@ -27,7 +27,9 @@ class ItemDetailsScreen extends StatefulWidget {
 class _ItemEditorState {
   _ItemEditorState({required this.imagePath})
     : brandController = TextEditingController(),
-      subcategoryController = TextEditingController();
+      subcategoryController = TextEditingController(),
+      customColorController = TextEditingController(),
+      customPatternController = TextEditingController();
 
   final String imagePath;
   ClothingAnalysis? analysis;
@@ -41,10 +43,22 @@ class _ItemEditorState {
   final Set<String> selectedSeasons = <String>{};
   final TextEditingController brandController;
   final TextEditingController subcategoryController;
+  final TextEditingController customColorController;
+  final TextEditingController customPatternController;
+  String? appliedColorDisplay; // e.g. "Warm beige"
+  String? appliedPatternDisplay; // e.g. "Muted geometric chevron"
+  List<String> colorSuggestions = const [];
+  List<String> patternSuggestions = const [];
+  List<String> styleDescriptors = const [];
+  List<String> complementaryColors = const [];
+  List<String> designElements = const [];
+  List<String> pairingHints = const [];
 
   void dispose() {
     brandController.dispose();
     subcategoryController.dispose();
+    customColorController.dispose();
+    customPatternController.dispose();
   }
 }
 
@@ -63,22 +77,54 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   _ItemEditorState get _currentState => _itemStates[_currentIndex];
   bool get _canContinue =>
       !_isAnalyzing && _itemStates.every((state) => state.analysis != null);
+  bool get _hasStyleInsights =>
+      _currentState.styleDescriptors.isNotEmpty ||
+      _currentState.complementaryColors.isNotEmpty ||
+      _currentState.designElements.isNotEmpty ||
+      _currentState.pairingHints.isNotEmpty;
   List<String> get _imagePaths =>
       _itemStates.map((state) => state.imagePath).toList(growable: false);
 
   late AnimationController _animationController;
 
   final List<ClothingType> _itemTypeOptions = ClothingType.values.toList();
-  final List<ClothingColor> _colorOptions = ClothingColor.values.toList();
   final List<ClothingOccasion> _occasionOptions = ClothingOccasion.values
       .toList();
-  final List<ClothingPattern> _patternOptions = ClothingPattern.values.toList();
   final List<ClothingMaterial> _materialOptions = ClothingMaterial.values
       .toList();
   final List<ClothingFit> _fitOptions = ClothingFit.values.toList();
   final List<ClothingFormality> _formalityOptions = ClothingFormality.values
       .toList();
   final List<String> _seasonOptions = ['Spring', 'Summer', 'Fall', 'Winter'];
+  static const Map<ClothingColor, List<String>> _colorFamilyKeywords = {
+    ClothingColor.red: ['burgundy', 'maroon', 'crimson', 'scarlet', 'wine'],
+    ClothingColor.blue: ['navy', 'cobalt', 'teal', 'denim', 'azure'],
+    ClothingColor.green: ['olive', 'sage', 'forest', 'mint', 'emerald'],
+    ClothingColor.yellow: ['gold', 'mustard', 'amber', 'chartreuse'],
+    ClothingColor.black: ['charcoal', 'jet', 'onyx'],
+    ClothingColor.white: ['ivory', 'cream', 'pearl', 'eggshell'],
+    ClothingColor.purple: ['violet', 'lavender', 'plum', 'lilac'],
+    ClothingColor.orange: ['rust', 'terracotta', 'apricot', 'coral'],
+    ClothingColor.pink: ['rose', 'blush', 'fuchsia', 'magenta'],
+    ClothingColor.brown: ['beige', 'tan', 'camel', 'taupe', 'khaki', 'sand'],
+    ClothingColor.gray: ['silver', 'slate', 'graphite', 'ash'],
+  };
+  static const Map<ClothingPattern, List<String>> _patternKeywordMap = {
+    ClothingPattern.solid: ['solid', 'plain', 'minimal', 'clean'],
+    ClothingPattern.striped: ['stripe', 'striped', 'pinstripe', 'banded'],
+    ClothingPattern.polka_dot: ['polka', 'dot', 'dotted', 'spotted'],
+    ClothingPattern.floral: ['floral', 'flower', 'botanical', 'bloom'],
+    ClothingPattern.plaid: ['plaid', 'check', 'checkered', 'tartan'],
+    ClothingPattern.animal_print: [
+      'animal',
+      'leopard',
+      'zebra',
+      'snake',
+      'cheetah',
+    ],
+    ClothingPattern.geometric: ['geometric', 'geo', 'chevron', 'diamond'],
+    ClothingPattern.abstract: ['abstract', 'artsy', 'organic', 'painted'],
+  };
 
   @override
   void initState() {
@@ -178,9 +224,13 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   ) {
     state.analysis = analysis;
     state.selectedType = _mapStringToClothingType(analysis.itemType);
-    state.selectedColor = _mapStringToClothingColor(analysis.primaryColor);
+    state.selectedColor = _mapStringToClothingColor(
+      analysis.colorFamily ?? analysis.primaryColor,
+    );
+    state.appliedColorDisplay = analysis.exactPrimaryColor;
     state.selectedOccasion = _mapStringToClothingOccasion(analysis.style);
     state.selectedPattern = _mapStringToClothingPattern(analysis.patternType);
+    state.appliedPatternDisplay = analysis.patternDetails;
     state.selectedMaterial = _mapStringToClothingMaterial(
       analysis.material ?? 'cotton',
     );
@@ -193,6 +243,50 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
       ..addAll(analysis.seasons);
     state.brandController.text = analysis.brand ?? '';
     state.subcategoryController.text = analysis.subcategory ?? '';
+    state.customColorController.text =
+        analysis.exactPrimaryColor ?? analysis.primaryColor;
+    state.customPatternController.text =
+        analysis.patternDetails ?? analysis.patternType;
+    final colorCandidates = <String>{};
+    if ((analysis.exactPrimaryColor ?? '').isNotEmpty) {
+      colorCandidates.add(analysis.exactPrimaryColor!.trim());
+    }
+    if ((analysis.colorFamily ?? '').isNotEmpty) {
+      final family = analysis.colorFamily!.trim();
+      colorCandidates.add(family);
+      final familyEnum = ClothingColor.values.firstWhere(
+        (color) => color.name == family,
+        orElse: () => _mapStringToClothingColor(family),
+      );
+      colorCandidates.addAll(_colorFamilyKeywords[familyEnum] ?? const []);
+    }
+    colorCandidates.addAll(analysis.colorKeywords ?? const []);
+    colorCandidates.addAll(analysis.complementaryColors ?? const []);
+
+    state.colorSuggestions = colorCandidates
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+
+    final patternCandidates = <String>{};
+    if ((analysis.patternDetails ?? '').isNotEmpty) {
+      patternCandidates.add(analysis.patternDetails!.trim());
+    }
+    patternCandidates.addAll(analysis.patternKeywords ?? const []);
+    final patternEnum = ClothingPattern.values.firstWhere(
+      (pattern) => pattern.name == analysis.patternType,
+      orElse: () => _mapStringToClothingPattern(analysis.patternType),
+    );
+    patternCandidates.addAll(_patternKeywordMap[patternEnum] ?? const []);
+
+    state.patternSuggestions = patternCandidates
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    state.styleDescriptors = analysis.styleDescriptors ?? const [];
+    state.complementaryColors = analysis.complementaryColors ?? const [];
+    state.designElements = analysis.designElements ?? const [];
+    state.pairingHints = analysis.pairingHints ?? const [];
   }
 
   ClothingType _mapStringToClothingType(String type) {
@@ -203,8 +297,19 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   }
 
   ClothingColor _mapStringToClothingColor(String color) {
+    final normalized = color.toLowerCase();
+    for (final entry in _colorFamilyKeywords.entries) {
+      if (entry.key.name.toLowerCase() == normalized) return entry.key;
+      if (entry.value.any((keyword) => keyword.toLowerCase() == normalized)) {
+        return entry.key;
+      }
+      if (normalized.contains(entry.key.name.toLowerCase())) return entry.key;
+      if (entry.value.any((keyword) => normalized.contains(keyword))) {
+        return entry.key;
+      }
+    }
     return ClothingColor.values.firstWhere(
-      (e) => e.name.toLowerCase() == color.toLowerCase(),
+      (e) => e.name.toLowerCase() == normalized,
       orElse: () => ClothingColor.blue,
     );
   }
@@ -217,8 +322,19 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   }
 
   ClothingPattern _mapStringToClothingPattern(String pattern) {
+    final normalized = pattern.toLowerCase();
+    for (final entry in _patternKeywordMap.entries) {
+      if (entry.key.name.toLowerCase() == normalized) return entry.key;
+      if (entry.value.any((keyword) => keyword.toLowerCase() == normalized)) {
+        return entry.key;
+      }
+      if (normalized.contains(entry.key.name.toLowerCase())) return entry.key;
+      if (entry.value.any((keyword) => normalized.contains(keyword))) {
+        return entry.key;
+      }
+    }
     return ClothingPattern.values.firstWhere(
-      (e) => e.name.toLowerCase() == pattern.toLowerCase(),
+      (e) => e.name.toLowerCase() == normalized,
       orElse: () => ClothingPattern.solid,
     );
   }
@@ -293,11 +409,27 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
     final base = state.analysis;
     if (base == null) return null;
 
+    final customColor = _normalizeText(state.customColorController.text);
+    final customPattern = _normalizeText(state.customPatternController.text);
+
+    // Map custom color to a family for backend compatibility
+    final colorEnum = customColor != null
+        ? _mapStringToClothingColor(customColor)
+        : state.selectedColor;
+
+    // Map custom pattern to enum for backend compatibility
+    final patternEnum = customPattern != null
+        ? _mapStringToClothingPattern(customPattern)
+        : state.selectedPattern;
+
     return base.copyWith(
       itemType: state.selectedType.name,
-      primaryColor: state.selectedColor.name,
+      primaryColor: customColor ?? colorEnum.name,
+      colorFamily: colorEnum.name,
+      exactPrimaryColor: customColor ?? base.exactPrimaryColor,
       style: state.selectedOccasion.name,
-      patternType: state.selectedPattern.name,
+      patternType: patternEnum.name,
+      patternDetails: customPattern ?? base.patternDetails,
       material: state.selectedMaterial.name,
       fit: state.selectedFit.name,
       formality: state.selectedFormality.name,
@@ -305,6 +437,12 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
       brand: _normalizeText(state.brandController.text),
       subcategory: _normalizeText(state.subcategoryController.text),
       imagePath: state.imagePath,
+      colorKeywords: state.colorSuggestions
+          .where((value) => value.isNotEmpty)
+          .toList(),
+      patternKeywords: state.patternSuggestions
+          .where((value) => value.isNotEmpty)
+          .toList(),
     );
   }
 
@@ -320,7 +458,8 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
 
   String _buildSearchQuery(ClothingAnalysis analysis) {
     final type = analysis.itemType.toLowerCase();
-    final color = analysis.primaryColor.toLowerCase();
+    final color = (analysis.exactPrimaryColor ?? analysis.primaryColor)
+        .toLowerCase();
     final occasion = analysis.style.toLowerCase();
     final subcategory = (analysis.subcategory ?? '').toLowerCase().trim();
 
@@ -585,13 +724,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           ),
           const SizedBox(height: 24),
 
-          _buildSmartSuggestionSection(
-            'What\'s the main color?',
-            _colorOptions,
-            _currentState.selectedColor,
-            (value) => setState(() => _currentState.selectedColor = value),
-            Icons.palette_outlined,
-          ),
+          _buildColorSection(theme),
           const SizedBox(height: 24),
 
           _buildSmartSuggestionSection(
@@ -603,14 +736,13 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           ),
           const SizedBox(height: 24),
 
-          _buildSmartSuggestionSection(
-            'Any pattern or texture?',
-            _patternOptions,
-            _currentState.selectedPattern,
-            (value) => setState(() => _currentState.selectedPattern = value),
-            Icons.texture_outlined,
-          ),
+          _buildPatternSection(theme),
           const SizedBox(height: 24),
+
+          if (_hasStyleInsights) ...[
+            _buildInsightsSection(theme),
+            const SizedBox(height: 24),
+          ],
 
           _buildSmartSuggestionSection(
             'What\'s the main material?',
@@ -841,6 +973,32 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
     );
   }
 
+  Widget _buildSuggestionChips(
+    List<String> suggestions, {
+    required void Function(String value) onTap,
+    IconData icon = Icons.label_outline,
+  }) {
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: suggestions.map((suggestion) {
+            return ActionChip(
+              avatar: Icon(icon, size: 16),
+              label: Text(suggestion),
+              onPressed: () => onTap(suggestion),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   Widget _buildOptionalField(
     String question,
     String hint,
@@ -1004,110 +1162,50 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   }
 
   Widget _buildGenderSelectionSection(ThemeData theme) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        // gradient: LinearGradient(
-        //   colors: [
-        //     theme.colorScheme.primary.withValues(alpha: 0.08),
-        //     theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
-        //     theme.colorScheme.secondaryContainer.withValues(alpha: 0.2),
-        //   ],
-        //   begin: Alignment.topLeft,
-        //   end: Alignment.bottomRight,
-        // ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          width: 2,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.person_outline,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Mannequin style preference',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
         ),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: theme.colorScheme.primary.withValues(alpha: 0.1),
-        //     blurRadius: 12,
-        //     offset: const Offset(0, 4),
-        //   ),
-        // ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.primary.withValues(alpha: 0.8),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.person_outline,
-                  color: Colors.white,
-                  size: 12,
-                ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildGenderCard(
+                gender: 'male',
+                icon: Icons.man,
+                label: 'Male',
+                theme: theme,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Mannequin Style Preference',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Choose the mannequin style for outfit previews',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildGenderCard(
+                gender: 'female',
+                icon: Icons.woman,
+                label: 'Female',
+                theme: theme,
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _buildGenderCard(
-                  gender: 'male',
-                  icon: Icons.man,
-                  label: 'Male',
-                  theme: theme,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildGenderCard(
-                  gender: 'female',
-                  icon: Icons.woman,
-                  label: 'Female',
-                  theme: theme,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -1128,121 +1226,294 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
         AppLogger.info('👤 Gender toggled to: $_currentGender');
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        height: 160,
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.primary.withValues(alpha: 0.85),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : LinearGradient(
-                  colors: [
-                    theme.colorScheme.surface,
-                    theme.colorScheme.surfaceContainerHighest,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          color: isSelected
+              ? theme.colorScheme.primary
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
                 ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withValues(alpha: 0.2),
-            width: isSelected ? 3 : 2,
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            width: 2,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                    spreadRadius: 0,
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon with background
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? Colors.white.withValues(alpha: 0.25)
-                    : theme.colorScheme.primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.3)
-                        : theme.colorScheme.primary.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: isSelected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.primary,
-              ),
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected
+                  ? theme.colorScheme.onPrimary
+                  : theme.colorScheme.onSurface,
             ),
-            const SizedBox(height: 10),
-            // Label
+            const SizedBox(height: 8),
             Text(
               label,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w500,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
                     ? theme.colorScheme.onPrimary
                     : theme.colorScheme.onSurface,
               ),
             ),
-            if (isSelected) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildColorSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.palette_outlined,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'What\'s the main color?',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: theme.colorScheme.onPrimary,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Selected',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_currentState.colorSuggestions.isNotEmpty) ...[
+          Text(
+            'Tap a suggestion or type your own',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildSuggestionChips(
+            _currentState.colorSuggestions,
+            onTap: (value) {
+              setState(() {
+                _currentState.customColorController.text = value;
+                _currentState.appliedColorDisplay = value;
+              });
+            },
+            icon: Icons.palette_rounded,
+          ),
+        ],
+        TextFormField(
+          controller: _currentState.customColorController,
+          decoration: InputDecoration(
+            hintText: 'e.g. warm beige, navy blue, charcoal',
+            prefixIcon: const Icon(Icons.edit_note),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.3,
+            ),
+          ),
+          onChanged: (value) {
+            setState(() {
+              _currentState.appliedColorDisplay = value.trim().isEmpty
+                  ? _currentState.appliedColorDisplay
+                  : value.trim();
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPatternSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.texture_outlined,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Any pattern or texture?',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_currentState.patternSuggestions.isNotEmpty) ...[
+          Text(
+            'Tap a suggestion or type your own',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildSuggestionChips(
+            _currentState.patternSuggestions,
+            onTap: (value) {
+              setState(() {
+                _currentState.customPatternController.text = value;
+                _currentState.appliedPatternDisplay = value;
+              });
+            },
+            icon: Icons.pattern,
+          ),
+        ],
+        TextFormField(
+          controller: _currentState.customPatternController,
+          decoration: InputDecoration(
+            hintText: 'e.g. striped, floral, solid',
+            prefixIcon: const Icon(Icons.edit_attributes),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: theme.colorScheme.primary,
+                width: 2,
+              ),
+            ),
+            filled: true,
+            fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.3,
+            ),
+          ),
+          onChanged: (value) {
+            setState(() {
+              _currentState.appliedPatternDisplay = value.trim().isEmpty
+                  ? _currentState.appliedPatternDisplay
+                  : value.trim();
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInsightsSection(ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'AI style insights',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_currentState.styleDescriptors.isNotEmpty)
+          _buildInsightList(
+            theme,
+            'Style vibe',
+            Icons.auto_awesome,
+            _currentState.styleDescriptors,
+          ),
+        if (_currentState.complementaryColors.isNotEmpty)
+          _buildInsightList(
+            theme,
+            'Pairs beautifully with',
+            Icons.colorize,
+            _currentState.complementaryColors,
+          ),
+        // if (_currentState.designElements.isNotEmpty)
+        //   _buildInsightList(
+        //     theme,
+        //     'Design details to note',
+        //     Icons.brush,
+        //     _currentState.designElements,
+        //   ),
+        if (_currentState.pairingHints.isNotEmpty)
+          _buildInsightList(
+            theme,
+            'Suggested pairings',
+            Icons.stars,
+            _currentState.pairingHints,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInsightList(
+    ThemeData theme,
+    String title,
+    IconData icon,
+    List<String> items,
+  ) {
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ],
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(left: 26, bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('• '),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.75,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

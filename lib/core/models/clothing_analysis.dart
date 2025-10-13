@@ -25,11 +25,23 @@ class ClothingAnalysis {
   final List<String>? colors; // secondary colors
   final String? texture; // smooth, textured, knit, etc.
 
+  // Enhanced color intelligence
+  final String? colorFamily; // normalized family (e.g., brown, blue)
+  final String? exactPrimaryColor; // precise name like "warm beige"
+  final String? colorHex; // hex code if available
+  final List<String>?
+  colorKeywords; // adjectives for the color (soft, muted, etc.)
+
+  // Pattern insights
+  final String? patternDetails; // natural language description of pattern
+  final List<String>? patternKeywords; // additional descriptors
+
   // Contextual metadata from AI analysis
   final List<String>?
   occasions; // suggested occasions (date night, brunch, work)
   final List<String>? locations; // indoor, outdoor, beach, cold_weather, etc.
   final List<String>? styleHints; // quick styling tips from AI
+  final List<String>? styleDescriptors; // mood/attitude notes
 
   // Fit information
   final String? length; // short, medium, long
@@ -46,6 +58,9 @@ class ClothingAnalysis {
   final String? stylePersonality; // edgy, classic, romantic, minimalist, etc.
   final String?
   detailLevel; // minimal, moderate, detailed - for pairing complexity
+  final List<String>? garmentKeywords; // hero descriptors e.g. retro, sporty
+  final Map<String, dynamic>?
+  rawAttributes; // additional AI metadata for future use
 
   const ClothingAnalysis({
     required this.id,
@@ -67,11 +82,18 @@ class ClothingAnalysis {
     this.subcategory,
     this.colors,
     this.texture,
+    this.colorFamily,
+    this.exactPrimaryColor,
+    this.colorHex,
+    this.colorKeywords,
+    this.patternDetails,
+    this.patternKeywords,
     this.length,
     this.silhouette,
     this.occasions,
     this.locations,
     this.styleHints,
+    this.styleDescriptors,
     this.colorUndertone,
     this.complementaryColors,
     this.colorTemperature,
@@ -80,6 +102,8 @@ class ClothingAnalysis {
     this.pairingHints,
     this.stylePersonality,
     this.detailLevel,
+    this.garmentKeywords,
+    this.rawAttributes,
   });
 
   ClothingAnalysis copyWith({
@@ -102,11 +126,18 @@ class ClothingAnalysis {
     String? subcategory,
     List<String>? colors,
     String? texture,
+    String? colorFamily,
+    String? exactPrimaryColor,
+    String? colorHex,
+    List<String>? colorKeywords,
+    String? patternDetails,
+    List<String>? patternKeywords,
     String? length,
     String? silhouette,
     List<String>? occasions,
     List<String>? locations,
     List<String>? styleHints,
+    List<String>? styleDescriptors,
     String? colorUndertone,
     List<String>? complementaryColors,
     String? colorTemperature,
@@ -115,6 +146,8 @@ class ClothingAnalysis {
     List<String>? pairingHints,
     String? stylePersonality,
     String? detailLevel,
+    List<String>? garmentKeywords,
+    Map<String, dynamic>? rawAttributes,
   }) {
     return ClothingAnalysis(
       id: id ?? this.id,
@@ -136,11 +169,18 @@ class ClothingAnalysis {
       subcategory: subcategory ?? this.subcategory,
       colors: colors ?? this.colors,
       texture: texture ?? this.texture,
+      colorFamily: colorFamily ?? this.colorFamily,
+      exactPrimaryColor: exactPrimaryColor ?? this.exactPrimaryColor,
+      colorHex: colorHex ?? this.colorHex,
+      colorKeywords: colorKeywords ?? this.colorKeywords,
+      patternDetails: patternDetails ?? this.patternDetails,
+      patternKeywords: patternKeywords ?? this.patternKeywords,
       length: length ?? this.length,
       silhouette: silhouette ?? this.silhouette,
       occasions: occasions ?? this.occasions,
       locations: locations ?? this.locations,
       styleHints: styleHints ?? this.styleHints,
+      styleDescriptors: styleDescriptors ?? this.styleDescriptors,
       colorUndertone: colorUndertone ?? this.colorUndertone,
       complementaryColors: complementaryColors ?? this.complementaryColors,
       colorTemperature: colorTemperature ?? this.colorTemperature,
@@ -149,6 +189,8 @@ class ClothingAnalysis {
       pairingHints: pairingHints ?? this.pairingHints,
       stylePersonality: stylePersonality ?? this.stylePersonality,
       detailLevel: detailLevel ?? this.detailLevel,
+      garmentKeywords: garmentKeywords ?? this.garmentKeywords,
+      rawAttributes: rawAttributes ?? this.rawAttributes,
     );
   }
 
@@ -179,6 +221,16 @@ class ClothingAnalysis {
       formality: json['formality'],
       subcategory: json['subcategory'],
       imagePath: json['imagePath'],
+      colorFamily: json['colorFamily'],
+      exactPrimaryColor: json['exactPrimaryColor'],
+      colorHex: json['colorHex'],
+      colorKeywords: json['colorKeywords'] != null
+          ? List<String>.from(json['colorKeywords'] as List<dynamic>)
+          : null,
+      patternDetails: json['patternDetails'],
+      patternKeywords: json['patternKeywords'] != null
+          ? List<String>.from(json['patternKeywords'] as List<dynamic>)
+          : null,
       occasions: json['occasions'] != null
           ? List<String>.from(json['occasions'] as List<dynamic>)
           : null,
@@ -187,6 +239,9 @@ class ClothingAnalysis {
           : null,
       styleHints: json['styleHints'] != null
           ? List<String>.from(json['styleHints'] as List<dynamic>)
+          : null,
+      styleDescriptors: json['styleDescriptors'] != null
+          ? List<String>.from(json['styleDescriptors'] as List<dynamic>)
           : null,
       colorUndertone: json['colorUndertone'],
       complementaryColors: json['complementaryColors'] != null
@@ -202,6 +257,10 @@ class ClothingAnalysis {
           : null,
       stylePersonality: json['stylePersonality'],
       detailLevel: json['detailLevel'],
+      garmentKeywords: json['garmentKeywords'] != null
+          ? List<String>.from(json['garmentKeywords'] as List<dynamic>)
+          : null,
+      rawAttributes: json['rawAttributes'] as Map<String, dynamic>?,
     );
     AppLogger.debug(
       '✅ ClothingAnalysis created: ${analysis.itemType} (${analysis.primaryColor})',
@@ -230,11 +289,18 @@ class ClothingAnalysis {
       'subcategory': subcategory,
       'colors': colors,
       'texture': texture,
+      'colorFamily': colorFamily,
+      'exactPrimaryColor': exactPrimaryColor,
+      'colorHex': colorHex,
+      'colorKeywords': colorKeywords,
+      'patternDetails': patternDetails,
+      'patternKeywords': patternKeywords,
       'length': length,
       'silhouette': silhouette,
       'occasions': occasions,
       'locations': locations,
       'styleHints': styleHints,
+      'styleDescriptors': styleDescriptors,
       'colorUndertone': colorUndertone,
       'complementaryColors': complementaryColors,
       'colorTemperature': colorTemperature,
@@ -243,6 +309,8 @@ class ClothingAnalysis {
       'pairingHints': pairingHints,
       'stylePersonality': stylePersonality,
       'detailLevel': detailLevel,
+      'garmentKeywords': garmentKeywords,
+      'rawAttributes': rawAttributes,
     };
     AppLogger.debug('📤 Serializing ClothingAnalysis: $itemType');
     return data;

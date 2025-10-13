@@ -35,7 +35,10 @@ class GeminiApiService {
       return ClothingAnalysis(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         itemType: result['itemType'] ?? '',
-        primaryColor: result['primaryColor'] ?? '',
+        primaryColor:
+            (result['normalizedPrimaryColor'] as String?)?.isNotEmpty == true
+            ? result['normalizedPrimaryColor'] as String
+            : result['primaryColor'] ?? '',
         patternType: result['patternType'] ?? '',
         style: result['style'] ?? 'casual',
         seasons: List<String>.from(result['seasons'] ?? ['All Seasons']),
@@ -46,6 +49,19 @@ class GeminiApiService {
         formality: result['formality'],
         subcategory: result['subcategory'],
         imagePath: imageFile.path,
+        colorFamily: result['colorFamily'],
+        exactPrimaryColor:
+            (result['exactPrimaryColor'] as String?)?.isNotEmpty == true
+            ? result['exactPrimaryColor'] as String
+            : result['primaryColor'],
+        colorHex: result['colorHex'],
+        colorKeywords: result['colorKeywords'] != null
+            ? List<String>.from(result['colorKeywords'])
+            : null,
+        patternDetails: result['patternDetails'],
+        patternKeywords: result['patternKeywords'] != null
+            ? List<String>.from(result['patternKeywords'])
+            : null,
         occasions: result['occasions'] != null
             ? List<String>.from(result['occasions'])
             : null,
@@ -54,6 +70,9 @@ class GeminiApiService {
             : null,
         styleHints: result['styleHints'] != null
             ? List<String>.from(result['styleHints'])
+            : null,
+        styleDescriptors: result['styleDescriptors'] != null
+            ? List<String>.from(result['styleDescriptors'])
             : null,
         colorUndertone: result['colorUndertone'],
         complementaryColors: result['complementaryColors'] != null
@@ -69,6 +88,10 @@ class GeminiApiService {
             : null,
         stylePersonality: result['stylePersonality'],
         detailLevel: result['detailLevel'],
+        garmentKeywords: result['garmentKeywords'] != null
+            ? List<String>.from(result['garmentKeywords'])
+            : null,
+        rawAttributes: result['rawAttributes'] as Map<String, dynamic>?,
       );
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -96,7 +119,7 @@ class GeminiApiService {
     try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-      
+
       final prompt =
           '''
       Analyze this clothing item and create a detailed description for generating a mannequin image wearing it.
@@ -165,7 +188,7 @@ class GeminiApiService {
         if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
           final jsonString = text.substring(jsonStart, jsonEnd + 1);
           final Map<String, dynamic> result = jsonDecode(jsonString);
-          
+
           AppLogger.info('✅ Mannequin description generated successfully');
           return result;
         } else {
@@ -255,9 +278,9 @@ class GeminiApiService {
       final startTime = DateTime.now();
       final response = await http
           .post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
           )
           .timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
@@ -285,12 +308,21 @@ class GeminiApiService {
           final jsonString = text.substring(jsonStart, jsonEnd + 1);
           final Map<String, dynamic> result = jsonDecode(jsonString);
 
-          final processedResult = {
+          final processedResult = <String, dynamic>{
             'itemType': result['itemType'] ?? 'Unknown',
-            'primaryColor': _normalizeColor(
-              result['primaryColor'] ?? 'Unknown',
+            'primaryColor': result['primaryColor'] ?? 'Unknown',
+            'normalizedPrimaryColor': _normalizeColor(
+              result['primaryColor'] ??
+                  result['exactPrimaryColor'] ??
+                  'Unknown',
             ),
+            'exactPrimaryColor': result['exactPrimaryColor'],
+            'colorFamily': result['colorFamily'],
+            'colorHex': result['colorHex'],
+            'colorKeywords': _extractStringList(result['colorKeywords']),
             'patternType': result['patternType'] ?? 'solid',
+            'patternDetails': result['patternDetails'],
+            'patternKeywords': _extractStringList(result['patternKeywords']),
             'style': _normalizeStyle(result['style'] ?? 'casual'),
             'fit': result['fit'] ?? 'regular fit',
             'material': result['material'] ?? 'cotton',
@@ -303,6 +335,7 @@ class GeminiApiService {
                 _defaultOccasions(result['formality'] as String?),
             'locations': _extractStringList(result['locations']),
             'styleHints': _extractStringList(result['styleHints']),
+            'styleDescriptors': _extractStringList(result['styleDescriptors']),
             // Enhanced fashion intelligence fields
             'colorUndertone': result['colorUndertone'],
             'complementaryColors': _extractStringList(
@@ -314,13 +347,15 @@ class GeminiApiService {
             'pairingHints': _extractStringList(result['pairingHints']),
             'stylePersonality': result['stylePersonality'],
             'detailLevel': result['detailLevel'],
+            'garmentKeywords': _extractStringList(result['garmentKeywords']),
+            'rawAttributes': result,
           };
 
           AppLogger.info(
             '✅ Clothing analysis complete',
             data: {
-            'itemType': processedResult['itemType'],
-            'primaryColor': processedResult['primaryColor'],
+              'itemType': processedResult['itemType'],
+              'primaryColor': processedResult['normalizedPrimaryColor'],
               'confidence': processedResult['confidence'],
               'occasions': processedResult['occasions'],
               'locations': processedResult['locations'],
@@ -434,11 +469,11 @@ class GeminiApiService {
     for (int i = 0; i < styles.length; i++) {
       suggestions.add(
         OutfitSuggestion(
-        id: 'suggestion_$i',
-        items: items,
-        matchScore: 0.8 + (i * 0.05),
-        style: styles[i],
-        occasion: _getOccasionForStyle(styles[i]),
+          id: 'suggestion_$i',
+          items: items,
+          matchScore: 0.8 + (i * 0.05),
+          style: styles[i],
+          occasion: _getOccasionForStyle(styles[i]),
           description:
               'A ${styles[i]} outfit perfect for ${_getOccasionForStyle(styles[i])}',
         ),
@@ -731,21 +766,35 @@ class GeminiApiService {
     final buffer = StringBuffer();
 
     buffer.writeln(
-      '🚨🚨🚨 CRITICAL: USE ONLY THE UPLOADED ITEMS LISTED BELOW 🚨🚨🚨',
+      'Design a premium full-body mannequin look using the wardrobe pieces provided.USE ONLY THE UPLOADED ITEMS LISTED BELOW',
+    );
+    buffer.writeln(
+      'Keep the hero items front and center and stay true to their original details.',
     );
     buffer.writeln('DO NOT replace uploaded items with similar alternatives.');
     buffer.writeln('DO NOT blend multiple items from the same category.');
     buffer.writeln('DO NOT create new versions of uploaded items.');
     buffer.writeln();
 
-    buffer.writeln('You are creating ONE complete outfit with:');
-    buffer.writeln();
-
-    // List ONLY the items to use in THIS specific outfit
-    buffer.writeln('UPLOADED ITEMS TO USE (MANDATORY - DO NOT CHANGE):');
+    buffer.writeln('Must-use uploaded pieces (show exactly as described):');
+    bool hasGraphicTop = false;
+    
     for (final item in uploadedItemsToUse) {
+      final isTop = item.itemType.toLowerCase().contains('top');
+      final hasGraphics = item.patternType != 'solid' || 
+                         (item.subcategory?.toLowerCase().contains('graphic') ?? false) ||
+                         (item.subcategory?.toLowerCase().contains('jersey') ?? false) ||
+                         (item.subcategory?.toLowerCase().contains('print') ?? false) ||
+                         (item.designElements?.any((e) => 
+                           e.toLowerCase().contains('graphic') || 
+                           e.toLowerCase().contains('text') ||
+                           e.toLowerCase().contains('logo') ||
+                           e.toLowerCase().contains('print')) ?? false);
+      
+      if (isTop && hasGraphics) hasGraphicTop = true;
+      
       buffer.writeln(
-        '✓ ${item.itemType.toUpperCase()}: ${item.primaryColor} ${item.subcategory ?? item.itemType}',
+        '• ${item.itemType.toUpperCase()}: ${item.primaryColor} ${item.subcategory ?? item.itemType}',
       );
       if (item.material != null) {
         buffer.writeln('  Material: ${item.material}');
@@ -753,7 +802,18 @@ class GeminiApiService {
       if (item.fit != null) {
         buffer.writeln('  Fit: ${item.fit}');
       }
-      buffer.writeln('  Pattern: ${item.patternType}');
+      if (item.patternType.isNotEmpty) {
+        buffer.writeln('  Pattern: ${item.patternType}');
+      }
+      if (item.exactPrimaryColor != null &&
+          item.exactPrimaryColor!.isNotEmpty) {
+        buffer.writeln('  Shade: ${item.exactPrimaryColor}');
+      }
+      if (hasGraphics && isTop) {
+        buffer.writeln(
+          '  ⚠️ HAS GRAPHICS/PRINTS/TEXT - SHOW BARE WITHOUT JACKET',
+        );
+      }
       buffer.writeln(
         '  🚨 USE THIS EXACT ${item.itemType.toUpperCase()} - NO SUBSTITUTIONS',
       );
@@ -761,25 +821,72 @@ class GeminiApiService {
     }
 
     if (unuploadedCategories.isNotEmpty) {
-      buffer.writeln('CATEGORIES TO AI-GENERATE (create matching items):');
+      buffer.writeln('Feel free to add tasteful complements for:');
       for (final category in unuploadedCategories) {
-        buffer.writeln(
-          '● ${category.toUpperCase()}: Generate a matching item that complements the uploaded pieces',
-        );
+        if (category.toLowerCase() == 'bottoms') {
+          buffer.writeln(
+            '  - BOTTOMS: Vary styles across looks - skirts (fitting, flare, short, long, bodycon), trousers, shorts, wide-leg pants, baggy jeans, joggers, fitting jeans. Avoid defaulting to tight jeans every time.',
+          );
+        } else if (category.toLowerCase() == 'tops') {
+          buffer.writeln(
+            '  - TOPS: Vary between t-shirts, blouses, tanks, knits. Keep graphics/prints visible.',
+          );
+        } else if (category.toLowerCase() == 'outerwear') {
+          buffer.writeln(
+            '  - OUTERWEAR: Use sparingly (max 1-2 looks). Only add if it enhances the outfit without hiding key details.',
+          );
+        } else {
+          buffer.writeln(
+            '  - ${category.toUpperCase()}: design something cohesive that matches the uploaded items.',
+          );
+        }
       }
       buffer.writeln();
     }
 
-    buffer.writeln('🚨 CRITICAL RULES:');
+    buffer.writeln('🎯 CRITICAL STYLING RULES:');
     buffer.writeln(
-      '1. The uploaded items listed above MUST appear exactly as described',
+      '1. Keep uploaded pieces as the hero - let colors, patterns, graphics, and text visible.',
     );
-    buffer.writeln('2. DO NOT create alternative versions of uploaded items');
-    buffer.writeln('3. DO NOT merge or blend multiple uploaded items into one');
     buffer.writeln(
-      '4. For unuploaded categories, generate stylish matching pieces',
+      '2. DO NOT create alternative versions of uploaded items.',
     );
-    buffer.writeln('5. Show COMPLETE mannequin from HEAD TO TOE - NO CROPPING');
+    buffer.writeln(
+      '3. DO NOT merge or blend multiple uploaded items into one.',
+    );
+    buffer.writeln();
+    
+    buffer.writeln('🚫 LAYERING LIMITS:');
+    if (hasGraphicTop) {
+      buffer.writeln(
+        '- ⚠️ IMPORTANT: The uploaded top has GRAPHICS/PRINTS/TEXT that MUST be visible',
+      );
+      buffer.writeln(
+        '- DO NOT cover this top with jackets/sweaters/coats in ANY of the 6 looks',
+      );
+      buffer.writeln(
+        '- Show the top BARE so graphics/text/designs are fully visible',
+      );
+    } else {
+      buffer.writeln(
+        '- Plain tops: Can have a light jacket in MAX 2 out of 6 looks',
+      );
+      buffer.writeln(
+        '- MOST LOOKS (4-6 out of 6) should show tops WITHOUT jackets/sweaters/coats',
+      );
+    }
+    buffer.writeln(
+      '- Outerwear should only add interest, never hide the hero piece. DO NOT create alternative versions of uploaded items. Most looks should feature tops or dresses without heavy layering so the garment is fully visible.',
+    );
+    buffer.writeln();
+    
+    buffer.writeln('✨ Variety guidance:');
+    buffer.writeln(
+      '- Ensure full-body mannequin view from head to toe',
+    );
+    buffer.writeln(
+      '- Professional fashion photography quality with studio lighting.For unuploaded categories, generate stylish matching pieces. Ensure a full-body mannequin view with polished fashion photography vibes.',
+    );
     buffer.writeln();
 
     // Gender requirement
@@ -962,7 +1069,7 @@ class GeminiApiService {
               ),
             );
           }
-            } else {
+        } else {
           // No shoes uploaded, let AI generate
           combinations.add(
             _OutfitCombination(
@@ -1008,7 +1115,7 @@ class GeminiApiService {
                   ),
                 );
               }
-          } else {
+            } else {
               // No shoes uploaded, let AI generate
               combinations.add(
                 _OutfitCombination(
@@ -1337,7 +1444,7 @@ Make the descriptions so detailed that an image generation AI could create an ex
         AppLogger.debug(
           '📥 Mannequin description response received',
           data: {
-          'response_length': text.length,
+            'response_length': text.length,
             'response_preview': text.length > 200
                 ? text.substring(0, 200) + '...'
                 : text,
@@ -1460,7 +1567,7 @@ Make the descriptions so detailed that an image generation AI could create an ex
         if (!await assetsDir.exists()) {
           await assetsDir.create(recursive: true);
         }
-        
+
         final assetsFile = File(assetsPath);
         await assetsFile.writeAsBytes(imageBytes);
         AppLogger.info(
@@ -1487,10 +1594,10 @@ Make the descriptions so detailed that an image generation AI could create an ex
     AppLogger.info(
       '🎨 Generating REAL mannequin image with uploaded item',
       data: {
-      'pose': poseDescription,
-      'itemType': itemType,
-      'color': color,
-      'imageFile': imageFile.path,
+        'pose': poseDescription,
+        'itemType': itemType,
+        'color': color,
+        'imageFile': imageFile.path,
       },
     );
 
@@ -1532,9 +1639,9 @@ Professional fashion photography style.
       final startTime = DateTime.now();
       final response = await http
           .post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(requestBody),
           )
           .timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
@@ -1632,7 +1739,7 @@ Professional fashion photography style.
   /// Normalize color names to standard palette
   static String _normalizeColor(String color) {
     final colorLower = color.toLowerCase().trim();
-    
+
     // Green variations
     if (colorLower.contains('green') ||
         colorLower.contains('mint') ||
@@ -1640,15 +1747,15 @@ Professional fashion photography style.
         colorLower.contains('olive')) {
       return 'green';
     }
-    
-    // Blue variations  
+
+    // Blue variations
     if (colorLower.contains('blue') ||
         colorLower.contains('navy') ||
         colorLower.contains('azure') ||
         colorLower.contains('teal')) {
       return 'blue';
     }
-    
+
     // Gray variations
     if (colorLower.contains('gray') ||
         colorLower.contains('grey') ||
@@ -1656,12 +1763,12 @@ Professional fashion photography style.
         colorLower.contains('silver')) {
       return 'gray';
     }
-    
+
     // Black variations
     if (colorLower.contains('black') || colorLower.contains('ebony')) {
       return 'black';
     }
-    
+
     // White variations
     if (colorLower.contains('white') ||
         colorLower.contains('cream') ||
@@ -1669,7 +1776,7 @@ Professional fashion photography style.
         colorLower.contains('off-white')) {
       return 'white';
     }
-    
+
     // Brown variations
     if (colorLower.contains('brown') ||
         colorLower.contains('tan') ||
@@ -1677,7 +1784,7 @@ Professional fashion photography style.
         colorLower.contains('khaki')) {
       return 'brown';
     }
-    
+
     // Red variations
     if (colorLower.contains('red') ||
         colorLower.contains('burgundy') ||
@@ -1685,14 +1792,14 @@ Professional fashion photography style.
         colorLower.contains('crimson')) {
       return 'red';
     }
-    
+
     return color; // Return original if no match
   }
 
   /// Normalize style classifications
   static String _normalizeStyle(String style) {
     final styleLower = style.toLowerCase().trim();
-    
+
     // Business formal variations
     if (styleLower.contains('business') ||
         styleLower.contains('formal') ||
@@ -1700,19 +1807,19 @@ Professional fashion photography style.
         styleLower.contains('office')) {
       return 'business formal';
     }
-    
+
     // Smart casual variations
     if (styleLower.contains('smart') || styleLower.contains('semi-formal')) {
       return 'smart casual';
     }
-    
+
     // Casual variations
     if (styleLower.contains('casual') ||
         styleLower.contains('everyday') ||
         styleLower.contains('relaxed')) {
       return 'casual';
     }
-    
+
     return style; // Return original if no match
   }
 
