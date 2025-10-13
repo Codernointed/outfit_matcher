@@ -654,17 +654,17 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
             Icons.category_outlined,
           ),
           const SizedBox(height: 24),
-          
+
           _buildOptionalField(
             'Brand or store?',
             'e.g., Zara, H&M, vintage...',
             _currentState.brandController,
             Icons.store_outlined,
           ),
-             const SizedBox(height: 24),
+          const SizedBox(height: 24),
           // Prominent gender selection section
           _buildGenderSelectionSection(theme),
-       
+
           const SizedBox(height: 24),
 
           _buildOptionalField(
@@ -681,6 +681,17 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   }
 
   Widget _buildBottomBar(ThemeData theme) {
+    // Determine the status message
+    String statusMessage = '';
+    bool showSpinner = false;
+
+    if (_isAnalyzing) {
+      statusMessage = 'Analyzing your items...';
+      showSpinner = true;
+    } else if (!_canContinue) {
+      statusMessage = 'Analysis failed. Please try uploading again.';
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -694,18 +705,68 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
           ),
         ],
       ),
-      child: ElevatedButton(
-        onPressed: _canContinue ? _saveAndContinue : null,
-        style: ElevatedButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (!_canContinue)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (showSpinner) ...[
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ] else ...[
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: theme.colorScheme.error,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Flexible(
+                    child: Text(
+                      statusMessage,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: showSpinner
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
+                            : theme.colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ElevatedButton(
+            onPressed: _canContinue ? _saveAndContinue : null,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              textStyle: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            child: Text(
+              _canContinue
+                  ? 'Find Matching Outfits'
+                  : (_isAnalyzing ? 'Analyzing...' : 'Analysis Failed'),
+            ),
           ),
-          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        child: Text(
-          _canContinue ? 'Find Matching Outfits' : 'Review Item Details',
-        ),
+        ],
       ),
     );
   }

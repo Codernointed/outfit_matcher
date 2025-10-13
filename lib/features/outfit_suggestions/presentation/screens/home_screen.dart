@@ -817,7 +817,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
     return Container(
       width: 140,
-      height: 164, // Further reduced height to minimize gaps
+      height: 164, // Total height: 120 (image) + 44 (content) = 164
       margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -869,7 +869,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
                   // Content - Fixed height
                   SizedBox(
-                    height: 46, // Further reduced to minimize gaps
+                    height: 54, // Reduced to prevent overflow
                     child: Padding(
                       padding: const EdgeInsets.all(8), // Reduced padding
                       child: Column(
@@ -886,7 +886,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                             overflow: TextOverflow.ellipsis,
                             softWrap: false,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 1), // Reduced spacing
                           Text(
                             '${outfit.items.length} items',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -1501,7 +1501,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
         : todaysPicks.tonightPicks;
 
     return SizedBox(
-      height: 300, // Increased to accommodate new card height
+      height: 220, // Updated to accommodate new card height
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: activePicks.length.clamp(0, 5),
@@ -1536,40 +1536,158 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   Widget _buildTodaysPickFallback(OutfitPairing pick, ThemeData theme) {
     if (pick.items.isEmpty) {
-      return Container(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: Center(
-          child: Icon(
-            Icons.checkroom_rounded,
-            size: 48,
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-          ),
+      return _buildImageError(theme);
+    }
+
+    final itemsToShow = pick.items.take(4).toList();
+
+    if (itemsToShow.length == 1) {
+      return _buildSingleWardrobeItemImage(itemsToShow[0], theme);
+    }
+
+    // Use the exact same grid layout as Recent Generations
+    if (itemsToShow.length == 2) {
+      return SizedBox(
+        height: 80, // Fixed height to prevent overflow
+        child: Row(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: _buildSingleWardrobeItemImage(itemsToShow[0], theme),
+              ),
+            ),
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: _buildSingleWardrobeItemImage(itemsToShow[1], theme),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    // Show up to 4 items in a grid
-    final itemsToShow = pick.items.take(4).toList();
-
-    if (itemsToShow.length == 1) {
-      return _buildWardrobeItemImage(itemsToShow[0], theme);
+    if (itemsToShow.length == 3) {
+      return SizedBox(
+        height: 120, // Fixed height to prevent overflow
+        child: Column(
+          children: [
+            // Top row - single item spanning full width
+            Expanded(
+              flex: 1,
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                    width: 0.5,
+                  ),
+                ),
+                child: _buildSingleWardrobeItemImage(itemsToShow[0], theme),
+              ),
+            ),
+            // Bottom row - two items side by side
+            Expanded(
+              flex: 1,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: _buildSingleWardrobeItemImage(
+                        itemsToShow[1],
+                        theme,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.1,
+                          ),
+                          width: 0.5,
+                        ),
+                      ),
+                      child: _buildSingleWardrobeItemImage(
+                        itemsToShow[2],
+                        theme,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    return GridView.count(
-      crossAxisCount: 2,
-      physics: const NeverScrollableScrollPhysics(),
-      children: itemsToShow.map((item) {
-        return Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(alpha: 0.1),
-              width: 0.5,
+    // 4 items - 2x2 grid
+    return SizedBox(
+      height: 160, // Fixed height to prevent overflow
+      child: GridView.count(
+        crossAxisCount: 2,
+        physics: const NeverScrollableScrollPhysics(),
+        childAspectRatio: 1.0,
+        children: itemsToShow.map((item) {
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                width: 0.5,
+              ),
             ),
-          ),
-          child: _buildWardrobeItemImage(item, theme),
-        );
-      }).toList(),
+            child: _buildSingleWardrobeItemImage(item, theme),
+          );
+        }).toList(),
+      ),
     );
+  }
+
+  Widget _buildSingleWardrobeItemImage(WardrobeItem item, ThemeData theme) {
+    // Try to show actual image first
+    if (item.originalImagePath.isNotEmpty) {
+      try {
+        final file = File(item.originalImagePath);
+        if (file.existsSync()) {
+          return Container(
+            color: theme.colorScheme.surfaceContainerHighest,
+            child: Image.file(
+              file,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fall back to placeholder if image fails to load
+                return _buildItemImagePlaceholder(item, theme);
+              },
+            ),
+          );
+        }
+      } catch (e) {
+        // File doesn't exist or can't be read
+      }
+    }
+
+    // Show placeholder with item info if no image path
+    return _buildItemImagePlaceholder(item, theme);
   }
 
   Widget _buildWardrobeItemImage(WardrobeItem item, ThemeData theme) {
@@ -1595,25 +1713,59 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   Widget _buildItemImagePlaceholder(WardrobeItem item, ThemeData theme) {
     return Container(
-      color: theme.colorScheme.surfaceContainerHighest,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            _getItemTypeIcon(item.analysis.itemType),
-            size: 24,
-            color: theme.colorScheme.primary.withValues(alpha: 0.6),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            item.analysis.itemType.toUpperCase(),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary.withValues(alpha: 0.8),
-              fontWeight: FontWeight.w600,
-              fontSize: 10,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.colorScheme.primary.withValues(alpha: 0.1),
+            theme.colorScheme.secondary.withValues(alpha: 0.05),
+          ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Prevent overflow
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4), // Reduced padding
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getItemTypeIcon(item.analysis.itemType),
+                size: 14, // Reduced icon size
+                color: theme.colorScheme.primary,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2), // Reduced spacing
+            Text(
+              item.analysis.primaryColor,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 7, // Smaller font
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 1), // Minimal spacing
+            Text(
+              item.analysis.itemType.toUpperCase(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 6, // Even smaller font
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1664,156 +1816,151 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   ) {
     return Container(
       width: 180,
-      height: 260, // Fixed height to prevent overflow
+      height: 194, // Updated to accommodate increased content height
       margin: EdgeInsets.only(right: index == 4 ? 0 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16), // Match Recent Generations
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           onTap: () {
             AppLogger.info('🎯 Tapped today\'s pick: ${pick.description}');
             // Outfit preview can be added later if needed - current card shows all info
           },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              // Image area with weather chip
-              Expanded(
-                flex: 2,
-                child: Stack(
-                  children: [
-                    Container(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Image - Fixed height to match Recent Generations
+                  SizedBox(
+                    height: 150, // Match Recent Generations exactly
+                    child: Container(
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
+                          top: Radius.circular(16),
                         ),
                         color: theme.colorScheme.surfaceContainerHighest,
                       ),
                       child: ClipRRect(
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20),
+                          top: Radius.circular(16),
                         ),
                         child: _buildTodaysPickImage(pick, theme),
                       ),
                     ),
-                    // Weather chip
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              index.isEven
-                                  ? Icons.nightlight_round
-                                  : Icons.wb_sunny_rounded,
-                              size: 14,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              index.isEven ? 'Tonight' : '22°C',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Content area
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        pick.description,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-
-                      // Bottom row with items count and score
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // Content - Fixed height to match Recent Generations
+                  SizedBox(
+                    height: 64, // Increased to accommodate content
+                    child: Padding(
+                      padding: const EdgeInsets.all(
+                        8,
+                      ), // Match Recent Generations
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.checkroom_outlined,
-                                size: 12,
-                                color: theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.6,
-                                ),
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${pick.items.length}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
-                                  ),
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            pick.description,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12, // Match Recent Generations
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
                           ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${pick.items.length} items',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.6,
+                              ),
+                              fontSize: 10,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: false,
+                          ),
+                          const Spacer(),
                           Row(
-                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons.auto_awesome,
-                                size: 12,
+                                size: 10,
                                 color: _getScoreColor(pick.compatibilityScore),
                               ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${(pick.compatibilityScore * 100).toInt()}%',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: _getScoreColor(
-                                    pick.compatibilityScore,
+                              const SizedBox(width: 3),
+                              Expanded(
+                                child: Text(
+                                  '${(pick.compatibilityScore * 100).toInt()}%',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: _getScoreColor(
+                                      pick.compatibilityScore,
+                                    ),
+                                    fontSize: 9,
                                   ),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 10,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Weather chip overlay
+              Positioned(
+                top: 4,
+                left: 4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        index.isEven
+                            ? Icons.nightlight_round
+                            : Icons.wb_sunny_rounded,
+                        size: 10,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        index.isEven ? 'Tonight' : '22°C',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),

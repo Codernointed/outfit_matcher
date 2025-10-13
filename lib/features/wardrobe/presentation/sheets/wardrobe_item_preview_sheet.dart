@@ -85,24 +85,24 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
                 child: ListView(
                   controller: scrollController,
                   padding: const EdgeInsets.all(0),
-                      children: [
+                  children: [
                     // Hero Image
                     _buildHeroImage(context, theme),
 
                     Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           // Title & Favorite
                           _buildHeader(context, theme),
 
-                                const SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
                           // Quick Details
                           _buildQuickDetails(theme),
 
-                                const SizedBox(height: 32),
+                          const SizedBox(height: 32),
 
                           // Primary Action - Pair This Item
                           _buildPrimaryAction(context, theme),
@@ -233,7 +233,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
           ),
         ),
         IconButton(
-            icon: Icon(
+          icon: Icon(
             _currentItem.isFavorite ? Icons.favorite : Icons.favorite_border,
             color: _currentItem.isFavorite ? Colors.red : null,
           ),
@@ -305,11 +305,11 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
           const SizedBox(width: 6),
           Text(
             label,
-              style: theme.textTheme.bodyMedium?.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: isPrimary
                   ? theme.colorScheme.primary
                   : theme.colorScheme.onSurface.withAlpha(204),
-                fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -443,7 +443,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Yesterday';
     if (difference < 7) return '$difference days ago';
@@ -461,19 +461,37 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
   }
 
   void _navigateToInspiration(BuildContext context) async {
+    AppLogger.info(
+      '🎨 [PREVIEW SHEET] Inspiration button tapped for ${_currentItem.analysis.primaryColor} ${_currentItem.analysis.itemType}',
+    );
+
     // Show dialog to add custom styling notes
     final customNotes = await showDialog<String>(
       context: context,
       builder: (context) => _buildStylingNotesDialog(context),
     );
 
+    AppLogger.info(
+      '📝 [PREVIEW SHEET] Dialog returned: ${customNotes == null ? "null (cancelled)" : "\"$customNotes\""}',
+    );
+
+    // If dialog was dismissed (null), don't navigate
+    if (customNotes == null) {
+      AppLogger.info('👤 [PREVIEW SHEET] User cancelled inspiration dialog');
+      return;
+    }
+
     if (!context.mounted) return;
 
     // Combine default notes with custom notes
     final finalNotes = [
       if (_currentItem.userNotes != null) _currentItem.userNotes!,
-      if (customNotes != null && customNotes.isNotEmpty) customNotes,
+      if (customNotes.isNotEmpty) customNotes,
     ].join('\n\n');
+
+    AppLogger.info(
+      '🚀 [PREVIEW SHEET] Navigating to inspiration with notes: "$finalNotes"',
+    );
 
     Navigator.push(
       context,
@@ -557,11 +575,20 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            AppLogger.info('🔙 [PREVIEW SHEET] Skip button tapped');
+            Navigator.pop(context, '');
+          },
           child: const Text('Skip'),
         ),
         FilledButton.icon(
-          onPressed: () => Navigator.pop(context, controller.text),
+          onPressed: () {
+            final notes = controller.text.trim();
+            AppLogger.info(
+              '✅ [PREVIEW SHEET] Generate button tapped with notes: "$notes"',
+            );
+            Navigator.pop(context, notes);
+          },
           icon: const Icon(Icons.auto_awesome),
           label: const Text('Generate'),
         ),

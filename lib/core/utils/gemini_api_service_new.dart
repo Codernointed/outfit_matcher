@@ -96,7 +96,7 @@ class GeminiApiService {
     try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-
+      
       final prompt =
           '''
       Analyze this clothing item and create a detailed description for generating a mannequin image wearing it.
@@ -165,7 +165,7 @@ class GeminiApiService {
         if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
           final jsonString = text.substring(jsonStart, jsonEnd + 1);
           final Map<String, dynamic> result = jsonDecode(jsonString);
-
+          
           AppLogger.info('✅ Mannequin description generated successfully');
           return result;
         } else {
@@ -255,9 +255,9 @@ class GeminiApiService {
       final startTime = DateTime.now();
       final response = await http
           .post(
-            Uri.parse(url),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(requestBody),
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
           )
           .timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
@@ -319,8 +319,8 @@ class GeminiApiService {
           AppLogger.info(
             '✅ Clothing analysis complete',
             data: {
-              'itemType': processedResult['itemType'],
-              'primaryColor': processedResult['primaryColor'],
+            'itemType': processedResult['itemType'],
+            'primaryColor': processedResult['primaryColor'],
               'confidence': processedResult['confidence'],
               'occasions': processedResult['occasions'],
               'locations': processedResult['locations'],
@@ -434,11 +434,11 @@ class GeminiApiService {
     for (int i = 0; i < styles.length; i++) {
       suggestions.add(
         OutfitSuggestion(
-          id: 'suggestion_$i',
-          items: items,
-          matchScore: 0.8 + (i * 0.05),
-          style: styles[i],
-          occasion: _getOccasionForStyle(styles[i]),
+        id: 'suggestion_$i',
+        items: items,
+        matchScore: 0.8 + (i * 0.05),
+        style: styles[i],
+        occasion: _getOccasionForStyle(styles[i]),
           description:
               'A ${styles[i]} outfit perfect for ${_getOccasionForStyle(styles[i])}',
         ),
@@ -962,7 +962,7 @@ class GeminiApiService {
               ),
             );
           }
-        } else {
+            } else {
           // No shoes uploaded, let AI generate
           combinations.add(
             _OutfitCombination(
@@ -1008,7 +1008,7 @@ class GeminiApiService {
                   ),
                 );
               }
-            } else {
+          } else {
               // No shoes uploaded, let AI generate
               combinations.add(
                 _OutfitCombination(
@@ -1337,7 +1337,7 @@ Make the descriptions so detailed that an image generation AI could create an ex
         AppLogger.debug(
           '📥 Mannequin description response received',
           data: {
-            'response_length': text.length,
+          'response_length': text.length,
             'response_preview': text.length > 200
                 ? text.substring(0, 200) + '...'
                 : text,
@@ -1460,7 +1460,7 @@ Make the descriptions so detailed that an image generation AI could create an ex
         if (!await assetsDir.exists()) {
           await assetsDir.create(recursive: true);
         }
-
+        
         final assetsFile = File(assetsPath);
         await assetsFile.writeAsBytes(imageBytes);
         AppLogger.info(
@@ -1487,10 +1487,10 @@ Make the descriptions so detailed that an image generation AI could create an ex
     AppLogger.info(
       '🎨 Generating REAL mannequin image with uploaded item',
       data: {
-        'pose': poseDescription,
-        'itemType': itemType,
-        'color': color,
-        'imageFile': imageFile.path,
+      'pose': poseDescription,
+      'itemType': itemType,
+      'color': color,
+      'imageFile': imageFile.path,
       },
     );
 
@@ -1532,9 +1532,9 @@ Professional fashion photography style.
       final startTime = DateTime.now();
       final response = await http
           .post(
-            Uri.parse(url),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(requestBody),
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
           )
           .timeout(const Duration(seconds: 30)); // Add timeout
       final duration = DateTime.now().difference(startTime);
@@ -1632,7 +1632,7 @@ Professional fashion photography style.
   /// Normalize color names to standard palette
   static String _normalizeColor(String color) {
     final colorLower = color.toLowerCase().trim();
-
+    
     // Green variations
     if (colorLower.contains('green') ||
         colorLower.contains('mint') ||
@@ -1640,15 +1640,15 @@ Professional fashion photography style.
         colorLower.contains('olive')) {
       return 'green';
     }
-
-    // Blue variations
+    
+    // Blue variations  
     if (colorLower.contains('blue') ||
         colorLower.contains('navy') ||
         colorLower.contains('azure') ||
         colorLower.contains('teal')) {
       return 'blue';
     }
-
+    
     // Gray variations
     if (colorLower.contains('gray') ||
         colorLower.contains('grey') ||
@@ -1656,12 +1656,12 @@ Professional fashion photography style.
         colorLower.contains('silver')) {
       return 'gray';
     }
-
+    
     // Black variations
     if (colorLower.contains('black') || colorLower.contains('ebony')) {
       return 'black';
     }
-
+    
     // White variations
     if (colorLower.contains('white') ||
         colorLower.contains('cream') ||
@@ -1669,7 +1669,7 @@ Professional fashion photography style.
         colorLower.contains('off-white')) {
       return 'white';
     }
-
+    
     // Brown variations
     if (colorLower.contains('brown') ||
         colorLower.contains('tan') ||
@@ -1677,7 +1677,7 @@ Professional fashion photography style.
         colorLower.contains('khaki')) {
       return 'brown';
     }
-
+    
     // Red variations
     if (colorLower.contains('red') ||
         colorLower.contains('burgundy') ||
@@ -1685,14 +1685,14 @@ Professional fashion photography style.
         colorLower.contains('crimson')) {
       return 'red';
     }
-
+    
     return color; // Return original if no match
   }
 
   /// Normalize style classifications
   static String _normalizeStyle(String style) {
     final styleLower = style.toLowerCase().trim();
-
+    
     // Business formal variations
     if (styleLower.contains('business') ||
         styleLower.contains('formal') ||
@@ -1700,19 +1700,19 @@ Professional fashion photography style.
         styleLower.contains('office')) {
       return 'business formal';
     }
-
+    
     // Smart casual variations
     if (styleLower.contains('smart') || styleLower.contains('semi-formal')) {
       return 'smart casual';
     }
-
+    
     // Casual variations
     if (styleLower.contains('casual') ||
         styleLower.contains('everyday') ||
         styleLower.contains('relaxed')) {
       return 'casual';
     }
-
+    
     return style; // Return original if no match
   }
 

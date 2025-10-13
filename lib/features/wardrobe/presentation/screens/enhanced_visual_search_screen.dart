@@ -66,9 +66,9 @@ class _EnhancedVisualSearchScreenState
     AppLogger.info(
       '🚀 EnhancedVisualSearchScreen initialized',
       data: {
-        'analyses_count': widget.analyses.length,
-        'item_images_count': widget.itemImages.length,
-        'search_query': widget.searchQuery,
+      'analyses_count': widget.analyses.length,
+      'item_images_count': widget.itemImages.length,
+      'search_query': widget.searchQuery,
         'user_notes_length': widget.userNotes?.length,
         'preferred_gender': widget.preferredGender,
       },
@@ -89,8 +89,8 @@ class _EnhancedVisualSearchScreenState
       AppLogger.info(
         '📱 Tab switched',
         data: {
-          'tab_index': _tabController.index,
-          'tab_name': tabNames[_tabController.index],
+        'tab_index': _tabController.index,
+        'tab_name': tabNames[_tabController.index],
         },
       );
     }
@@ -212,8 +212,8 @@ class _EnhancedVisualSearchScreenState
     AppLogger.info(
       '🎨 Starting mannequin generation',
       data: {
-        'analyses_count': widget.analyses.length,
-        'item_images_count': widget.itemImages.length,
+      'analyses_count': widget.analyses.length,
+      'item_images_count': widget.itemImages.length,
       },
     );
 
@@ -228,23 +228,23 @@ class _EnhancedVisualSearchScreenState
     try {
       final generatedOutfits =
           await GeminiApiService.generateEnhancedMannequinOutfits(
-            widget.analyses,
+        widget.analyses,
             userNotes: widget.userNotes,
             gender: _currentGender,
-            onProgress: (status) {
-              if (mounted) {
-                setState(() => _generationStatus = status);
-              }
-            },
-            onProgressUpdate: (completed, total) {
-              if (mounted) {
-                setState(() {
-                  _generationProgress = completed;
-                  _totalPoses = total;
-                });
-              }
-            },
-          );
+        onProgress: (status) {
+          if (mounted) {
+            setState(() => _generationStatus = status);
+          }
+        },
+        onProgressUpdate: (completed, total) {
+          if (mounted) {
+            setState(() {
+              _generationProgress = completed;
+              _totalPoses = total;
+            });
+          }
+        },
+      );
 
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
@@ -255,8 +255,8 @@ class _EnhancedVisualSearchScreenState
       AppLogger.info(
         '✅ Generated mannequin outfits successfully',
         data: {
-          'count': generatedOutfits.length,
-          'duration_ms': duration.inMilliseconds,
+        'count': generatedOutfits.length,
+        'duration_ms': duration.inMilliseconds,
         },
       );
 
@@ -276,11 +276,11 @@ class _EnhancedVisualSearchScreenState
           final pose = _getPoseForIndex(i);
           outfits.add(
             MannequinOutfit(
-              id: 'mannequin_$i',
+            id: 'mannequin_$i',
               items: [fallbackAnalysis],
               imageUrl:
                   'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=600&fit=crop&crop=center',
-              pose: pose,
+            pose: pose,
               style: [
                 'casual chic',
                 'business sharp',
@@ -303,7 +303,7 @@ class _EnhancedVisualSearchScreenState
         '✅ Created fallback mannequin outfits',
         data: {'count': outfits.length},
       );
-      return outfits;
+    return outfits;
     }
   }
 
@@ -802,25 +802,25 @@ class _EnhancedVisualSearchScreenState
     final theme = Theme.of(context);
 
     return DecoratedBox(
-      decoration: BoxDecoration(
+        decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
+          boxShadow: [
+            BoxShadow(
             color: theme.colorScheme.shadow.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
+            ),
+          ],
+        ),
+        child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
+            children: [
+              AspectRatio(
               aspectRatio: 3 / 4,
-              child: Container(
+                  child: Container(
                 color: theme.colorScheme.surfaceContainerHighest.withValues(
                   alpha: 0.3,
                 ),
@@ -835,9 +835,9 @@ class _EnhancedVisualSearchScreenState
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             theme.colorScheme.primary.withValues(alpha: 0.7),
-                          ),
                         ),
                       ),
+                    ),
                       const SizedBox(height: 16),
                       Text(
                         _generationStatus.isNotEmpty
@@ -878,7 +878,7 @@ class _EnhancedVisualSearchScreenState
       padding: const EdgeInsets.only(bottom: 24),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
+                    color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
@@ -897,9 +897,9 @@ class _EnhancedVisualSearchScreenState
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
-          child: Column(
+                    child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+                      children: [
               AspectRatio(
                 aspectRatio: 3 / 4,
                 child: _buildMannequinImage(outfit.imageUrl),
@@ -909,7 +909,7 @@ class _EnhancedVisualSearchScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                        Text(
                       'Look $index: ${_formatStyleLabel(outfit.style)}',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -931,9 +931,9 @@ class _EnhancedVisualSearchScreenState
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(
                             alpha: 0.7,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                     if (widget.userNotes != null &&
                         widget.userNotes!.isNotEmpty) ...[
@@ -943,8 +943,8 @@ class _EnhancedVisualSearchScreenState
                     const SizedBox(height: 16),
                     _buildMannequinActions(outfit, index),
                   ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -1042,14 +1042,14 @@ class _EnhancedVisualSearchScreenState
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: onAction,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
-                foregroundColor: Colors.white,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
-                shape: RoundedRectangleBorder(
+                        shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -1644,8 +1644,8 @@ class _EnhancedVisualSearchScreenState
                           color: inspiration.confidence > 0.8
                               ? Colors.green
                               : inspiration.confidence > 0.6
-                              ? Colors.orange
-                              : Colors.red,
+                                  ? Colors.orange
+                                  : Colors.red,
                         ),
                         const SizedBox(width: 8),
                         Text(

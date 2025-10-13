@@ -62,12 +62,12 @@ class WardrobePairingService {
     AppLogger.info(
       '👔 Generating outfit pairings',
       data: {
-        'heroItem': heroItem.toString(),
-        'wardrobeSize': wardrobeItems.length,
-        'mode': mode.toString(),
-        'occasion': occasion,
-        'location': location,
-        'weather': weather,
+      'heroItem': heroItem.toString(),
+      'wardrobeSize': wardrobeItems.length,
+      'mode': mode.toString(),
+      'occasion': occasion,
+      'location': location,
+      'weather': weather,
       },
     );
 
@@ -83,7 +83,7 @@ class WardrobePairingService {
       final availableItems = wardrobeItems
           .where((item) => item.id != heroItem.id)
           .toList();
-
+      
       if (availableItems.isEmpty) {
         AppLogger.warning(
           '⚠️ No other items available - generating styling suggestions',
@@ -148,7 +148,7 @@ class WardrobePairingService {
         stackTrace: stackTrace,
       );
       analytics?.trackPairingFailure(mode: mode, heroItem: heroItem, error: e);
-
+      
       // Return fallback pairings
       onProgress?.call('Creating fallback suggestions...');
       return _generateFallbackPairings(
@@ -238,12 +238,12 @@ class WardrobePairingService {
             usedItemIds.add(itemIds);
             pairings.add(
               _createPairing(
-                items,
+            items,
                 i == 0
                     ? 'Classic ${heroItem.analysis.primaryColor} combo'
                     : 'Fresh ${heroItem.analysis.primaryColor} pairing',
-                PairingMode.pairThisItem,
-                score: compatibilityScore,
+            PairingMode.pairThisItem,
+            score: compatibilityScore,
                 stylingTips: _buildStylingTips(items, heroItem: heroItem),
               ),
             );
@@ -302,12 +302,12 @@ class WardrobePairingService {
             usedItemIds.add(itemIds);
             pairings.add(
               _createPairing(
-                items,
+            items,
                 i == 0
                     ? 'Polished ${heroItem.analysis.primaryColor} look'
                     : 'Stylish ${heroItem.analysis.primaryColor} outfit',
-                PairingMode.pairThisItem,
-                score: compatibilityScore,
+            PairingMode.pairThisItem,
+            score: compatibilityScore,
                 stylingTips: _buildStylingTips(items, heroItem: heroItem),
               ),
             );
@@ -335,11 +335,11 @@ class WardrobePairingService {
             usedItemIds.add(itemIds);
             pairings.add(
               _createPairing(
-                items,
+            items,
                 lookIndex == 0
                     ? 'Outfit showcasing your ${heroItem.analysis.subcategory ?? 'shoes'}'
                     : 'Alternative look with your ${heroItem.analysis.primaryColor} shoes',
-                PairingMode.pairThisItem,
+            PairingMode.pairThisItem,
                 stylingTips: _buildStylingTips(items, heroItem: heroItem),
               ),
             );
@@ -488,11 +488,11 @@ class WardrobePairingService {
 
         pairings.add(
           _createPairing(
-            items,
+          items,
             isTight
                 ? 'Polished ${heroItem.analysis.primaryColor} ${heroItem.analysis.itemType.toLowerCase()} look'
                 : 'Creative surprise combination ${i - 2}',
-            PairingMode.surpriseMe,
+          PairingMode.surpriseMe,
             score: finalScore.clamp(0.0, 1.0),
             stylingTips: _buildStylingTips(
               items,
@@ -661,15 +661,15 @@ class WardrobePairingService {
     // Filter items based on location/weather/occasion
     final suitableItems = availableItems.where((item) {
       bool suitable = true;
-
+      
       if (location != null) {
         suitable &= item.matchesLocation(location);
       }
-
+      
       if (occasion != null) {
         suitable &= item.matchesOccasion(occasion);
       }
-
+      
       // Weather-based filtering
       if (weather != null) {
         switch (weather.toLowerCase()) {
@@ -677,15 +677,15 @@ class WardrobePairingService {
           case 'warm':
             suitable &=
                 item.matchesSeason('Summer') ||
-                item.analysis.material?.toLowerCase() == 'cotton' ||
-                item.analysis.material?.toLowerCase() == 'linen';
+                       item.analysis.material?.toLowerCase() == 'cotton' ||
+                       item.analysis.material?.toLowerCase() == 'linen';
             break;
           case 'cold':
           case 'cool':
             suitable &=
                 item.matchesSeason('Winter') ||
-                item.analysis.material?.toLowerCase() == 'wool' ||
-                _isOuterwear(item);
+                       item.analysis.material?.toLowerCase() == 'wool' ||
+                       _isOuterwear(item);
             break;
           case 'rainy':
             suitable &=
@@ -694,7 +694,7 @@ class WardrobePairingService {
             break;
         }
       }
-
+      
       return suitable;
     }).toList();
 
@@ -722,7 +722,7 @@ class WardrobePairingService {
       try {
         // Convert WardrobeItems to ClothingAnalysis for Gemini API
         final analyses = pairing.items.map((item) => item.analysis).toList();
-
+        
         // Get current gender preference
         final profileService = getIt<ProfileService>();
         final profile = await profileService.getProfile();
@@ -730,12 +730,12 @@ class WardrobePairingService {
 
         final mannequinOutfits =
             await GeminiApiService.generateEnhancedMannequinOutfits(
-              analyses,
+          analyses,
               userNotes:
                   pairing.metadata['stylingNotes'] as String? ??
                   'Create a polished wardrobe pairing showcasing these items together.',
               gender: gender,
-            );
+        );
 
         if (mannequinOutfits.isNotEmpty) {
           final enhanced = pairing.copyWith(
@@ -766,7 +766,7 @@ class WardrobePairingService {
     AppLogger.info('🔄 Generating fallback pairings');
 
     final pairings = <OutfitPairing>[];
-
+    
     // Even with no other items, suggest what would complete the outfit
     final suggestions = _getSingleItemSuggestions(heroItem);
 
@@ -793,10 +793,10 @@ class WardrobePairingService {
       final items = [heroItem, ...availableItems.take(3)];
       pairings.add(
         _createPairing(
-          items,
-          'Quick pairing with your ${heroItem.analysis.primaryColor} ${heroItem.analysis.itemType.toLowerCase()}',
+        items,
+        'Quick pairing with your ${heroItem.analysis.primaryColor} ${heroItem.analysis.itemType.toLowerCase()}',
           mode,
-          score: 0.6,
+        score: 0.6,
           stylingTips: _buildStylingTips(items, heroItem: heroItem),
         ),
       );
@@ -940,7 +940,7 @@ class WardrobePairingService {
   }) {
     final id =
         'pairing_${DateTime.now().millisecondsSinceEpoch}_${items.map((i) => i.id).join('_')}';
-
+    
     return OutfitPairing(
       id: id,
       items: items,
@@ -959,48 +959,48 @@ class WardrobePairingService {
   /// Calculate average compatibility score for a group of items
   static double _calculateAverageCompatibility(List<WardrobeItem> items) {
     if (items.length < 2) return 1.0;
-
+    
     double totalScore = 0.0;
     int comparisons = 0;
-
+    
     for (int i = 0; i < items.length; i++) {
       for (int j = i + 1; j < items.length; j++) {
         totalScore += items[i].getCompatibilityScore(items[j]);
         comparisons++;
       }
     }
-
+    
     return comparisons > 0 ? totalScore / comparisons : 0.5;
   }
 
   // Category detection helpers
-  static bool _isDress(WardrobeItem item) =>
+  static bool _isDress(WardrobeItem item) => 
       item.analysis.itemType.toLowerCase().contains('dress');
-
-  static bool _isTop(WardrobeItem item) =>
+  
+  static bool _isTop(WardrobeItem item) => 
       item.analysis.itemType.toLowerCase().contains('top') ||
       item.analysis.itemType.toLowerCase().contains('shirt') ||
       item.analysis.itemType.toLowerCase().contains('blouse');
-
-  static bool _isBottom(WardrobeItem item) =>
+  
+  static bool _isBottom(WardrobeItem item) => 
       item.analysis.itemType.toLowerCase().contains('bottom') ||
       item.analysis.itemType.toLowerCase().contains('pants') ||
       item.analysis.itemType.toLowerCase().contains('jeans') ||
       item.analysis.itemType.toLowerCase().contains('skirt');
-
-  static bool _isShoes(WardrobeItem item) =>
+  
+  static bool _isShoes(WardrobeItem item) => 
       item.analysis.itemType.toLowerCase().contains('shoe') ||
       item.analysis.itemType.toLowerCase().contains('footwear') ||
       item.analysis.itemType.toLowerCase().contains('boot') ||
       item.analysis.itemType.toLowerCase().contains('sneaker');
-
-  static bool _isAccessory(WardrobeItem item) =>
+  
+  static bool _isAccessory(WardrobeItem item) => 
       item.analysis.itemType.toLowerCase().contains('accessory') ||
       item.analysis.itemType.toLowerCase().contains('jewelry') ||
       item.analysis.itemType.toLowerCase().contains('belt') ||
       item.analysis.itemType.toLowerCase().contains('bag');
-
-  static bool _isOuterwear(WardrobeItem item) =>
+  
+  static bool _isOuterwear(WardrobeItem item) => 
       item.analysis.itemType.toLowerCase().contains('outer') ||
       item.analysis.itemType.toLowerCase().contains('jacket') ||
       item.analysis.itemType.toLowerCase().contains('coat') ||
