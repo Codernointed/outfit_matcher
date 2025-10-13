@@ -468,7 +468,8 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
     // Show dialog to add custom styling notes
     final customNotes = await showDialog<String>(
       context: context,
-      builder: (context) => _buildStylingNotesDialog(context),
+      barrierDismissible: true,
+      builder: (dialogContext) => _buildStylingNotesDialog(dialogContext),
     );
 
     AppLogger.info(
@@ -481,7 +482,27 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       return;
     }
 
-    if (!context.mounted) return;
+    // Check if widget is still mounted before navigation
+    if (!mounted) {
+      AppLogger.warning('⚠️ [PREVIEW SHEET] Widget unmounted, cannot navigate');
+      return;
+    }
+
+    // Close the preview sheet first
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+
+    // Wait a frame to ensure sheet is closed
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Check context is still valid
+    if (!context.mounted) {
+      AppLogger.warning(
+        '⚠️ [PREVIEW SHEET] Context unmounted after sheet close',
+      );
+      return;
+    }
 
     // Combine default notes with custom notes
     final finalNotes = [
@@ -493,6 +514,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       '🚀 [PREVIEW SHEET] Navigating to inspiration with notes: "$finalNotes"',
     );
 
+    // Navigate to inspiration screen
     Navigator.push(
       context,
       MaterialPageRoute(

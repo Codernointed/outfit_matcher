@@ -1085,12 +1085,15 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       String? imageUrl = pairing.mannequinImageUrl;
 
       if (imageUrl == null) {
+        AppLogger.info('🎨 Generating SINGLE mannequin preview for pairing');
+
         // Get current gender preference
         final profile = await _profileService.getProfile();
         final gender = profile.preferredGender.apiValue;
 
-        final outfits =
-            await GeminiApiService.generateEnhancedMannequinOutfits(
+        // Use the new single mannequin generation method
+        imageUrl =
+            await GeminiApiService.generateSingleMannequinPreview(
               pairing.items.map((item) => item.analysis).toList(),
               userNotes: pairing.metadata['stylingNotes'] as String?,
               gender: gender,
@@ -1104,8 +1107,7 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
               },
             );
 
-        if (outfits.isNotEmpty) {
-          imageUrl = outfits.first.imageUrl;
+        if (imageUrl != null) {
           final updated = pairing.copyWith(mannequinImageUrl: imageUrl);
           setState(() {
             _pairings[_selectedIndex] = updated;

@@ -588,6 +588,67 @@ class GeminiApiService {
     onProgress?.call('All looks styled successfully.');
   }
 
+  /// Generate a SINGLE mannequin preview (for pairing sheet preview button)
+  static Future<String?> generateSingleMannequinPreview(
+    List<ClothingAnalysis> items, {
+    String? userNotes,
+    String gender = '', // 'male' or 'female'
+  }) async {
+    AppLogger.info(
+      '🎨 Generating SINGLE mannequin preview',
+      data: {'items': items.length, 'gender': gender},
+    );
+
+    if (items.isEmpty) {
+      AppLogger.warning('⚠️ No items provided for mannequin generation');
+      return null;
+    }
+
+    // Generate only ONE mannequin
+    final combinations = _composeOutfitCombinations(items);
+    if (combinations.isEmpty) {
+      AppLogger.warning('⚠️ No outfit combinations generated');
+      return null;
+    }
+
+    // Use the first combination
+    final combo = combinations.first;
+
+    try {
+      final prompt = _buildMannequinPrompt(
+        uploadedItemsToUse: combo.uploadedItems,
+        unuploadedCategories: combo.unuploadedCategories,
+        userNotes: userNotes,
+        desiredStyle: 'styled pairing',
+        gender: gender,
+      );
+
+      // Get the first image file
+      final imagePath = items.first.imagePath;
+      if (imagePath == null || imagePath.isEmpty) {
+        AppLogger.error('❌ No image path provided for first item');
+        return null;
+      }
+
+      final imageFile = File(imagePath);
+      if (!await imageFile.exists()) {
+        AppLogger.error('❌ Image file not found: $imagePath');
+        return null;
+      }
+
+      final imageUrl = await _callImagePreview(prompt, imageFile);
+      AppLogger.info('✅ Single mannequin preview generated successfully');
+      return imageUrl;
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Failed to generate single mannequin preview',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
+  }
+
   /// Generate enhanced mannequin outfits using full wardrobe context and notes
   static Future<List<MannequinOutfit>> generateEnhancedMannequinOutfits(
     List<ClothingAnalysis> items, {
