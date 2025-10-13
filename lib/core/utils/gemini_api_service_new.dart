@@ -778,21 +778,25 @@ class GeminiApiService {
 
     buffer.writeln('Must-use uploaded pieces (show exactly as described):');
     bool hasGraphicTop = false;
-    
+
     for (final item in uploadedItemsToUse) {
       final isTop = item.itemType.toLowerCase().contains('top');
-      final hasGraphics = item.patternType != 'solid' || 
-                         (item.subcategory?.toLowerCase().contains('graphic') ?? false) ||
-                         (item.subcategory?.toLowerCase().contains('jersey') ?? false) ||
-                         (item.subcategory?.toLowerCase().contains('print') ?? false) ||
-                         (item.designElements?.any((e) => 
-                           e.toLowerCase().contains('graphic') || 
-                           e.toLowerCase().contains('text') ||
-                           e.toLowerCase().contains('logo') ||
-                           e.toLowerCase().contains('print')) ?? false);
-      
+      final hasGraphics =
+          item.patternType != 'solid' ||
+          (item.subcategory?.toLowerCase().contains('graphic') ?? false) ||
+          (item.subcategory?.toLowerCase().contains('jersey') ?? false) ||
+          (item.subcategory?.toLowerCase().contains('print') ?? false) ||
+          (item.designElements?.any(
+                (e) =>
+                    e.toLowerCase().contains('graphic') ||
+                    e.toLowerCase().contains('text') ||
+                    e.toLowerCase().contains('logo') ||
+                    e.toLowerCase().contains('print'),
+              ) ??
+              false);
+
       if (isTop && hasGraphics) hasGraphicTop = true;
-      
+
       buffer.writeln(
         '• ${item.itemType.toUpperCase()}: ${item.primaryColor} ${item.subcategory ?? item.itemType}',
       );
@@ -848,14 +852,12 @@ class GeminiApiService {
     buffer.writeln(
       '1. Keep uploaded pieces as the hero - let colors, patterns, graphics, and text visible.',
     );
-    buffer.writeln(
-      '2. DO NOT create alternative versions of uploaded items.',
-    );
+    buffer.writeln('2. DO NOT create alternative versions of uploaded items.');
     buffer.writeln(
       '3. DO NOT merge or blend multiple uploaded items into one.',
     );
     buffer.writeln();
-    
+
     buffer.writeln('🚫 LAYERING LIMITS:');
     if (hasGraphicTop) {
       buffer.writeln(
@@ -879,11 +881,9 @@ class GeminiApiService {
       '- Outerwear should only add interest, never hide the hero piece. DO NOT create alternative versions of uploaded items. Most looks should feature tops or dresses without heavy layering so the garment is fully visible.',
     );
     buffer.writeln();
-    
+
     buffer.writeln('✨ Variety guidance:');
-    buffer.writeln(
-      '- Ensure full-body mannequin view from head to toe',
-    );
+    buffer.writeln('- Ensure full-body mannequin view from head to toe');
     buffer.writeln(
       '- Professional fashion photography quality with studio lighting.For unuploaded categories, generate stylish matching pieces. Ensure a full-body mannequin view with polished fashion photography vibes.',
     );
