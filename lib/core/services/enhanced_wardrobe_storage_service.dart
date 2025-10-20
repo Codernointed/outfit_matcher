@@ -280,6 +280,10 @@ class EnhancedWardrobeStorageService {
     String? season,
     bool? isFavorite,
     List<String>? tags,
+    String? mood,
+    String? weather,
+    String? colorPreference,
+    String? gender,
   }) async {
     final items = await getWardrobeItems();
 
@@ -323,6 +327,75 @@ class EnhancedWardrobeStorageService {
           ),
         );
         if (!hasMatchingTag) return false;
+      }
+
+      // Mood filter (check style descriptors and stylePersonality)
+      if (mood != null) {
+        final styleDescriptors = item.analysis.styleDescriptors ?? [];
+        final stylePersonality = item.analysis.stylePersonality ?? '';
+        final moodLower = mood.toLowerCase();
+        if (!styleDescriptors.any(
+              (desc) => desc.toLowerCase().contains(moodLower),
+            ) &&
+            !stylePersonality.toLowerCase().contains(moodLower)) {
+          return false;
+        }
+      }
+
+      // Weather filter (check seasons and material)
+      if (weather != null) {
+        final weatherLower = weather.toLowerCase();
+        final seasons = item.analysis.seasons ?? [];
+        final material = item.analysis.material ?? '';
+
+        if (weatherLower.contains('cold') || weatherLower.contains('cool')) {
+          if (!seasons.any(
+            (s) =>
+                s.toLowerCase().contains('winter') ||
+                s.toLowerCase().contains('fall'),
+          )) {
+            return false;
+          }
+        } else if (weatherLower.contains('hot') ||
+            weatherLower.contains('warm')) {
+          if (!seasons.any(
+            (s) =>
+                s.toLowerCase().contains('summer') ||
+                s.toLowerCase().contains('spring'),
+          )) {
+            return false;
+          }
+        }
+      }
+
+      // Color preference filter (check color family and complementary colors)
+      if (colorPreference != null) {
+        final colorFamily = item.analysis.colorFamily ?? '';
+        final complementaryColors = item.analysis.complementaryColors ?? [];
+        final colorPrefLower = colorPreference.toLowerCase();
+
+        if (!colorFamily.toLowerCase().contains(colorPrefLower) &&
+            !complementaryColors.any(
+              (c) => c.toLowerCase().contains(colorPrefLower),
+            )) {
+          return false;
+        }
+      }
+
+      // Gender filter (check if item fits the preferred gender)
+      if (gender != null) {
+        final formality = item.analysis.formality ?? '';
+        final style = item.analysis.style ?? '';
+
+        // For now, use formality and style as proxies for gender appropriateness
+        // This could be enhanced with better gender detection in the future
+        if (gender == 'female' && formality.toLowerCase().contains('formal')) {
+          // Formal items are generally more unisex
+        } else if (gender == 'male' &&
+            (style.toLowerCase().contains('feminine') ||
+                formality.toLowerCase().contains('elegant'))) {
+          return false;
+        }
       }
 
       return true;
