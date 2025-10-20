@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/core/models/swipe_closet_request.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
@@ -104,11 +105,50 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
     swipe_planner_providers.SwipeClosetSelections selections,
     SwipeClosetRequest? request,
   ) {
+    // Count total items
+    final totalItems = pools.tops.length + pools.bottoms.length + 
+                      pools.footwear.length + pools.accessories.length;
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Occasion info banner
+          if (request != null) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      totalItems > 0
+                          ? 'Showing ${totalItems} items for "${request.occasion}"'
+                          : 'No exact matches for "${request.occasion}"',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Current selection preview
           if (selections.top != null ||
               selections.bottom != null ||
@@ -120,12 +160,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
           // Tops section
           if (pools.tops.isNotEmpty) ...[
-            Text(
-              'Tops',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            _buildCategoryHeader(theme, 'Tops', pools.tops.length),
             const SizedBox(height: 12),
             _buildSwipeRow(
               theme,
@@ -138,12 +173,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
           // Bottoms section
           if (pools.bottoms.isNotEmpty) ...[
-            Text(
-              'Bottoms',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            _buildCategoryHeader(theme, 'Bottoms', pools.bottoms.length),
             const SizedBox(height: 12),
             _buildSwipeRow(
               theme,
@@ -156,12 +186,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
           // Footwear section
           if (pools.footwear.isNotEmpty) ...[
-            Text(
-              'Shoes',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            _buildCategoryHeader(theme, 'Shoes', pools.footwear.length),
             const SizedBox(height: 12),
             _buildSwipeRow(
               theme,
@@ -174,12 +199,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
           // Accessories section
           if (pools.accessories.isNotEmpty) ...[
-            Text(
-              'Accessories',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            _buildCategoryHeader(theme, 'Accessories', pools.accessories.length),
             const SizedBox(height: 12),
             _buildSwipeRow(
               theme,
@@ -228,6 +248,40 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
     );
   }
 
+  Widget _buildCategoryHeader(ThemeData theme, String title, int count) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '$count',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onPrimaryContainer,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const Spacer(),
+        Icon(
+          Icons.swipe,
+          size: 16,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSwipeRow(
     ThemeData theme,
     List<WardrobeItem> items,
@@ -235,29 +289,31 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
     Function(WardrobeItem) onItemSelected,
   ) {
     return SizedBox(
-      height: 170,
-      width: 200,
+      height: 200,
       child: PageView.builder(
         controller: controller,
         itemCount: items.length,
         onPageChanged: (index) {
+          HapticFeedback.lightImpact();
           onItemSelected(items[index]);
         },
         itemBuilder: (context, index) {
           final item = items[index];
           return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
+            margin: const EdgeInsets.symmetric(horizontal: 40),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: theme.colorScheme.outline.withValues(alpha: 0.3),
-              ),
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: _buildItemImage(item),
             ),
           );
@@ -440,97 +496,96 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
   Future<void> _shuffleOutfit() async {
     AppLogger.info('🔀 Surprise me tapped');
 
-    final request = ref.read(swipe_planner_providers.swipeRequestProvider);
+    final poolsAsync = ref.read(swipe_planner_providers.swipeClosetPoolsProvider);
+    
+    // Get pools from the provider (already filtered)
+    final pools = poolsAsync.when(
+      data: (data) => data,
+      loading: () => const swipe_planner_providers.SwipeClosetPools(),
+      error: (_, __) => const swipe_planner_providers.SwipeClosetPools(),
+    );
+    
+    // Collect all available items from pools
+    final allPoolItems = [
+      ...pools.tops,
+      ...pools.bottoms,
+      ...pools.footwear,
+      ...pools.accessories,
+    ];
 
-    if (request == null) {
+    if (allPoolItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please plan an outfit first')),
+        const SnackBar(content: Text('Add some items to your closet first')),
       );
       return;
     }
 
-    // Use existing wardrobe pairing service to generate a surprise combination
+    AppLogger.info('🎲 Shuffling from ${allPoolItems.length} available items');
+
     try {
-      final storage = getIt<EnhancedWardrobeStorageService>();
-      final wardrobeItems = await storage.getWardrobeItems();
+      // Pick random items from each category
+      final randomTop = pools.tops.isNotEmpty 
+          ? pools.tops[DateTime.now().millisecond % pools.tops.length]
+          : null;
+      final randomBottom = pools.bottoms.isNotEmpty
+          ? pools.bottoms[DateTime.now().millisecond % pools.bottoms.length]
+          : null;
+      final randomFootwear = pools.footwear.isNotEmpty
+          ? pools.footwear[DateTime.now().millisecond % pools.footwear.length]
+          : null;
+      final randomAccessory = pools.accessories.isNotEmpty
+          ? pools.accessories[DateTime.now().millisecond % pools.accessories.length]
+          : null;
 
-      if (wardrobeItems.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Add some items to your closet first')),
-        );
-        return;
-      }
-
-      // Filter items based on the request
-      final filteredItems = await storage.getFilteredWardrobeItems(
-        occasion: request.occasion,
-        mood: request.mood,
-        weather: request.weather,
-        colorPreference: request.colorPreference,
-        gender: request.gender,
+      // Update selections
+      ref
+          .read(
+            swipe_planner_providers.swipeClosetSelectionsProvider.notifier,
+          )
+          .state = swipe_planner_providers.SwipeClosetSelections(
+        top: randomTop,
+        bottom: randomBottom,
+        footwear: randomFootwear,
+        accessory: randomAccessory,
       );
 
-      if (filteredItems.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No items match your occasion. Try adjusting your preferences.',
-            ),
-          ),
+      // Scroll to show the selected items
+      if (randomTop != null && pools.tops.isNotEmpty) {
+        final index = pools.tops.indexOf(randomTop);
+        _topController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
         );
-        return;
+      }
+      if (randomBottom != null && pools.bottoms.isNotEmpty) {
+        final index = pools.bottoms.indexOf(randomBottom);
+        _bottomController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+      if (randomFootwear != null && pools.footwear.isNotEmpty) {
+        final index = pools.footwear.indexOf(randomFootwear);
+        _footwearController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+      if (randomAccessory != null && pools.accessories.isNotEmpty) {
+        final index = pools.accessories.indexOf(randomAccessory);
+        _accessoryController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
       }
 
-      // Create a temporary hero item from the first available item
-      final heroItem = filteredItems.first;
-
-      // Generate surprise pairings using the existing service
-      final pairingService = getIt<WardrobePairingService>();
-      final pairings = await pairingService.generatePairings(
-        heroItem: heroItem,
-        wardrobeItems: filteredItems,
-        mode: PairingMode.surpriseMe,
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✨ Surprise outfit generated!')),
       );
-
-      if (pairings.isNotEmpty) {
-        final surprisePairing = pairings.first;
-
-        // Update the selections with the surprise outfit
-        ref
-            .read(
-              swipe_planner_providers.swipeClosetSelectionsProvider.notifier,
-            )
-            .state = swipe_planner_providers.SwipeClosetSelections(
-          top: surprisePairing.items
-              .where(
-                (item) => item.analysis.itemType.toLowerCase().contains('top'),
-              )
-              .firstOrNull,
-          bottom: surprisePairing.items
-              .where(
-                (item) =>
-                    item.analysis.itemType.toLowerCase().contains('bottom'),
-              )
-              .firstOrNull,
-          footwear: surprisePairing.items
-              .where(
-                (item) =>
-                    item.analysis.itemType.toLowerCase().contains('shoe') ||
-                    item.analysis.itemType.toLowerCase().contains('footwear'),
-              )
-              .firstOrNull,
-          accessory: surprisePairing.items
-              .where(
-                (item) =>
-                    item.analysis.itemType.toLowerCase().contains('accessory'),
-              )
-              .firstOrNull,
-        );
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✨ Surprise outfit generated!')),
-        );
-      }
     } catch (e) {
       AppLogger.error('❌ Failed to generate surprise outfit', error: e);
       ScaffoldMessenger.of(context).showSnackBar(

@@ -179,159 +179,162 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     );
   }
 
- // Minimal header implementation for enhanced_closet_screen.dart
-// Replace the _buildCustomHeader method with this
+  // Minimal header implementation for enhanced_closet_screen.dart
+  // Replace the _buildCustomHeader method with this
 
-Widget _buildCustomHeader(ThemeData theme, bool showFavoritesOnly) {
-  return Container(
-    padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-    child: Column(
-      children: [
-        // Compact header row
-        Row(
-          children: [
-            // Title
-            Text(
-              'My Closet',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-
-            // Compact action buttons
-            IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search, size: 22),
-              onPressed: () {
-                setState(() {
-                  _isSearching = !_isSearching;
-                  if (!_isSearching) {
-                    _searchController.clear();
-                  }
-                });
-              },
-              style: IconButton.styleFrom(
-                backgroundColor: _isSearching
-                    ? theme.colorScheme.primaryContainer
-                    : theme.colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
-                      ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: Icon(
-                showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
-                size: 22,
-                color: showFavoritesOnly ? Colors.red : null,
-              ),
-              onPressed: () {
-                ref.read(showFavoritesOnlyProvider.notifier).state =
-                    !showFavoritesOnly;
-              },
-              style: IconButton.styleFrom(
-                backgroundColor: showFavoritesOnly
-                    ? Colors.red.withValues(alpha: 0.1)
-                    : theme.colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.5,
-                      ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            IconButton(
-              icon: const Icon(Icons.tune, size: 22),
-              onPressed: _showSettingsSheet,
-              style: IconButton.styleFrom(
-                backgroundColor: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        // Compact Plan an outfit CTA
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: _showSwipePlanner,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    theme.colorScheme.primary,
-                    theme.colorScheme.secondary,
-                  ],
+  Widget _buildCustomHeader(ThemeData theme, bool showFavoritesOnly) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: Column(
+        children: [
+          // Compact header row
+          Row(
+            children: [
+              // Title
+              Text(
+                'My Closet',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.auto_awesome,
-                    color: theme.colorScheme.onPrimary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Plan an Outfit',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.onPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    Icons.arrow_forward,
-                    color: theme.colorScheme.onPrimary,
-                    size: 18,
-                  ),
-                ],
+              const Spacer(),
+
+              // Compact action buttons
+              IconButton(
+                icon: Icon(_isSearching ? Icons.close : Icons.search, size: 22),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = !_isSearching;
+                    if (!_isSearching) {
+                      _searchController.clear();
+                    }
+                  });
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: _isSearching
+                      ? theme.colorScheme.primaryContainer
+                      : theme.colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
+                ),
               ),
-            ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: Icon(
+                  showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
+                  size: 22,
+                  color: showFavoritesOnly ? Colors.red : null,
+                ),
+                onPressed: () {
+                  ref.read(showFavoritesOnlyProvider.notifier).state =
+                      !showFavoritesOnly;
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: showFavoritesOnly
+                      ? Colors.red.withValues(alpha: 0.1)
+                      : theme.colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.tune, size: 22),
+                onPressed: _showSettingsSheet,
+                style: IconButton.styleFrom(
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.5),
+                ),
+              ),
+            ],
           ),
-        ),
 
-        // Search bar (when active)
-        if (_isSearching) ...[
           const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
-              ),
+
+          // Compact Plan an outfit CTA
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Search your wardrobe...',
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
+              onTap: _showSwipePlanner,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.secondary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.auto_awesome,
+                      color: theme.colorScheme.onPrimary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Plan an Outfit',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward,
+                      color: theme.colorScheme.onPrimary,
+                      size: 18,
+                    ),
+                  ],
+                ),
               ),
-              style: theme.textTheme.bodyLarge,
             ),
           ),
+
+          // Search bar (when active)
+          if (_isSearching) ...[
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search your wardrobe...',
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                style: theme.textTheme.bodyLarge,
+              ),
+            ),
+          ],
         ],
-      ],
-    ),
-  );
-}
+      ),
+    );
+  }
 
   Widget _buildCategoryTabs(ThemeData theme, String selectedCategory) {
     final categories = [
