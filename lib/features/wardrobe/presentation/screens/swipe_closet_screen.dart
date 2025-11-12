@@ -106,9 +106,12 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
     SwipeClosetRequest? request,
   ) {
     // Count total items
-    final totalItems = pools.tops.length + pools.bottoms.length + 
-                      pools.footwear.length + pools.accessories.length;
-    
+    final totalItems =
+        pools.tops.length +
+        pools.bottoms.length +
+        pools.footwear.length +
+        pools.accessories.length;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -119,7 +122,9 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.3,
+                ),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: theme.colorScheme.primary.withValues(alpha: 0.2),
@@ -199,7 +204,11 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
           // Accessories section
           if (pools.accessories.isNotEmpty) ...[
-            _buildCategoryHeader(theme, 'Accessories', pools.accessories.length),
+            _buildCategoryHeader(
+              theme,
+              'Accessories',
+              pools.accessories.length,
+            ),
             const SizedBox(height: 12),
             _buildSwipeRow(
               theme,
@@ -496,15 +505,17 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
   Future<void> _shuffleOutfit() async {
     AppLogger.info('🔀 Surprise me tapped');
 
-    final poolsAsync = ref.read(swipe_planner_providers.swipeClosetPoolsProvider);
-    
+    final poolsAsync = ref.read(
+      swipe_planner_providers.swipeClosetPoolsProvider,
+    );
+
     // Get pools from the provider (already filtered)
     final pools = poolsAsync.when(
       data: (data) => data,
       loading: () => const swipe_planner_providers.SwipeClosetPools(),
       error: (_, __) => const swipe_planner_providers.SwipeClosetPools(),
     );
-    
+
     // Collect all available items from pools
     final allPoolItems = [
       ...pools.tops,
@@ -524,7 +535,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
     try {
       // Pick random items from each category
-      final randomTop = pools.tops.isNotEmpty 
+      final randomTop = pools.tops.isNotEmpty
           ? pools.tops[DateTime.now().millisecond % pools.tops.length]
           : null;
       final randomBottom = pools.bottoms.isNotEmpty
@@ -534,14 +545,13 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
           ? pools.footwear[DateTime.now().millisecond % pools.footwear.length]
           : null;
       final randomAccessory = pools.accessories.isNotEmpty
-          ? pools.accessories[DateTime.now().millisecond % pools.accessories.length]
+          ? pools.accessories[DateTime.now().millisecond %
+                pools.accessories.length]
           : null;
 
       // Update selections
       ref
-          .read(
-            swipe_planner_providers.swipeClosetSelectionsProvider.notifier,
-          )
+          .read(swipe_planner_providers.swipeClosetSelectionsProvider.notifier)
           .state = swipe_planner_providers.SwipeClosetSelections(
         top: randomTop,
         bottom: randomBottom,

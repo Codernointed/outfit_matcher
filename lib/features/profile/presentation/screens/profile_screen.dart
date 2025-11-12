@@ -313,15 +313,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           floating: true,
           title: const Text('Profile'),
           centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                // Future: show more options menu
-              },
-            ),
-          ],
+          // actions: [
+          //   IconButton(
+          //     icon: const Icon(Icons.more_vert),
+          //     onPressed: () {
+          //       HapticFeedback.lightImpact();
+          //       // Future: show more options menu
+          //     },
+          //   ),
+          // ],
         ),
 
         SliverToBoxAdapter(
@@ -459,29 +459,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => _handlePermissionTap(Permission.microphone),
               ),
 
-              // Share & Connect Section
-              const ProfileSectionHeader(title: 'Share & Connect'),
+              // // Share & Connect Section
+              // const ProfileSectionHeader(title: 'Share & Connect'),
 
-              ProfileSectionTile(
-                icon: Icons.share_outlined,
-                title: 'Share My Wardrobe',
-                subtitle: 'Generate shareable link',
-                onTap: _shareWardrobe,
-              ),
+              // ProfileSectionTile(
+              //   icon: Icons.share_outlined,
+              //   title: 'Share My Wardrobe',
+              //   subtitle: 'Generate shareable link',
+              //   onTap: _shareWardrobe,
+              // ),
 
-              ProfileSectionTile(
-                icon: Icons.photo_camera_outlined,
-                title: 'Share to Instagram',
-                subtitle: 'Export outfit image',
-                onTap: _shareToInstagram,
-              ),
+              // ProfileSectionTile(
+              //   icon: Icons.photo_camera_outlined,
+              //   title: 'Share to Instagram',
+              //   subtitle: 'Export outfit image',
+              //   onTap: _shareToInstagram,
+              // ),
 
-              ProfileSectionTile(
-                icon: Icons.link,
-                title: 'Copy Profile Link',
-                subtitle: 'Share your profile',
-                onTap: _copyProfileLink,
-              ),
+              // ProfileSectionTile(
+              //   icon: Icons.link,
+              //   title: 'Copy Profile Link',
+              //   subtitle: 'Share your profile',
+              //   onTap: _copyProfileLink,
+              // ),
 
               // About Section
               const ProfileSectionHeader(title: 'About'),

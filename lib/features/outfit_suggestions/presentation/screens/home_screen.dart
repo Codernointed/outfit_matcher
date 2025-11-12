@@ -101,14 +101,14 @@ class HomeScreen extends ConsumerWidget {
             tooltip: 'Search',
           ),
           // Filter button
-          IconButton(
-            icon: const Icon(Icons.tune_rounded),
-            onPressed: () {
-              AppLogger.info('🎛️ Opening filters');
-              _openFilters(context);
-            },
-            tooltip: 'Filters',
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.tune_rounded),
+          //   onPressed: () {
+          //     AppLogger.info('🎛️ Opening filters');
+          //     _openFilters(context);
+          //   },
+          //   tooltip: 'Filters',
+          // ),
           // Theme toggle
           IconButton(
             icon: Icon(
