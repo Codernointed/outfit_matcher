@@ -205,19 +205,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (confirmed == true && mounted) {
       HapticFeedback.mediumImpact();
-      
+
       // Show loading
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
         final clearedMB = await storageService.clearCache();
-        
+
         // Track analytics
         final analytics = AnalyticsService();
         await analytics.logCacheCleared(sizeMB: clearedMB);
@@ -226,7 +224,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Navigator.pop(context); // Close loading
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Cache cleared: ${clearedMB.toStringAsFixed(2)} MB'),
+              content: Text(
+                'Cache cleared: ${clearedMB.toStringAsFixed(2)} MB',
+              ),
               duration: const Duration(seconds: 2),
             ),
           );
@@ -307,7 +307,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (confirmed == true && mounted) {
       HapticFeedback.mediumImpact();
-      
+
       try {
         // Track analytics
         final analytics = AnalyticsService();
@@ -318,7 +318,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await authService.signOut();
 
         AppLogger.info('👋 User signed out');
-        
+
         // Navigation is handled by AuthWrapper
       } catch (e) {
         AppLogger.error('❌ Sign out error: $e');
@@ -389,14 +389,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       if (finalConfirmation == true && mounted) {
         HapticFeedback.heavyImpact();
-        
+
         // Show loading
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => const Center(
-            child: CircularProgressIndicator(),
-          ),
+          builder: (context) =>
+              const Center(child: CircularProgressIndicator()),
         );
 
         try {
@@ -409,7 +408,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           await authService.deleteAccount();
 
           AppLogger.info('🗑️ Account deleted');
-          
+
           // Navigation is handled by AuthWrapper
         } catch (e) {
           AppLogger.error('❌ Account deletion error: $e');
@@ -429,14 +428,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Future<void> _showStorageInfo() async {
     HapticFeedback.lightImpact();
-    
+
     // Show loading
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -474,7 +471,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Text(entry.key),
                             Text(
                               '${entry.value.toStringAsFixed(2)} MB',
-                              style: const TextStyle(fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -520,7 +519,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (currentUser == null) return;
 
     HapticFeedback.lightImpact();
-    
+
     final nameController = TextEditingController(text: currentUser.displayName);
     final bioController = TextEditingController(text: currentUser.bio);
 
@@ -570,17 +569,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (result != null && mounted) {
       HapticFeedback.mediumImpact();
-      
+
       try {
         final userProfileService = ref.read(userProfileServiceProvider);
-        await userProfileService.updateUserProfile(
-          currentUser.uid,
-          {
-            'displayName': result['displayName'],
-            'bio': result['bio'],
-            'updatedAt': DateTime.now(),
-          },
-        );
+        await userProfileService.updateUserProfile(currentUser.uid, {
+          'displayName': result['displayName'],
+          'bio': result['bio'],
+          'updatedAt': DateTime.now(),
+        });
 
         // Track analytics
         final analytics = AnalyticsService();
@@ -596,7 +592,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           );
         }
-        
+
         _refreshProfile();
         AppLogger.info('✅ Profile updated');
       } catch (e) {
@@ -704,103 +700,114 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 24),
 
               // Generations indicator (from AppUser data)
-              ref.watch(currentUserProvider).when(
-                data: (appUser) {
-                  if (appUser == null) return const SizedBox.shrink();
-                  
-                  final todayGen = appUser.todayGenerations;
-                  final totalGen = appUser.totalGenerations;
-                  final limit = appUser.generationsLimit;
-                  final tier = appUser.subscriptionTier;
-                  
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary.withValues(alpha: 0.1),
-                          theme.colorScheme.secondary.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ref
+                  .watch(currentUserProvider)
+                  .when(
+                    data: (appUser) {
+                      if (appUser == null) return const SizedBox.shrink();
+
+                      final todayGen = appUser.todayGenerations;
+                      final totalGen = appUser.totalGenerations;
+                      final limit = appUser.generationsLimit;
+                      final tier = appUser.subscriptionTier;
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.colorScheme.primary.withValues(alpha: 0.1),
+                              theme.colorScheme.secondary.withValues(
+                                alpha: 0.05,
+                              ),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.2,
+                            ),
+                          ),
+                        ),
+                        child: Column(
                           children: [
                             Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Icon(
-                                  Icons.auto_awesome,
-                                  color: theme.colorScheme.primary,
-                                  size: 24,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.auto_awesome,
+                                      color: theme.colorScheme.primary,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Generations',
+                                      style: theme.textTheme.titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Generations',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    tier.name.toUpperCase(),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.2,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                tier.name.toUpperCase(),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildGenerationStat(
+                                  context,
+                                  theme,
+                                  'Today',
+                                  '$todayGen/$limit',
+                                  todayGen >= limit
+                                      ? Colors.red
+                                      : theme.colorScheme.primary,
                                 ),
-                              ),
+                                Container(
+                                  height: 40,
+                                  width: 1,
+                                  color: theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                ),
+                                _buildGenerationStat(
+                                  context,
+                                  theme,
+                                  'Total',
+                                  totalGen.toString(),
+                                  theme.colorScheme.primary,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildGenerationStat(
-                              context,
-                              theme,
-                              'Today',
-                              '$todayGen/$limit',
-                              todayGen >= limit ? Colors.red : theme.colorScheme.primary,
-                            ),
-                            Container(
-                              height: 40,
-                              width: 1,
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
-                            ),
-                            _buildGenerationStat(
-                              context,
-                              theme,
-                              'Total',
-                              totalGen.toString(),
-                              theme.colorScheme.primary,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-              ),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
 
               const SizedBox(height: 24),
 
@@ -1009,7 +1016,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
 
               const Divider(height: 32),
-              
+
               ProfileSectionTile(
                 icon: Icons.logout,
                 title: 'Sign Out',

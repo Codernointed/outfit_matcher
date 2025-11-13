@@ -39,7 +39,10 @@ class StorageService {
         'Cache': cacheSize,
         'Images': await _calculateSubdirectorySize(docDir, 'images'),
         'Database': await _calculateSubdirectorySize(docDir, 'databases'),
-        'Other Documents': documentsSize - await _calculateSubdirectorySize(docDir, 'images') - await _calculateSubdirectorySize(docDir, 'databases'),
+        'Other Documents':
+            documentsSize -
+            await _calculateSubdirectorySize(docDir, 'images') -
+            await _calculateSubdirectorySize(docDir, 'databases'),
       };
 
       return StorageInfo(
@@ -85,7 +88,10 @@ class StorageService {
       if (!directory.existsSync()) return 0;
 
       int totalSize = 0;
-      await for (var entity in directory.list(recursive: true, followLinks: false)) {
+      await for (var entity in directory.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is File) {
           try {
             totalSize += await entity.length();
@@ -105,7 +111,10 @@ class StorageService {
   }
 
   /// Calculate size of a subdirectory
-  Future<double> _calculateSubdirectorySize(Directory parentDir, String subdirName) async {
+  Future<double> _calculateSubdirectorySize(
+    Directory parentDir,
+    String subdirName,
+  ) async {
     try {
       final subdir = Directory('${parentDir.path}/$subdirName');
       if (!subdir.existsSync()) return 0;
@@ -120,7 +129,10 @@ class StorageService {
   Future<void> _deleteDirectory(Directory directory) async {
     if (!directory.existsSync()) return;
 
-    await for (var entity in directory.list(recursive: false, followLinks: false)) {
+    await for (var entity in directory.list(
+      recursive: false,
+      followLinks: false,
+    )) {
       try {
         if (entity is Directory) {
           await entity.delete(recursive: true);
@@ -138,7 +150,7 @@ class StorageService {
     final buffer = StringBuffer();
     buffer.writeln('Total: ${info.formattedTotal}');
     buffer.writeln('');
-    
+
     info.breakdown.forEach((category, size) {
       if (size > 0) {
         buffer.writeln('$category: ${size.toStringAsFixed(2)} MB');

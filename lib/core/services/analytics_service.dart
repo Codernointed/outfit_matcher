@@ -7,7 +7,8 @@ class AnalyticsService {
   AnalyticsService._internal();
 
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-  FirebaseAnalyticsObserver get observer => FirebaseAnalyticsObserver(analytics: _analytics);
+  FirebaseAnalyticsObserver get observer =>
+      FirebaseAnalyticsObserver(analytics: _analytics);
 
   // Screen tracking
   Future<void> logScreenView({
@@ -83,10 +84,7 @@ class AnalyticsService {
     try {
       await _analytics.logEvent(
         name: 'feature_usage',
-        parameters: {
-          'feature_name': featureName,
-          ...?parameters,
-        },
+        parameters: {'feature_name': featureName, ...?parameters},
       );
       debugPrint('📊 Analytics: Feature usage - $featureName');
     } catch (e) {
@@ -113,15 +111,11 @@ class AnalyticsService {
     }
   }
 
-  Future<void> logOutfitSaved({
-    required String outfitType,
-  }) async {
+  Future<void> logOutfitSaved({required String outfitType}) async {
     try {
       await _analytics.logEvent(
         name: 'outfit_saved',
-        parameters: {
-          'outfit_type': outfitType,
-        },
+        parameters: {'outfit_type': outfitType},
       );
       debugPrint('📊 Analytics: Outfit saved - $outfitType');
     } catch (e) {
@@ -148,15 +142,11 @@ class AnalyticsService {
     }
   }
 
-  Future<void> logItemRemoved({
-    required String category,
-  }) async {
+  Future<void> logItemRemoved({required String category}) async {
     try {
       await _analytics.logEvent(
         name: 'wardrobe_item_removed',
-        parameters: {
-          'category': category,
-        },
+        parameters: {'category': category},
       );
       debugPrint('📊 Analytics: Item removed - $category');
     } catch (e) {
@@ -165,15 +155,11 @@ class AnalyticsService {
   }
 
   // Profile events
-  Future<void> logProfileUpdated({
-    required List<String> fieldsUpdated,
-  }) async {
+  Future<void> logProfileUpdated({required List<String> fieldsUpdated}) async {
     try {
       await _analytics.logEvent(
         name: 'profile_updated',
-        parameters: {
-          'fields_updated': fieldsUpdated.join(','),
-        },
+        parameters: {'fields_updated': fieldsUpdated.join(',')},
       );
       debugPrint('📊 Analytics: Profile updated - ${fieldsUpdated.join(', ')}');
     } catch (e) {
@@ -191,15 +177,11 @@ class AnalyticsService {
   }
 
   // Storage/cache events
-  Future<void> logCacheCleared({
-    required double sizeMB,
-  }) async {
+  Future<void> logCacheCleared({required double sizeMB}) async {
     try {
       await _analytics.logEvent(
         name: 'cache_cleared',
-        parameters: {
-          'size_mb': sizeMB,
-        },
+        parameters: {'size_mb': sizeMB},
       );
       debugPrint('📊 Analytics: Cache cleared - ${sizeMB}MB');
     } catch (e) {
@@ -215,10 +197,7 @@ class AnalyticsService {
     try {
       await _analytics.logEvent(
         name: 'subscription_upgrade',
-        parameters: {
-          'from_tier': fromTier,
-          'to_tier': toTier,
-        },
+        parameters: {'from_tier': fromTier, 'to_tier': toTier},
       );
       debugPrint('📊 Analytics: Subscription upgrade - $fromTier to $toTier');
     } catch (e) {
@@ -269,10 +248,7 @@ class AnalyticsService {
     Map<String, Object>? parameters,
   }) async {
     try {
-      await _analytics.logEvent(
-        name: eventName,
-        parameters: parameters,
-      );
+      await _analytics.logEvent(name: eventName, parameters: parameters);
       debugPrint('📊 Analytics: Custom event - $eventName');
     } catch (e) {
       debugPrint('❌ Analytics error (custom event): $e');
