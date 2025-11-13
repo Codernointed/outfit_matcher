@@ -5,9 +5,11 @@ import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/favorites_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 /// Provider for user profile data
@@ -27,7 +29,9 @@ final profileStatsProvider = FutureProvider.autoDispose<ProfileStats>((
     if (currentUser != null) {
       try {
         final userProfileService = getIt<UserProfileService>();
-        final appUser = await userProfileService.getUserProfile(currentUser.uid);
+        final appUser = await userProfileService.getUserProfile(
+          currentUser.uid,
+        );
 
         if (appUser != null) {
           AppLogger.info(
@@ -72,47 +76,85 @@ final profileStatsProvider = FutureProvider.autoDispose<ProfileStats>((
   }
 });
 
-/// Provider for favorite items
-final favoriteItemsProvider = FutureProvider.autoDispose<List<WardrobeItem>>((
+/// Provider for favorite items (FIRESTORE STREAMS!)
+final favoriteItemsProvider = StreamProvider.autoDispose<List<WardrobeItem>>((
   ref,
-) async {
+) async* {
   try {
-    final wardrobeService = getIt<EnhancedWardrobeStorageService>();
-    final allItems = await wardrobeService.getWardrobeItems();
-    final favorites = allItems
-        .where((item) => item.isFavorite == true)
-        .toList();
+    // Get current user
+    final user = ref.watch(currentUserProvider).value;
+    if (user == null) {
+      AppLogger.info('⭐ No user logged in, returning empty favorites');
+      yield [];
+      return;
+    }
 
-    AppLogger.info('⭐ Loaded ${favorites.length} favorite items');
-    return favorites;
+    // Get favorite IDs from Firestore (real-time stream)
+    final favoritesService = FavoritesService();
+    final wardrobeService = getIt<EnhancedWardrobeStorageService>();
+
+    await for (final favoriteIds in favoritesService.watchFavoriteItemIds(user.uid)) {
+      if (favoriteIds.isEmpty) {
+        yield [];
+        continue;
+      }
+
+      // Fetch full item data for each favorite ID
+      final allItems = await wardrobeService.getWardrobeItems();
+      final favoriteItems = allItems
+          .where((item) => favoriteIds.contains(item.id))
+          .toList();
+
+      AppLogger.info('⭐ Loaded ${favoriteItems.length} favorite items from Firestore stream');
+      yield favoriteItems;
+    }
   } catch (e) {
     AppLogger.error('❌ Error loading favorite items', error: e);
-    return [];
+    yield [];
   }
 });
 
-/// Provider for favorite outfits
-final favoriteLooksProvider = FutureProvider.autoDispose<List<SavedOutfit>>((
+/// Provider for favorite outfits (FIRESTORE STREAMS!)
+final favoriteLooksProvider = StreamProvider.autoDispose<List<SavedOutfit>>((
   ref,
-) async {
+) async* {
   try {
-    final outfitService = getIt<OutfitStorageService>();
-    final allLooks = await outfitService.fetchAll();
-    final favorites = allLooks
-        .where((look) => look.isFavorite ?? false)
-        .toList();
+    // Get current user
+    final user = ref.watch(currentUserProvider).value;
+    if (user == null) {
+      AppLogger.info('⭐ No user logged in, returning empty favorite looks');
+      yield [];
+      return;
+    }
 
-    AppLogger.info('⭐ Loaded ${favorites.length} favorite looks');
-    return favorites;
+    // Get favorite outfit IDs from Firestore (real-time stream)
+    final favoritesService = FavoritesService();
+    final outfitService = getIt<OutfitStorageService>();
+
+    await for (final favoriteIds in favoritesService.watchFavoriteOutfitIds(user.uid)) {
+      if (favoriteIds.isEmpty) {
+        yield [];
+        continue;
+      }
+
+      // Fetch full outfit data for each favorite ID
+      final allLooks = await outfitService.fetchAll();
+      final favoriteLooks = allLooks
+          .where((look) => favoriteIds.contains(look.id))
+          .toList();
+
+      AppLogger.info('⭐ Loaded ${favoriteLooks.length} favorite looks from Firestore stream');
+      yield favoriteLooks;
+    }
   } catch (e) {
     AppLogger.error('❌ Error loading favorite looks', error: e);
-    return [];
+    yield [];
   }
 });
 
-/// Combined favorites count
-final favoritesCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final items = await ref.watch(favoriteItemsProvider.future);
-  final looks = await ref.watch(favoriteLooksProvider.future);
+/// Combined favorites count (updated for streams)
+final favoritesCountProvider = Provider.autoDispose<int>((ref) {
+  final items = ref.watch(favoriteItemsProvider).value ?? [];
+  final looks = ref.watch(favoriteLooksProvider).value ?? [];
   return items.length + looks.length;
 });

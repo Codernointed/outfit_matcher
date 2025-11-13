@@ -112,8 +112,7 @@ class EnhancedWardrobeStorageService {
   Future<void> _attemptFirestoreMigration() async {
     if (!_isFirestoreAvailable || _isMigrating) return;
 
-    final migrationComplete =
-        _prefs.getBool(_firestoreMigrationKey) ?? false;
+    final migrationComplete = _prefs.getBool(_firestoreMigrationKey) ?? false;
 
     if (migrationComplete) return;
 
@@ -125,9 +124,7 @@ class EnhancedWardrobeStorageService {
       final localItems = await _getWardrobeItemsFromLocal();
 
       if (localItems.isNotEmpty) {
-        AppLogger.info(
-          '📦 Migrating ${localItems.length} items to Firestore',
-        );
+        AppLogger.info('📦 Migrating ${localItems.length} items to Firestore');
         await _firestoreService!.bulkSaveWardrobeItems(localItems);
         AppLogger.info('✅ Firestore migration complete');
       }
@@ -295,9 +292,7 @@ class EnhancedWardrobeStorageService {
         _cachedItems = items;
         await _updateCacheTimestamp();
 
-        AppLogger.debug(
-          '📦 Loaded ${items.length} items from Firestore',
-        );
+        AppLogger.debug('📦 Loaded ${items.length} items from Firestore');
         return items;
       } catch (e) {
         AppLogger.warning(
@@ -339,7 +334,9 @@ class EnhancedWardrobeStorageService {
       _cachedItems = items;
       await _updateCacheTimestamp();
 
-      AppLogger.debug('📦 Loaded ${items.length} wardrobe items from local storage');
+      AppLogger.debug(
+        '📦 Loaded ${items.length} wardrobe items from local storage',
+      );
       return List.from(items);
     } catch (e, stackTrace) {
       AppLogger.error(

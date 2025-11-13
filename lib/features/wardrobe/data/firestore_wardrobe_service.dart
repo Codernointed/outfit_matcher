@@ -34,9 +34,9 @@ class FirestoreWardrobeService {
     try {
       AppLogger.debug('💾 Saving wardrobe item to Firestore: ${item.id}');
 
-      await _wardrobeCollection(userId).doc(item.id).set(
-        _wardrobeItemToFirestore(item),
-      );
+      await _wardrobeCollection(
+        userId,
+      ).doc(item.id).set(_wardrobeItemToFirestore(item));
 
       AppLogger.info('✅ Wardrobe item saved to Firestore');
     } catch (e, stack) {
@@ -120,9 +120,9 @@ class FirestoreWardrobeService {
     if (userId == null) return;
 
     try {
-      await _wardrobeCollection(userId).doc(item.id).update(
-        _wardrobeItemToFirestore(item),
-      );
+      await _wardrobeCollection(
+        userId,
+      ).doc(item.id).update(_wardrobeItemToFirestore(item));
 
       AppLogger.info('✅ Wardrobe item updated in Firestore');
     } catch (e) {
@@ -162,11 +162,7 @@ class FirestoreWardrobeService {
       await batch.commit();
       AppLogger.info('✅ Bulk save complete: ${items.length} items');
     } catch (e, stack) {
-      AppLogger.error(
-        '❌ Error in bulk save',
-        error: e,
-        stackTrace: stack,
-      );
+      AppLogger.error('❌ Error in bulk save', error: e, stackTrace: stack);
       rethrow;
     }
   }
@@ -252,12 +248,14 @@ class FirestoreWardrobeService {
     try {
       // Convert Timestamp back to DateTime
       if (data['createdAt'] is Timestamp) {
-        data['createdAt'] =
-            (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        data['createdAt'] = (data['createdAt'] as Timestamp)
+            .toDate()
+            .toIso8601String();
       }
       if (data['lastWorn'] is Timestamp) {
-        data['lastWorn'] =
-            (data['lastWorn'] as Timestamp).toDate().toIso8601String();
+        data['lastWorn'] = (data['lastWorn'] as Timestamp)
+            .toDate()
+            .toIso8601String();
       }
 
       return WardrobeItem.fromJson(data);

@@ -10,6 +10,8 @@ import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/voice_search_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/providers/wardrobe_search_providers.dart';
+import 'package:vestiq/features/wardrobe/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Screen for displaying search results across items, looks, and inspiration
@@ -198,6 +200,8 @@ class _HomeSearchResultsScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final searchResults = ref.watch(wardrobeSearchResultsProvider).value ?? [];
+    final filterCriteria = ref.watch(filterCriteriaProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -212,9 +216,50 @@ class _HomeSearchResultsScreenState
             ),
           ),
           style: theme.textTheme.bodyLarge,
+          onChanged: (value) {
+            // Update search query provider in real-time
+            ref.read(searchQueryProvider.notifier).state = value;
+          },
           onSubmitted: _performSearch,
         ),
         actions: [
+          // Filter button with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => DraggableScrollableSheet(
+                      initialChildSize: 0.7,
+                      minChildSize: 0.5,
+                      maxChildSize: 0.9,
+                      builder: (context, scrollController) {
+                        return const FilterBottomSheet();
+                      },
+                    ),
+                  );
+                },
+                tooltip: 'Filter',
+              ),
+              if (filterCriteria.hasActiveFilters)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           // Voice search button
           IconButton(
             icon: Icon(
@@ -229,6 +274,7 @@ class _HomeSearchResultsScreenState
               icon: const Icon(Icons.clear),
               onPressed: () {
                 _searchController.clear();
+                ref.read(searchQueryProvider.notifier).state = '';
                 _performSearch('');
               },
             ),
@@ -236,7 +282,7 @@ class _HomeSearchResultsScreenState
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Items (${_itemResults.length})'),
+            Tab(text: 'Items (${searchResults.length})'),
             Tab(text: 'Looks (${_lookResults.length})'),
             const Tab(text: 'Inspiration'),
           ],
@@ -247,7 +293,7 @@ class _HomeSearchResultsScreenState
           : TabBarView(
               controller: _tabController,
               children: [
-                _buildItemsTab(theme),
+                _buildItemsTabWithProvider(theme, searchResults),
                 _buildLooksTab(theme),
                 _buildInspirationTab(theme),
               ],
@@ -255,7 +301,7 @@ class _HomeSearchResultsScreenState
     );
   }
 
-  Widget _buildItemsTab(ThemeData theme) {
+  Widget _buildItemsTabWithProvider(ThemeData theme, List<WardrobeItem> items) {
     if (_itemResults.isEmpty) {
       return _buildEmptyState(
         theme,
