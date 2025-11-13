@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/features/auth/presentation/screens/signup_screen.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
@@ -32,16 +33,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
+      final user = await ref
           .read(authControllerProvider.notifier)
           .signInWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
 
-      if (mounted) {
-        AppLogger.info('✅ Login successful');
-        // Navigation handled by auth state change
+      if (mounted && user != null) {
+        AppLogger.info('✅ Login successful - refreshing auth flow');
+        // Notify AuthFlowController to re-evaluate state
+        await ref.read(authFlowControllerProvider.notifier).refresh();
+        // AuthWrapper will automatically navigate based on new state
       }
     } catch (e) {
       if (mounted) {
@@ -58,11 +61,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authControllerProvider.notifier).signInWithGoogle();
+      final user = await ref.read(authControllerProvider.notifier).signInWithGoogle();
 
-      if (mounted) {
-        AppLogger.info('✅ Google sign-in successful');
-        // Navigation handled by auth state change
+      if (mounted && user != null) {
+        AppLogger.info('✅ Google sign-in successful - refreshing auth flow');
+        // Notify AuthFlowController to re-evaluate state
+        await ref.read(authFlowControllerProvider.notifier).refresh();
+        // AuthWrapper will automatically navigate based on new state
       }
     } catch (e) {
       if (mounted) {
@@ -109,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  // const SizedBox(height:22),
 
                   // Welcome Text
                   Text(
@@ -128,17 +133,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
 
                   // Email Field
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email',
+                      // fillColor: theme.inputDecorationTheme.fillColor,
+                      // labelText: 'Email',
                       hintText: 'your@email.com',
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          width: 3
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -159,8 +168,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: '••••••••',
+                      
+                      // labelText: 'Password',
+                      hintText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -173,6 +183,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                       ),
                       border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          width: 3
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -202,7 +215,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Login Button
                   ElevatedButton(
@@ -227,7 +240,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Divider
                   Row(
@@ -248,7 +261,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Expanded(child: Divider(color: theme.dividerColor)),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Google Sign In Button
                   OutlinedButton.icon(
@@ -273,7 +286,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 22),
 
                   // Sign Up Link
                   Row(

@@ -5,9 +5,8 @@ import 'package:vestiq/core/models/profile_data.dart';
 import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
-import 'package:vestiq/core/constants/app_constants.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Premium gender selection screen for onboarding
 class GenderSelectionScreen extends ConsumerStatefulWidget {
@@ -63,7 +62,7 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
     }
   }
 
-  void _continue() {
+  Future<void> _continue() async {
     if (_isProcessing) {
       AppLogger.warning('⚠️ Continue already in progress, ignoring tap');
       return;
@@ -73,22 +72,32 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
     AppLogger.info('🚀 Continue button pressed');
 
     try {
-      if (_selectedGender == null) {
-        AppLogger.info('⚠️ No gender selected, defaulting to Female');
-        // Save default gender synchronously
-        final profileService = getIt<ProfileService>();
-        profileService.updateGenderPreference(Gender.female);
-      } else {
-        AppLogger.info(
-          '✅ Gender already selected: ${_selectedGender!.displayName}',
+      final genderToSave = _selectedGender ?? Gender.female;
+      AppLogger.info('💾 Saving gender: ${genderToSave.displayName}');
+
+      // Save gender to BOTH ProfileService AND Firestore
+      final profileService = getIt<ProfileService>();
+      await profileService.updateGenderPreference(genderToSave);
+
+      // Also update Firestore profile
+      final userProfileService = getIt<UserProfileService>();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      
+      if (currentUser != null) {
+        await userProfileService.updateUserProfile(
+          currentUser.uid,
+          {'gender': genderToSave.name},
         );
+        AppLogger.info('✅ Gender saved to Firestore');
       }
 
-      AppLogger.info('🎯 Navigating directly to home screen');
-      _navigateToHome();
+      AppLogger.info('✅ Gender preference saved successfully');
+      
+      // Call the callback to notify AuthFlowController
+      widget.onComplete();
     } catch (e, stackTrace) {
       AppLogger.error(
-        '❌ Error during continue process',
+        '❌ Error saving gender',
         error: e,
         stackTrace: stackTrace,
       );
@@ -98,60 +107,45 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
     }
   }
 
-  void _skip() {
+  Future<void> _skip() async {
     if (_isProcessing) {
       AppLogger.warning('⚠️ Skip already in progress, ignoring tap');
       return;
     }
 
     setState(() => _isProcessing = true);
-    AppLogger.info('⏭️ Skip button pressed');
+    AppLogger.info('⏭️ Skip button pressed, defaulting to Female');
 
     try {
-      AppLogger.info('⚠️ Skipping gender selection, defaulting to Female');
-      // Save default gender synchronously
+      // Save default gender
       final profileService = getIt<ProfileService>();
-      profileService.updateGenderPreference(Gender.female);
+      await profileService.updateGenderPreference(Gender.female);
 
-      AppLogger.info('🎯 Navigating directly to home screen');
-      _navigateToHome();
+      // Also update Firestore profile
+      final userProfileService = getIt<UserProfileService>();
+      final currentUser = FirebaseAuth.instance.currentUser;
+      
+      if (currentUser != null) {
+        await userProfileService.updateUserProfile(
+          currentUser.uid,
+          {'gender': Gender.female.name},
+        );
+        AppLogger.info('✅ Default gender saved to Firestore');
+      }
+
+      AppLogger.info('✅ Skip completed, calling callback');
+      
+      // Call the callback to notify AuthFlowController
+      widget.onComplete();
     } catch (e, stackTrace) {
       AppLogger.error(
-        '❌ Error during skip process',
+        '❌ Error during skip',
         error: e,
         stackTrace: stackTrace,
       );
       if (mounted) {
         setState(() => _isProcessing = false);
       }
-    }
-  }
-
-  void _navigateToHome() async {
-    try {
-      // Save that onboarding has been completed
-      final prefs = getIt<SharedPreferences>();
-      await prefs.setBool(AppConstants.onboardingCompletedKey, true);
-      AppLogger.info('✅ Onboarding completion flag saved');
-
-      if (!mounted) {
-        AppLogger.warning('⚠️ Widget not mounted, aborting navigation');
-        return;
-      }
-
-      AppLogger.info('🏠 Navigating to Home Screen');
-      // Navigate directly to home screen
-      await Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-        (route) => false,
-      );
-      AppLogger.info('✅ Successfully navigated to Home Screen');
-    } catch (e, stackTrace) {
-      AppLogger.error(
-        '❌ Error navigating to home',
-        error: e,
-        stackTrace: stackTrace,
-      );
     }
   }
 

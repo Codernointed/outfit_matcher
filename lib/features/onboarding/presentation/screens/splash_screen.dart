@@ -63,73 +63,124 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
-    final prefs = getIt<SharedPreferences>();
-    final hasSeenOnboarding =
-        prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
+    try {
+      final prefs = getIt<SharedPreferences>();
+      
+      // Check auth state first
+      final authState = ref.read(authStateProvider);
 
-    // Check auth state
-    final authState = ref.read(authStateProvider);
-
-    authState.when(
-      data: (user) {
-        if (user == null) {
-          // Not signed in
-          if (hasSeenOnboarding) {
-            // Has seen onboarding before → Go to login
-            AppLogger.info('🔄 Returning user, not signed in → Login');
-            _navigateTo(const LoginScreen());
+      await authState.when(
+        data: (user) async {
+          AppLogger.info('🔍 Auth check - User: ${user?.uid ?? "null"}');
+          
+          if (user == null) {
+            // Not signed in - check if they've seen onboarding
+            final hasSeenOnboarding =
+                prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
+            
+            if (hasSeenOnboarding) {
+              // Returning user → Go to login
+              AppLogger.info('🔄 Returning user, not signed in → Login');
+              _navigateTo(const LoginScreen());
+            } else {
+              // First time user → Show onboarding (no bypass)
+              AppLogger.info('✨ First time user → Onboarding');
+              _navigateTo(const OnboardingScreen());
+            }
           } else {
-            // First time user → Show onboarding
-            AppLogger.info('✨ First time user → Onboarding');
-            _navigateTo(const OnboardingScreen());
-          }
-        } else {
-          // User is signed in → Check if profile is complete
-          ref
-              .read(currentUserProvider)
-              .when(
-                data: (appUser) {
-                  if (appUser?.gender == null ||
-                      appUser?.gender?.isEmpty == true) {
-                    // Signed in but no gender selected → Go to gender selection
-                    AppLogger.info(
-                      '👤 User signed in, profile incomplete → Gender selection',
-                    );
-                    _navigateTo(const OnboardingScreen(skipToGender: true));
-                  } else {
-                    // Fully set up → Go to home
-                    AppLogger.info('✅ User signed in, profile complete → Home');
-                    _navigateTo(HomeScreen());
+            // User is authenticated → Must verify profile exists
+            AppLogger.info('✅ User authenticated: ${user.uid}');
+            
+            final currentUserAsync = ref.read(currentUserProvider);
+            await currentUserAsync.when(
+              data: (appUser) async {
+                if (appUser == null) {
+                  // Profile doesn't exist - this shouldn't happen, sign out
+                  AppLogger.error('❌ Auth exists but no profile found! Signing out...');
+                  await ref.read(authControllerProvider.notifier).signOut();
+                  if (mounted) {
+                    _navigateTo(const LoginScreen());
                   }
-                },
-                loading: () {
-                  // Wait a bit more
-                  Future.delayed(const Duration(milliseconds: 500), () {
-                    if (mounted) {
+                  return;
+                }
+                
+                // Check if profile is complete
+                if (appUser.gender == null || appUser.gender?.isEmpty == true) {
+                  // Profile incomplete → Complete profile
+                  AppLogger.info(
+                    '👤 Profile incomplete → Gender selection',
+                  );
+                  // Previously navigated directly to gender selection via skipToGender.
+                  // Profile completion now handled by AuthFlow + ProfileCreationScreen after signup.
+                  // So just go to the generic onboarding flow; AuthWrapper will take over afterward.
+                  _navigateTo(const OnboardingScreen());
+                } else {
+                  // Profile complete → Go to home
+                  AppLogger.info('✅ Profile complete → Home');
+                  _navigateTo(HomeScreen());
+                }
+              },
+              loading: () async {
+                // Still loading profile, give it reasonable time
+                AppLogger.info('⏳ Loading user profile...');
+                await Future.delayed(const Duration(milliseconds: 1500));
+                if (mounted) {
+                  // Retry once more
+                  final retry = ref.read(currentUserProvider);
+                  retry.whenData((retryUser) {
+                    if (retryUser != null) {
                       _navigateTo(HomeScreen());
+                    } else {
+                      // Still null, go to login
+                      _navigateTo(const LoginScreen());
                     }
                   });
-                },
-                error: (_, __) {
-                  // Error loading profile → Go to home anyway
-                  _navigateTo(HomeScreen());
-                },
-              );
-        }
-      },
-      loading: () {
-        // Still loading auth state, wait
-        Future.delayed(
-          const Duration(milliseconds: 500),
-          _navigateToNextScreen,
-        );
-      },
-      error: (error, _) {
-        // Error with auth → Show login
-        AppLogger.error('❌ Auth error on splash', error: error);
+                }
+              },
+              error: (error, stackTrace) async {
+                // Error loading profile - sign out for safety
+                AppLogger.error(
+                  '❌ Error loading profile, signing out',
+                  error: error,
+                  stackTrace: stackTrace,
+                );
+                await ref.read(authControllerProvider.notifier).signOut();
+                if (mounted) {
+                  _navigateTo(const LoginScreen());
+                }
+              },
+            );
+          }
+        },
+        loading: () async {
+          // Still loading auth state, retry
+          AppLogger.info('⏳ Loading auth state...');
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            _navigateToNextScreen();
+          }
+        },
+        error: (error, stackTrace) async {
+          // Error with auth → Show login
+          AppLogger.error(
+            '❌ Auth error on splash',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          _navigateTo(const LoginScreen());
+        },
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Unexpected error in navigation',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Fallback to login on any error
+      if (mounted) {
         _navigateTo(const LoginScreen());
-      },
-    );
+      }
+    }
   }
 
   void _navigateTo(Widget screen) {

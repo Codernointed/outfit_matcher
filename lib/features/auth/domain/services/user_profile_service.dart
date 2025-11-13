@@ -23,6 +23,7 @@ class UserProfileService {
     String? displayName,
     String? photoUrl,
     String? phoneNumber,
+    String? gender,
     required AuthProvider authProvider,
   }) async {
     try {
@@ -39,6 +40,7 @@ class UserProfileService {
         authProvider: authProvider,
         createdAt: now,
         lastLoginAt: now,
+        gender: gender,
         preferences: const UserPreferences(),
       );
 

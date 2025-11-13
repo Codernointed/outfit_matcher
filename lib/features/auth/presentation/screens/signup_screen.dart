@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -48,7 +48,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref
+      final user = await ref
           .read(authControllerProvider.notifier)
           .signUpWithEmail(
             email: _emailController.text.trim(),
@@ -56,14 +56,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             username: _usernameController.text.trim(),
           );
 
-      if (mounted) {
-        AppLogger.info('✅ Signup successful - navigating to gender selection');
-        // Navigate to gender selection after successful signup
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const OnboardingScreen(skipToGender: true),
-          ),
-        );
+      if (mounted && user != null) {
+        AppLogger.info('✅ Signup successful - refreshing auth flow');
+        // Notify AuthFlowController to re-evaluate state
+        await ref.read(authFlowControllerProvider.notifier).refresh();
+        // AuthWrapper will automatically navigate based on new state
       }
     } catch (e) {
       if (mounted) {
@@ -80,11 +77,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authControllerProvider.notifier).signInWithGoogle();
+      final user = await ref.read(authControllerProvider.notifier).signInWithGoogle();
 
-      if (mounted) {
-        AppLogger.info('✅ Google sign-up successful');
-        // Navigation handled by auth state change
+      if (mounted && user != null) {
+        AppLogger.info('✅ Google sign-up successful - refreshing auth flow');
+        // Notify AuthFlowController to re-evaluate state
+        await ref.read(authFlowControllerProvider.notifier).refresh();
+        // AuthWrapper will automatically navigate based on new state
       }
     } catch (e) {
       if (mounted) {

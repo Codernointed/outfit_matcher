@@ -98,8 +98,24 @@ class AuthService {
         throw Exception('Failed to sign in');
       }
 
-      // Update last login time
-      final appUser = await _userProfileService.updateLastLogin(user.uid);
+      // Check if profile exists, create if not
+      AppUser? appUser = await _userProfileService.getUserProfile(user.uid);
+      
+      if (appUser == null) {
+        // Profile doesn't exist - create it
+        AppLogger.warning('⚠️ Profile not found, creating new profile for: ${user.uid}');
+        appUser = await _userProfileService.createUserProfile(
+          uid: user.uid,
+          email: user.email ?? email,
+          username: user.displayName ?? email.split('@')[0],
+          displayName: user.displayName,
+          photoUrl: user.photoURL,
+          authProvider: AuthProvider.email,
+        );
+      } else {
+        // Profile exists - just update last login
+        appUser = await _userProfileService.updateLastLogin(user.uid);
+      }
 
       AppLogger.info('✅ User signed in successfully: ${user.uid}');
       return appUser;
@@ -178,12 +194,12 @@ class AuthService {
         throw Exception('Failed to sign in with Google');
       }
 
-      // Check if this is a new user
-      final bool isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
-
-      AppUser? appUser;
-      if (isNewUser) {
-        // Create new user profile
+      // Check if profile exists in Firestore (more reliable than isNewUser)
+      AppUser? appUser = await _userProfileService.getUserProfile(user.uid);
+      
+      if (appUser == null) {
+        // Profile doesn't exist - create it
+        AppLogger.info('✅ Creating new Google user profile: ${user.uid}');
         appUser = await _userProfileService.createUserProfile(
           uid: user.uid,
           email: user.email ?? googleUser.email,
@@ -192,11 +208,10 @@ class AuthService {
           photoUrl: user.photoURL ?? googleUser.photoUrl?.toString(),
           authProvider: AuthProvider.google,
         );
-        AppLogger.info('✅ New Google user profile created: ${user.uid}');
       } else {
-        // Update existing user's last login
+        // Profile exists - just update last login
+        AppLogger.info('✅ Existing Google user, updating last login: ${user.uid}');
         appUser = await _userProfileService.updateLastLogin(user.uid);
-        AppLogger.info('✅ Existing Google user signed in: ${user.uid}');
       }
 
       return appUser;

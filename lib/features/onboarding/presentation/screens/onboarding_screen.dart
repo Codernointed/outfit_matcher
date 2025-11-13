@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/theme/app_theme.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
-import 'package:vestiq/features/onboarding/presentation/screens/gender_selection_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 /// The onboarding screen widget showing the app features to new users
-class OnboardingScreen extends StatefulWidget {
-  /// Skip directly to gender selection (for signed-in users without gender)
-  final bool skipToGender;
-
+class OnboardingScreen extends ConsumerStatefulWidget {
   /// Default constructor
-  const OnboardingScreen({super.key, this.skipToGender = false});
+  const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// Current page index
   int _currentPage = 0;
 
@@ -27,65 +22,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
 
   @override
-  void initState() {
-    super.initState();
-    // If skipToGender is true, go directly to gender selection
-    if (widget.skipToGender) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _goToGenderSelection();
-      });
-    }
-  }
-
-  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
-  /// Navigate to gender selection screen
-  void _goToGenderSelection() {
-    AppLogger.info('🎨 Navigating to Gender Selection Screen');
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) =>
-            GenderSelectionScreen(onComplete: _completeOnboarding),
-      ),
-    );
-  }
-
-  /// Navigate to the main screen and mark onboarding as completed
+  /// Complete onboarding - notify AuthFlowController (no manual navigation!)
   void _completeOnboarding() {
-    AppLogger.info('🎉 Completing onboarding flow');
-
-    // Use post-frame callback to ensure navigation happens after current frame
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        // Save that onboarding has been completed
-        final prefs = getIt<SharedPreferences>();
-        await prefs.setBool(AppConstants.onboardingCompletedKey, true);
-        AppLogger.info('✅ Onboarding completion flag saved');
-
-        if (!mounted) {
-          AppLogger.warning('⚠️ Widget not mounted, aborting navigation');
-          return;
-        }
-
-        AppLogger.info('🏠 Navigating to Home Screen');
-        // Navigate to main screen - use pushAndRemoveUntil to clear the stack
-        await Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-          (route) => false,
-        );
-        AppLogger.info('✅ Successfully navigated to Home Screen');
-      } catch (e, stackTrace) {
-        AppLogger.error(
-          '❌ Error completing onboarding',
-          error: e,
-          stackTrace: stackTrace,
-        );
-      }
-    });
+    AppLogger.info('🎉 Onboarding complete - notifying controller');
+    
+    // Just notify the controller - it will handle state transition
+    // No manual navigation! AuthFlowController will emit AuthFlowUnauthenticated
+    // and AuthWrapper will show LoginScreen automatically
+    ref.read(authFlowControllerProvider.notifier).completeOnboarding();
   }
 
   @override
@@ -169,15 +118,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       } else {
-                        // Go to gender selection before completing onboarding
-                        _goToGenderSelection();
+                        // Complete onboarding - AuthWrapper will show LoginScreen
+                        _completeOnboarding();
                       }
                     },
                     child: Text(_currentPage == 2 ? 'Get Started' : 'Continue'),
                   ),
                   if (_currentPage < 2)
                     TextButton(
-                      onPressed: _goToGenderSelection,
+                      onPressed: _completeOnboarding,
                       child: const Text('Skip'),
                     ),
                 ],

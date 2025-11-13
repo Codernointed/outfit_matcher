@@ -18,32 +18,37 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
-    }
-    
-    // Wardrobe items - users can only access their own wardrobe
-    match /users/{userId}/wardrobe/{itemId} {
-      allow read, write: if isOwner(userId);
-    }
-    
-    // Saved outfits - users can only access their own outfits
-    match /users/{userId}/outfits/{outfitId} {
-      allow read, write: if isOwner(userId);
-    }
-    
-    // Wardrobe looks - users can only access their own looks
-    match /users/{userId}/looks/{lookId} {
-      allow read, write: if isOwner(userId);
-    }
-    
-    // Favorites - users can only access their own favorites
-    match /users/{userId}/favorites/{favoriteId} {
-      allow read, write: if isOwner(userId);
+      
+      // Subcollections - favorite items
+      match /favorite_items/{itemId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - favorite outfits
+      match /favorite_outfits/{outfitId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - wardrobe items (if stored in Firestore)
+      match /wardrobe/{itemId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - saved outfits
+      match /outfits/{outfitId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - wardrobe looks
+      match /looks/{lookId} {
+        allow read, write: if isOwner(userId);
+      }
     }
     
     // Public profiles - read-only for public profiles
     match /users/{userId} {
       allow read: if isAuthenticated() && 
-                     resource.data.isPublicProfile == true;
+                     get(/databases/$(database)/documents/users/$(userId)).data.isPublicProfile == true;
     }
   }
 }

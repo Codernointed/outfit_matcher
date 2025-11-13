@@ -11,6 +11,7 @@ import 'package:vestiq/core/router/app_router.dart';
 import 'package:vestiq/firebase_options.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/auth/presentation/widgets/auth_wrapper.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 
@@ -33,7 +34,18 @@ Future main() async {
   // Initialize dependency injection
   await setupServiceLocator();
 
-  runApp(const ProviderScope(child: VestiqApp()));
+  // Get SharedPreferences to override provider
+  final sharedPrefs = getIt<SharedPreferences>();
+
+  runApp(
+    ProviderScope(
+      overrides: [
+        // Override the sharedPreferencesProvider with actual instance
+        sharedPreferencesProvider.overrideWithValue(sharedPrefs),
+      ],
+      child: const VestiqApp(),
+    ),
+  );
 }
 
 /// The main app widget

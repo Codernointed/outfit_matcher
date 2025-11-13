@@ -11,6 +11,8 @@ import 'package:vestiq/core/utils/image_cache_manager.dart';
 import 'package:vestiq/core/services/file_based_storage_service.dart';
 import 'package:vestiq/core/services/voice_search_service.dart';
 import 'package:vestiq/core/services/profile_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;
@@ -70,6 +72,12 @@ Future<void> setupServiceLocator() async {
 
   getIt.registerLazySingleton<ProfileService>(
     () => ProfileService(sharedPreferences),
+  );
+
+  // Auth / User Profile Services
+  // Ensure Firebase is initialized before this is called (done in main.dart)
+  getIt.registerLazySingleton<UserProfileService>(
+    () => UserProfileService(firestore: FirebaseFirestore.instance),
   );
 
   // Controllers

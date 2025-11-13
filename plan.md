@@ -247,7 +247,182 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 - Add loading indicators
 - Add retry mechanisms
 ```
+D/UserSceneDetector(25548): invoke error.
+E/FileUtils(25548): err write to mi_exception_log
+E/rnointed.vestiq(25548): DynamicFPS DF open fail: No such file or directory
+E/rnointed.vestiq(25548): FrameInsert open fail: No such file or directory
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809691280, downTime=809691280, phoneEventTime=19:32:54.606 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809691379, downTime=809691280, phoneEventTime=19:32:54.706 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809692362, downTime=809692362, phoneEventTime=19:32:55.688 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809692445, downTime=809692362, phoneEventTime=19:32:55.771 } moveCount:0
+I/flutter (25548): ℹ️ 🎨 Navigating to Gender Selection Screen
+I/flutter (25548): ℹ️ 🎨 Gender Selection Screen initialized
+W/WindowOnBackDispatcher(25548): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(25548): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809694028, downTime=809694028, phoneEventTime=19:32:57.355 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809694045, downTime=809694028, phoneEventTime=19:32:57.371 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 📝 Created initial user profile
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Male
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809707538, downTime=809707538, phoneEventTime=19:33:10.864 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809707621, downTime=809707538, phoneEventTime=19:33:10.948 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Female
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809708538, downTime=809708538, phoneEventTime=19:33:11.864 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809708621, downTime=809708538, phoneEventTime=19:33:11.947 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Male
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809711236, downTime=809711236, phoneEventTime=19:33:14.562 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809711253, downTime=809711236, phoneEventTime=19:33:14.579 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809713202, downTime=809713202, phoneEventTime=19:33:16.528 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809713285, downTime=809713202, phoneEventTime=19:33:16.611 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809714951, downTime=809714951, phoneEventTime=19:33:18.277 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809715001, downTime=809714951, phoneEventTime=19:33:18.328 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809716567, downTime=809716567, phoneEventTime=19:33:19.894 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809716650, downTime=809716567, phoneEventTime=19:33:19.976 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Female
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809717133, downTime=809717133, phoneEventTime=19:33:20.460 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809717216, downTime=809717133, phoneEventTime=19:33:20.543 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809717883, downTime=809717883, phoneEventTime=19:33:21.210 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809717933, downTime=809717883, phoneEventTime=19:33:21.260 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Male
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809718949, downTime=809718949, phoneEventTime=19:33:22.275 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809719015, downTime=809718949, phoneEventTime=19:33:22.341 } moveCount:0
+I/flutter (25548): ℹ️ ⏭️ Skip button pressed, defaulting to Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ❌ ❌ Error during skip
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809721331, downTime=809721331, phoneEventTime=19:33:24.658 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809721414, downTime=809721331, phoneEventTime=19:33:24.741 } moveCount:0
+I/flutter (25548): ℹ️ ⏭️ Skip button pressed, defaulting to Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ❌ ❌ Error during skip
+see? 
+now without changing anything:
+D/UserSceneDetector(25548): invoke error.
+E/FileUtils(25548): err write to mi_exception_log
+E/rnointed.vestiq(25548): DynamicFPS DF open fail: No such file or directory
+E/rnointed.vestiq(25548): FrameInsert open fail: No such file or directory
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809691280, downTime=809691280, phoneEventTime=19:32:54.606 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809691379, downTime=809691280, phoneEventTime=19:32:54.706 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809692362, downTime=809692362, phoneEventTime=19:32:55.688 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809692445, downTime=809692362, phoneEventTime=19:32:55.771 } moveCount:0
+I/flutter (25548): ℹ️ 🎨 Navigating to Gender Selection Screen
+I/flutter (25548): ℹ️ 🎨 Gender Selection Screen initialized
+W/WindowOnBackDispatcher(25548): OnBackInvokedCallback is not enabled for the application.
+W/WindowOnBackDispatcher(25548): Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809694028, downTime=809694028, phoneEventTime=19:32:57.355 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809694045, downTime=809694028, phoneEventTime=19:32:57.371 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 📝 Created initial user profile
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Male
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809707538, downTime=809707538, phoneEventTime=19:33:10.864 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809707621, downTime=809707538, phoneEventTime=19:33:10.948 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Female
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809708538, downTime=809708538, phoneEventTime=19:33:11.864 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809708621, downTime=809708538, phoneEventTime=19:33:11.947 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Male
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809711236, downTime=809711236, phoneEventTime=19:33:14.562 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809711253, downTime=809711236, phoneEventTime=19:33:14.579 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809713202, downTime=809713202, phoneEventTime=19:33:16.528 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809713285, downTime=809713202, phoneEventTime=19:33:16.611 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809714951, downTime=809714951, phoneEventTime=19:33:18.277 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809715001, downTime=809714951, phoneEventTime=19:33:18.328 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809716567, downTime=809716567, phoneEventTime=19:33:19.894 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809716650, downTime=809716567, phoneEventTime=19:33:19.976 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Female
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809717133, downTime=809717133, phoneEventTime=19:33:20.460 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809717216, downTime=809717133, phoneEventTime=19:33:20.543 } moveCount:0
+I/flutter (25548): ℹ️ 🚀 Continue button pressed
+I/flutter (25548): ℹ️ 💾 Saving gender: Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ❌ ❌ Error saving gender
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809717883, downTime=809717883, phoneEventTime=19:33:21.210 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809717933, downTime=809717883, phoneEventTime=19:33:21.260 } moveCount:0
+I/flutter (25548): ℹ️ 👤 User tapped gender: Male
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Male
+I/flutter (25548): ℹ️ ✅ Gender preference saved: Male
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809718949, downTime=809718949, phoneEventTime=19:33:22.275 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809719015, downTime=809718949, phoneEventTime=19:33:22.341 } moveCount:0
+I/flutter (25548): ℹ️ ⏭️ Skip button pressed, defaulting to Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ❌ ❌ Error during skip
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_DOWN, id[0]=0, pointerCount=1, eventTime=809721331, downTime=809721331, phoneEventTime=19:33:24.658 } moveCount:0
+I/MIUIInput(25548): [MotionEvent] ViewRootImpl windowName 'com.codernointed.vestiq/com.codernointed.vestiq.MainActivity', { action=ACTION_UP, id[0]=0, pointerCount=1, eventTime=809721414, downTime=809721331, phoneEventTime=19:33:24.741 } moveCount:0
+I/flutter (25548): ℹ️ ⏭️ Skip button pressed, defaulting to Female
+I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
+I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
+I/flutter (25548): ❌ ❌ Error during skip
+If hes are returing user no need to select denger, if hes sined out no need, 
 
+It seems the login signup pages are gone again
+
+ALso the select gender let it come only after create account(sign up), and even that let it be a create profile(picture, name, some prefs, a request to upload a full body pic(to use as mannuqeuins))
+Let you be like this Page view things it shouldn't be one long annoying form It should be like maybe something like let's get you started. What's your name? What shall we call you this that then? When do you finish you swipe? Gender then you select I am this swipe who Oh No, we are almost there one more thing See that kind of friendly thing then maybe upload a picture a full picture that we can be using for your mannequin then Swipe for next you can be or maybe go back to previous it has this minimal animated smooth transitions as they could Create your profile Also, it should be very user-friendly a very intuitive Let's just get rid of just a gender page and then do it like that so without the male-female UI should be very very small because it's going to have our other pages. Let's get that one good
 ---
 
 ## 📊 **Technical Debt Assessment**
