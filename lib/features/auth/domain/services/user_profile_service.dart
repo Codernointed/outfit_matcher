@@ -5,7 +5,7 @@ import 'package:vestiq/features/auth/domain/models/app_user.dart';
 /// Service for managing user profiles in Firestore
 class UserProfileService {
   UserProfileService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -88,7 +88,10 @@ class UserProfileService {
   // ==================== UPDATE OPERATIONS ====================
 
   /// Update user profile
-  Future<void> updateUserProfile(String uid, Map<String, dynamic> updates) async {
+  Future<void> updateUserProfile(
+    String uid,
+    Map<String, dynamic> updates,
+  ) async {
     try {
       AppLogger.debug('📝 Updating user profile: $uid');
 
@@ -127,7 +130,8 @@ class UserProfileService {
 
       // Check if it's a new day - reset daily count
       final lastGen = user.lastGenerationDate;
-      final isNewDay = lastGen == null ||
+      final isNewDay =
+          lastGen == null ||
           lastGen.year != now.year ||
           lastGen.month != now.month ||
           lastGen.day != now.day;
@@ -255,7 +259,10 @@ class UserProfileService {
   }
 
   /// Update user preferences
-  Future<void> updatePreferences(String uid, UserPreferences preferences) async {
+  Future<void> updatePreferences(
+    String uid,
+    UserPreferences preferences,
+  ) async {
     try {
       await _usersCollection.doc(uid).update({
         'preferences': preferences.toMap(),
@@ -307,9 +314,7 @@ class UserProfileService {
     DateTime? expiryDate,
   }) async {
     try {
-      final Map<String, dynamic> updates = {
-        'subscriptionTier': tier.name,
-      };
+      final Map<String, dynamic> updates = {'subscriptionTier': tier.name};
 
       if (expiryDate != null) {
         updates['subscriptionExpiryDate'] = Timestamp.fromDate(expiryDate);

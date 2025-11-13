@@ -8,20 +8,20 @@ class AppUser {
   final String? displayName;
   final String? photoUrl;
   final String? phoneNumber;
-  
+
   // Authentication metadata
   final AuthProvider authProvider;
   final DateTime createdAt;
   final DateTime lastLoginAt;
   final bool isEmailVerified;
-  
+
   // Profile information
   final String? gender;
   final String? bio;
   final DateTime? dateOfBirth;
   final String? location;
   final String? country;
-  
+
   // App usage statistics
   final int totalGenerations;
   final int todayGenerations;
@@ -29,40 +29,40 @@ class AppUser {
   final int wardrobeItemCount;
   final int savedOutfitCount;
   final int favoriteCount;
-  
+
   // Subscription & limits
   final SubscriptionTier subscriptionTier;
   final DateTime? subscriptionExpiryDate;
   final int generationsLimit;
   final int wardrobeItemLimit;
-  
+
   // User preferences
   final UserPreferences preferences;
-  
+
   // Style profile
   final List<String> preferredStyles;
   final List<String> preferredColors;
   final List<String> preferredOccasions;
   final String? bodyType;
   final String? stylePersonality;
-  
+
   // App settings
   final bool notificationsEnabled;
   final bool emailNotificationsEnabled;
   final String themeMode; // 'light', 'dark', 'system'
   final String language;
-  
+
   // Social features (for future)
   final List<String> followingIds;
   final List<String> followerIds;
   final bool isPublicProfile;
-  
+
   // Analytics & tracking
   final Map<String, int> featureUsageCount;
   final DateTime? lastActiveDate;
   final int totalAppOpenCount;
   final int totalSessionDuration; // in minutes
-  
+
   const AppUser({
     required this.uid,
     required this.email,
@@ -111,18 +111,18 @@ class AppUser {
   /// Check if user can generate more outfits today
   bool canGenerateOutfit() {
     if (subscriptionTier != SubscriptionTier.free) return true;
-    
+
     final now = DateTime.now();
     final lastGen = lastGenerationDate;
-    
+
     // Reset daily count if it's a new day
-    if (lastGen == null || 
-        lastGen.year != now.year || 
-        lastGen.month != now.month || 
+    if (lastGen == null ||
+        lastGen.year != now.year ||
+        lastGen.month != now.month ||
         lastGen.day != now.day) {
       return true;
     }
-    
+
     return todayGenerations < generationsLimit;
   }
 
@@ -135,18 +135,18 @@ class AppUser {
   /// Get remaining generations for today
   int getRemainingGenerations() {
     if (subscriptionTier != SubscriptionTier.free) return -1; // Unlimited
-    
+
     final now = DateTime.now();
     final lastGen = lastGenerationDate;
-    
+
     // Reset count if new day
-    if (lastGen == null || 
-        lastGen.year != now.year || 
-        lastGen.month != now.month || 
+    if (lastGen == null ||
+        lastGen.year != now.year ||
+        lastGen.month != now.month ||
         lastGen.day != now.day) {
       return generationsLimit;
     }
-    
+
     return (generationsLimit - todayGenerations).clamp(0, generationsLimit);
   }
 
@@ -218,7 +218,8 @@ class AppUser {
       savedOutfitCount: savedOutfitCount ?? this.savedOutfitCount,
       favoriteCount: favoriteCount ?? this.favoriteCount,
       subscriptionTier: subscriptionTier ?? this.subscriptionTier,
-      subscriptionExpiryDate: subscriptionExpiryDate ?? this.subscriptionExpiryDate,
+      subscriptionExpiryDate:
+          subscriptionExpiryDate ?? this.subscriptionExpiryDate,
       generationsLimit: generationsLimit ?? this.generationsLimit,
       wardrobeItemLimit: wardrobeItemLimit ?? this.wardrobeItemLimit,
       preferences: preferences ?? this.preferences,
@@ -228,7 +229,8 @@ class AppUser {
       bodyType: bodyType ?? this.bodyType,
       stylePersonality: stylePersonality ?? this.stylePersonality,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
+      emailNotificationsEnabled:
+          emailNotificationsEnabled ?? this.emailNotificationsEnabled,
       themeMode: themeMode ?? this.themeMode,
       language: language ?? this.language,
       followingIds: followingIds ?? this.followingIds,
@@ -256,17 +258,23 @@ class AppUser {
       'isEmailVerified': isEmailVerified,
       'gender': gender,
       'bio': bio,
-      'dateOfBirth': dateOfBirth != null ? Timestamp.fromDate(dateOfBirth!) : null,
+      'dateOfBirth': dateOfBirth != null
+          ? Timestamp.fromDate(dateOfBirth!)
+          : null,
       'location': location,
       'country': country,
       'totalGenerations': totalGenerations,
       'todayGenerations': todayGenerations,
-      'lastGenerationDate': lastGenerationDate != null ? Timestamp.fromDate(lastGenerationDate!) : null,
+      'lastGenerationDate': lastGenerationDate != null
+          ? Timestamp.fromDate(lastGenerationDate!)
+          : null,
       'wardrobeItemCount': wardrobeItemCount,
       'savedOutfitCount': savedOutfitCount,
       'favoriteCount': favoriteCount,
       'subscriptionTier': subscriptionTier.name,
-      'subscriptionExpiryDate': subscriptionExpiryDate != null ? Timestamp.fromDate(subscriptionExpiryDate!) : null,
+      'subscriptionExpiryDate': subscriptionExpiryDate != null
+          ? Timestamp.fromDate(subscriptionExpiryDate!)
+          : null,
       'generationsLimit': generationsLimit,
       'wardrobeItemLimit': wardrobeItemLimit,
       'preferences': preferences.toMap(),
@@ -283,7 +291,9 @@ class AppUser {
       'followerIds': followerIds,
       'isPublicProfile': isPublicProfile,
       'featureUsageCount': featureUsageCount,
-      'lastActiveDate': lastActiveDate != null ? Timestamp.fromDate(lastActiveDate!) : null,
+      'lastActiveDate': lastActiveDate != null
+          ? Timestamp.fromDate(lastActiveDate!)
+          : null,
       'totalAppOpenCount': totalAppOpenCount,
       'totalSessionDuration': totalSessionDuration,
     };
@@ -307,12 +317,16 @@ class AppUser {
       isEmailVerified: data['isEmailVerified'] as bool? ?? false,
       gender: data['gender'] as String?,
       bio: data['bio'] as String?,
-      dateOfBirth: data['dateOfBirth'] != null ? (data['dateOfBirth'] as Timestamp).toDate() : null,
+      dateOfBirth: data['dateOfBirth'] != null
+          ? (data['dateOfBirth'] as Timestamp).toDate()
+          : null,
       location: data['location'] as String?,
       country: data['country'] as String?,
       totalGenerations: data['totalGenerations'] as int? ?? 0,
       todayGenerations: data['todayGenerations'] as int? ?? 0,
-      lastGenerationDate: data['lastGenerationDate'] != null ? (data['lastGenerationDate'] as Timestamp).toDate() : null,
+      lastGenerationDate: data['lastGenerationDate'] != null
+          ? (data['lastGenerationDate'] as Timestamp).toDate()
+          : null,
       wardrobeItemCount: data['wardrobeItemCount'] as int? ?? 0,
       savedOutfitCount: data['savedOutfitCount'] as int? ?? 0,
       favoriteCount: data['favoriteCount'] as int? ?? 0,
@@ -320,24 +334,31 @@ class AppUser {
         (e) => e.name == data['subscriptionTier'],
         orElse: () => SubscriptionTier.free,
       ),
-      subscriptionExpiryDate: data['subscriptionExpiryDate'] != null ? (data['subscriptionExpiryDate'] as Timestamp).toDate() : null,
+      subscriptionExpiryDate: data['subscriptionExpiryDate'] != null
+          ? (data['subscriptionExpiryDate'] as Timestamp).toDate()
+          : null,
       generationsLimit: data['generationsLimit'] as int? ?? 5,
       wardrobeItemLimit: data['wardrobeItemLimit'] as int? ?? 30,
-      preferences: UserPreferences.fromMap(data['preferences'] as Map<String, dynamic>? ?? {}),
+      preferences: UserPreferences.fromMap(
+        data['preferences'] as Map<String, dynamic>? ?? {},
+      ),
       preferredStyles: List<String>.from(data['preferredStyles'] ?? []),
       preferredColors: List<String>.from(data['preferredColors'] ?? []),
       preferredOccasions: List<String>.from(data['preferredOccasions'] ?? []),
       bodyType: data['bodyType'] as String?,
       stylePersonality: data['stylePersonality'] as String?,
       notificationsEnabled: data['notificationsEnabled'] as bool? ?? true,
-      emailNotificationsEnabled: data['emailNotificationsEnabled'] as bool? ?? true,
+      emailNotificationsEnabled:
+          data['emailNotificationsEnabled'] as bool? ?? true,
       themeMode: data['themeMode'] as String? ?? 'system',
       language: data['language'] as String? ?? 'en',
       followingIds: List<String>.from(data['followingIds'] ?? []),
       followerIds: List<String>.from(data['followerIds'] ?? []),
       isPublicProfile: data['isPublicProfile'] as bool? ?? false,
       featureUsageCount: Map<String, int>.from(data['featureUsageCount'] ?? {}),
-      lastActiveDate: data['lastActiveDate'] != null ? (data['lastActiveDate'] as Timestamp).toDate() : null,
+      lastActiveDate: data['lastActiveDate'] != null
+          ? (data['lastActiveDate'] as Timestamp).toDate()
+          : null,
       totalAppOpenCount: data['totalAppOpenCount'] as int? ?? 0,
       totalSessionDuration: data['totalSessionDuration'] as int? ?? 0,
     );
@@ -345,19 +366,10 @@ class AppUser {
 }
 
 /// Authentication provider enum
-enum AuthProvider {
-  email,
-  google,
-  apple,
-  phone,
-}
+enum AuthProvider { email, google, apple, phone }
 
 /// Subscription tier enum
-enum SubscriptionTier {
-  free,
-  plus,
-  pro,
-}
+enum SubscriptionTier { free, plus, pro }
 
 /// User preferences model
 class UserPreferences {
@@ -369,7 +381,7 @@ class UserPreferences {
   final bool enableMannequinGeneration;
   final bool enableFlatLayGeneration;
   final bool enableVisualSearch;
-  
+
   const UserPreferences({
     this.showWelcomeTips = true,
     this.autoSavePairings = true,
@@ -401,7 +413,8 @@ class UserPreferences {
       highQualityImages: map['highQualityImages'] as bool? ?? true,
       analyticsEnabled: map['analyticsEnabled'] as bool? ?? true,
       defaultPairingMode: map['defaultPairingMode'] as String? ?? 'surpriseMe',
-      enableMannequinGeneration: map['enableMannequinGeneration'] as bool? ?? true,
+      enableMannequinGeneration:
+          map['enableMannequinGeneration'] as bool? ?? true,
       enableFlatLayGeneration: map['enableFlatLayGeneration'] as bool? ?? true,
       enableVisualSearch: map['enableVisualSearch'] as bool? ?? true,
     );
@@ -423,8 +436,10 @@ class UserPreferences {
       highQualityImages: highQualityImages ?? this.highQualityImages,
       analyticsEnabled: analyticsEnabled ?? this.analyticsEnabled,
       defaultPairingMode: defaultPairingMode ?? this.defaultPairingMode,
-      enableMannequinGeneration: enableMannequinGeneration ?? this.enableMannequinGeneration,
-      enableFlatLayGeneration: enableFlatLayGeneration ?? this.enableFlatLayGeneration,
+      enableMannequinGeneration:
+          enableMannequinGeneration ?? this.enableMannequinGeneration,
+      enableFlatLayGeneration:
+          enableFlatLayGeneration ?? this.enableFlatLayGeneration,
       enableVisualSearch: enableVisualSearch ?? this.enableVisualSearch,
     );
   }

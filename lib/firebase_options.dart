@@ -83,5 +83,4 @@ class DefaultFirebaseOptions {
     authDomain: 'vestiq-app.firebaseapp.com',
     storageBucket: 'vestiq-app.firebasestorage.app',
   );
-
 }

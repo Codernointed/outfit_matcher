@@ -32,7 +32,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authControllerProvider.notifier).signInWithEmail(
+      await ref
+          .read(authControllerProvider.notifier)
+          .signInWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -44,10 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -68,10 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -80,16 +76,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _navigateToSignup() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const SignupScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SignupScreen()));
   }
 
   void _handleForgotPassword() {
-    showDialog(
-      context: context,
-      builder: (context) => _ForgotPasswordDialog(),
-    );
+    showDialog(context: context, builder: (context) => _ForgotPasswordDialog());
   }
 
   @override
@@ -245,7 +238,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Text(
                           'OR',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -287,7 +282,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Text(
                         "Don't have an account? ",
                         style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                       TextButton(
@@ -330,9 +327,9 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
 
   Future<void> _sendResetEmail() async {
     if (_emailController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your email')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter your email')));
       return;
     }
 
@@ -355,10 +352,7 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {

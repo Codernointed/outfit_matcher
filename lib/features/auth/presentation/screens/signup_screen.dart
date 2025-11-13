@@ -47,7 +47,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authControllerProvider.notifier).signUpWithEmail(
+      await ref
+          .read(authControllerProvider.notifier)
+          .signUpWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             username: _usernameController.text.trim(),
@@ -71,10 +73,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -95,10 +94,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -330,7 +326,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         child: Text(
                           'OR',
                           style: TextStyle(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -372,7 +370,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       Text(
                         'Already have an account? ',
                         style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                       TextButton(

@@ -28,11 +28,7 @@ class AuthWrapper extends ConsumerWidget {
       },
       loading: () {
         // Show loading while checking auth state
-        return const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       },
       error: (error, stackTrace) {
         // Show error screen
@@ -42,11 +38,7 @@ class AuthWrapper extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Colors.red,
-                ),
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
                 const SizedBox(height: 16),
                 Text(
                   'Authentication Error',
