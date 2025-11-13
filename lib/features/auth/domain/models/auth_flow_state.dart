@@ -25,25 +25,20 @@ class AuthFlowUnauthenticated extends AuthFlowState {
 class AuthFlowNeedsProfile extends AuthFlowState {
   final String userId;
   final String? email;
-  
-  const AuthFlowNeedsProfile({
-    required this.userId,
-    this.email,
-  });
+
+  const AuthFlowNeedsProfile({required this.userId, this.email});
 }
 
 /// User is fully authenticated with complete profile - ready for app
 class AuthFlowAuthenticated extends AuthFlowState {
   final String userId;
-  
-  const AuthFlowAuthenticated({
-    required this.userId,
-  });
+
+  const AuthFlowAuthenticated({required this.userId});
 }
 
 /// Error state - authentication check failed
 class AuthFlowError extends AuthFlowState {
   final String message;
-  
+
   const AuthFlowError({required this.message});
 }

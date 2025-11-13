@@ -7,19 +7,17 @@ import 'package:vestiq/features/onboarding/presentation/screens/onboarding_scree
 import 'package:vestiq/features/auth/presentation/screens/login_screen.dart';
 
 /// Integration tests for authentication flow
-/// 
+///
 /// These tests verify the entire authentication flow works correctly
 /// from onboarding through to authenticated state.
 void main() {
   group('Auth Flow Integration Tests', () {
-    testWidgets('AuthWrapper shows correct screen based on state', (tester) async {
+    testWidgets('AuthWrapper shows correct screen based on state', (
+      tester,
+    ) async {
       // Build the widget tree
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: AuthWrapper(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: AuthWrapper())),
       );
 
       // Wait for initial state evaluation
@@ -32,63 +30,51 @@ void main() {
 
     testWidgets('OnboardingScreen has all required elements', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: OnboardingScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: OnboardingScreen())),
       );
 
       await tester.pumpAndSettle();
 
       // Should have page indicator dots
       expect(find.byType(PageView), findsOneWidget);
-      
+
       // Should have navigation buttons
       expect(find.text('Skip'), findsOneWidget);
     });
 
     testWidgets('LoginScreen has all required form fields', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: LoginScreen())),
       );
 
       await tester.pumpAndSettle();
 
       // Should have email and password fields
       expect(find.byType(TextFormField), findsNWidgets(2));
-      
+
       // Should have sign in button
       expect(find.text('Sign In'), findsOneWidget);
-      
+
       // Should have google sign in button
       expect(find.text('Continue with Google'), findsOneWidget);
-      
+
       // Should have link to signup
       expect(find.text('Sign Up'), findsOneWidget);
     });
 
     testWidgets('LoginScreen validates email format', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: LoginScreen())),
       );
 
       await tester.pumpAndSettle();
 
       // Find the email field (first TextFormField)
       final emailField = find.byType(TextFormField).first;
-      
+
       // Enter invalid email
       await tester.enterText(emailField, 'invalid-email');
-      
+
       // Find and tap sign in button
       final signInButton = find.widgetWithText(FilledButton, 'Sign In');
       await tester.tap(signInButton);
@@ -100,11 +86,7 @@ void main() {
 
     testWidgets('LoginScreen validates password is not empty', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: LoginScreen(),
-          ),
-        ),
+        const ProviderScope(child: MaterialApp(home: LoginScreen())),
       );
 
       await tester.pumpAndSettle();
@@ -114,7 +96,7 @@ void main() {
       await tester.enterText(emailField, 'test@example.com');
 
       // Leave password empty
-      
+
       // Find and tap sign in button
       final signInButton = find.widgetWithText(FilledButton, 'Sign In');
       await tester.tap(signInButton);
@@ -124,7 +106,9 @@ void main() {
       expect(find.textContaining('password'), findsWidgets);
     });
 
-    testWidgets('GenderSelectionScreen has male and female options', (tester) async {
+    testWidgets('GenderSelectionScreen has male and female options', (
+      tester,
+    ) async {
       // Note: Can't directly test GenderSelectionScreen without proper auth setup
       // This would be tested in full integration test with Firebase emulator
     });
@@ -154,7 +138,7 @@ void main() {
         userId: 'test-uid',
         email: 'test@example.com',
       );
-      
+
       expect(state, isA<AuthFlowNeedsProfile>());
       expect(state.userId, equals('test-uid'));
       expect(state.email, equals('test@example.com'));
@@ -162,14 +146,14 @@ void main() {
 
     test('AuthFlowAuthenticated stores userId correctly', () {
       const state = AuthFlowAuthenticated(userId: 'test-uid');
-      
+
       expect(state, isA<AuthFlowAuthenticated>());
       expect(state.userId, equals('test-uid'));
     });
 
     test('AuthFlowError stores message correctly', () {
       const state = AuthFlowError(message: 'Test error');
-      
+
       expect(state, isA<AuthFlowError>());
       expect(state.message, equals('Test error'));
     });

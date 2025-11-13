@@ -61,7 +61,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+      final user = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithGoogle();
 
       if (mounted && user != null) {
         AppLogger.info('✅ Google sign-in successful - refreshing auth flow');
@@ -145,9 +147,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       hintText: 'your@email.com',
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          width: 3
-                        ),
+                        borderSide: BorderSide(width: 3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -168,7 +168,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      
                       // labelText: 'Password',
                       hintText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
@@ -183,9 +182,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                       ),
                       border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          width: 3
-                        ),
+                        borderSide: BorderSide(width: 3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),

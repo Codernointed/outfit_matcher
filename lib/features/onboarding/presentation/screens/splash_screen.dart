@@ -65,19 +65,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     try {
       final prefs = getIt<SharedPreferences>();
-      
+
       // Check auth state first
       final authState = ref.read(authStateProvider);
 
       await authState.when(
         data: (user) async {
           AppLogger.info('🔍 Auth check - User: ${user?.uid ?? "null"}');
-          
+
           if (user == null) {
             // Not signed in - check if they've seen onboarding
             final hasSeenOnboarding =
                 prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
-            
+
             if (hasSeenOnboarding) {
               // Returning user → Go to login
               AppLogger.info('🔄 Returning user, not signed in → Login');
@@ -90,26 +90,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           } else {
             // User is authenticated → Must verify profile exists
             AppLogger.info('✅ User authenticated: ${user.uid}');
-            
+
             final currentUserAsync = ref.read(currentUserProvider);
             await currentUserAsync.when(
               data: (appUser) async {
                 if (appUser == null) {
                   // Profile doesn't exist - this shouldn't happen, sign out
-                  AppLogger.error('❌ Auth exists but no profile found! Signing out...');
+                  AppLogger.error(
+                    '❌ Auth exists but no profile found! Signing out...',
+                  );
                   await ref.read(authControllerProvider.notifier).signOut();
                   if (mounted) {
                     _navigateTo(const LoginScreen());
                   }
                   return;
                 }
-                
+
                 // Check if profile is complete
                 if (appUser.gender == null || appUser.gender?.isEmpty == true) {
                   // Profile incomplete → Complete profile
-                  AppLogger.info(
-                    '👤 Profile incomplete → Gender selection',
-                  );
+                  AppLogger.info('👤 Profile incomplete → Gender selection');
                   // Previously navigated directly to gender selection via skipToGender.
                   // Profile completion now handled by AuthFlow + ProfileCreationScreen after signup.
                   // So just go to the generic onboarding flow; AuthWrapper will take over afterward.

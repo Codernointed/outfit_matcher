@@ -77,7 +77,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final user = await ref.read(authControllerProvider.notifier).signInWithGoogle();
+      final user = await ref
+          .read(authControllerProvider.notifier)
+          .signInWithGoogle();
 
       if (mounted && user != null) {
         AppLogger.info('✅ Google sign-up successful - refreshing auth flow');

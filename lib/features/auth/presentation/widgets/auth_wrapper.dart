@@ -26,20 +26,20 @@ class AuthWrapper extends ConsumerWidget {
     // Declarative routing based on state
     return switch (authFlowState) {
       AuthFlowInitial() => const SplashScreen(),
-      
+
       AuthFlowNeedsOnboarding() => const OnboardingScreen(),
-      
+
       AuthFlowUnauthenticated() => const LoginScreen(),
-      
+
       AuthFlowNeedsProfile() => ProfileCreationScreen(
         onComplete: () {
           // After profile created, refresh auth state
           ref.read(authFlowControllerProvider.notifier).onProfileUpdated();
         },
       ),
-      
+
       AuthFlowAuthenticated() => HomeScreen(),
-      
+
       AuthFlowError(:final message) => Scaffold(
         body: Center(
           child: Column(

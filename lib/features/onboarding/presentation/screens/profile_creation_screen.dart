@@ -28,7 +28,7 @@ class ProfileCreationScreen extends ConsumerStatefulWidget {
 class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
   final PageController _pageController = PageController();
   final TextEditingController _nameController = TextEditingController();
-  
+
   int _currentPage = 0;
   Gender? _selectedGender;
   File? _mannequinPhoto;
@@ -74,9 +74,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
     } catch (e) {
       AppLogger.error('❌ Error picking photo', error: e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to pick photo')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to pick photo')));
       }
     }
   }
@@ -97,8 +97,8 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
 
       // Prepare profile data
       final Map<String, dynamic> profileData = {
-        'username': _nameController.text.trim().isNotEmpty 
-            ? _nameController.text.trim() 
+        'username': _nameController.text.trim().isNotEmpty
+            ? _nameController.text.trim()
             : 'Fashion Enthusiast',
         'gender': _selectedGender?.name ?? Gender.female.name,
       };
@@ -106,14 +106,18 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       // TODO: Upload mannequin photo to Firebase Storage
       // For now, just save the data
       if (_mannequinPhoto != null) {
-        AppLogger.info('📸 Mannequin photo ready for upload: ${_mannequinPhoto!.path}');
+        AppLogger.info(
+          '📸 Mannequin photo ready for upload: ${_mannequinPhoto!.path}',
+        );
         // profileData['mannequinPhotoUrl'] = uploadedUrl;
       }
 
       // Create or update Firestore user profile
       final existing = await userProfileService.getUserProfile(currentUser.uid);
       if (existing == null) {
-        AppLogger.info('🆕 No existing profile found. Creating new user profile document...');
+        AppLogger.info(
+          '🆕 No existing profile found. Creating new user profile document...',
+        );
         await userProfileService.createUserProfile(
           uid: currentUser.uid,
           email: currentUser.email ?? 'unknown@example.com',
@@ -121,11 +125,14 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
           displayName: profileData['username'] as String,
           phoneNumber: currentUser.phoneNumber,
           gender: profileData['gender'] as String?,
-          authProvider: app_user.AuthProvider.email, // TODO: derive from providerData
+          authProvider:
+              app_user.AuthProvider.email, // TODO: derive from providerData
         );
         AppLogger.info('✅ Base user profile document created');
       } else {
-        AppLogger.info('ℹ️ Existing profile found. Updating user profile document...');
+        AppLogger.info(
+          'ℹ️ Existing profile found. Updating user profile document...',
+        );
         await userProfileService.updateUserProfile(
           currentUser.uid,
           profileData,
@@ -142,12 +149,16 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       // Notify completion
       widget.onComplete();
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Error saving profile', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Error saving profile',
+        error: e,
+        stackTrace: stackTrace,
+      );
       if (mounted) {
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save profile: $e')));
       }
     }
   }
@@ -270,10 +281,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 40),
-          Text(
-            '👋',
-            style: const TextStyle(fontSize: 64),
-          ),
+          Text('👋', style: const TextStyle(fontSize: 64)),
           const SizedBox(height: 24),
           Text(
             'Let\'s get you started!',
@@ -313,10 +321,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       child: Column(
         children: [
           const SizedBox(height: 40),
-          Text(
-            '✨',
-            style: const TextStyle(fontSize: 64),
-          ),
+          Text('✨', style: const TextStyle(fontSize: 64)),
           const SizedBox(height: 24),
           Text(
             'Choose your style',
@@ -383,9 +388,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
               : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? theme.colorScheme.primary
-                : Colors.transparent,
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
             width: 2,
           ),
         ),
@@ -421,10 +424,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       child: Column(
         children: [
           const SizedBox(height: 40),
-          Text(
-            '📸',
-            style: const TextStyle(fontSize: 64),
-          ),
+          Text('📸', style: const TextStyle(fontSize: 64)),
           const SizedBox(height: 24),
           Text(
             'One more thing!',
@@ -459,10 +459,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
               child: _mannequinPhoto != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(18),
-                      child: Image.file(
-                        _mannequinPhoto!,
-                        fit: BoxFit.cover,
-                      ),
+                      child: Image.file(_mannequinPhoto!, fit: BoxFit.cover),
                     )
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -486,7 +483,9 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                           '(Optional - you can skip this)',
                           style: TextStyle(
                             fontSize: 14,
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.5,
+                            ),
                           ),
                         ),
                       ],

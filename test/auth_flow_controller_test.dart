@@ -12,11 +12,7 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
 // Generate mocks with: flutter pub run build_runner build
-@GenerateMocks([
-  AuthService,
-  UserProfileService,
-  SharedPreferences,
-])
+@GenerateMocks([AuthService, UserProfileService, SharedPreferences])
 import 'auth_flow_controller_test.mocks.dart';
 
 void main() {
@@ -32,9 +28,13 @@ void main() {
       mockPrefs = MockSharedPreferences();
 
       // Setup default mock behaviors
-      when(mockAuthService.authStateChanges).thenAnswer((_) => Stream.value(null));
+      when(
+        mockAuthService.authStateChanges,
+      ).thenAnswer((_) => Stream.value(null));
       when(mockAuthService.currentFirebaseUser).thenReturn(null);
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(false);
+      when(
+        mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+      ).thenReturn(false);
     });
 
     tearDown(() {
@@ -43,9 +43,7 @@ void main() {
 
     test('Initial state should be AuthFlowInitial', () {
       container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(mockPrefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(mockPrefs)],
       );
 
       final controller = AuthFlowController(
@@ -58,7 +56,9 @@ void main() {
     });
 
     test('First-time user should transition to NeedsOnboarding', () async {
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(false);
+      when(
+        mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+      ).thenReturn(false);
 
       final controller = AuthFlowController(
         mockAuthService,
@@ -73,7 +73,9 @@ void main() {
     });
 
     test('Returning user without auth should show Unauthenticated', () async {
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(true);
+      when(
+        mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+      ).thenReturn(true);
       when(mockAuthService.currentFirebaseUser).thenReturn(null);
 
       final controller = AuthFlowController(
@@ -87,74 +89,92 @@ void main() {
       expect(controller.state, isA<AuthFlowUnauthenticated>());
     });
 
-    test('Authenticated user with incomplete profile should show NeedsProfile', () async {
-      final mockUser = MockFirebaseUser();
-      when(mockUser.uid).thenReturn('test-uid');
-      when(mockUser.email).thenReturn('test@example.com');
+    test(
+      'Authenticated user with incomplete profile should show NeedsProfile',
+      () async {
+        final mockUser = MockFirebaseUser();
+        when(mockUser.uid).thenReturn('test-uid');
+        when(mockUser.email).thenReturn('test@example.com');
 
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(true);
-      when(mockAuthService.currentFirebaseUser).thenReturn(mockUser);
-      
-      // Profile exists but gender is null
-      final incompleteProfile = AppUser(
-        uid: 'test-uid',
-        email: 'test@example.com',
-        username: 'Test User',
-        authProvider: AuthProvider.email,
-        createdAt: DateTime.now(),
-        gender: null, // Incomplete!
-      );
-      when(mockProfileService.getUserProfile('test-uid')).thenAnswer((_) async => incompleteProfile);
+        when(
+          mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+        ).thenReturn(true);
+        when(mockAuthService.currentFirebaseUser).thenReturn(mockUser);
 
-      final controller = AuthFlowController(
-        mockAuthService,
-        mockProfileService,
-        mockPrefs,
-      );
+        // Profile exists but gender is null
+        final incompleteProfile = AppUser(
+          uid: 'test-uid',
+          email: 'test@example.com',
+          username: 'Test User',
+          authProvider: AuthProvider.email,
+          createdAt: DateTime.now(),
+          gender: null, // Incomplete!
+        );
+        when(
+          mockProfileService.getUserProfile('test-uid'),
+        ).thenAnswer((_) async => incompleteProfile);
 
-      await Future.delayed(const Duration(milliseconds: 100));
+        final controller = AuthFlowController(
+          mockAuthService,
+          mockProfileService,
+          mockPrefs,
+        );
 
-      expect(controller.state, isA<AuthFlowNeedsProfile>());
-      final state = controller.state as AuthFlowNeedsProfile;
-      expect(state.userId, equals('test-uid'));
-      expect(state.email, equals('test@example.com'));
-    });
+        await Future.delayed(const Duration(milliseconds: 100));
 
-    test('Authenticated user with complete profile should show Authenticated', () async {
-      final mockUser = MockFirebaseUser();
-      when(mockUser.uid).thenReturn('test-uid');
-      when(mockUser.email).thenReturn('test@example.com');
+        expect(controller.state, isA<AuthFlowNeedsProfile>());
+        final state = controller.state as AuthFlowNeedsProfile;
+        expect(state.userId, equals('test-uid'));
+        expect(state.email, equals('test@example.com'));
+      },
+    );
 
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(true);
-      when(mockAuthService.currentFirebaseUser).thenReturn(mockUser);
-      
-      // Complete profile with gender
-      final completeProfile = AppUser(
-        uid: 'test-uid',
-        email: 'test@example.com',
-        username: 'Test User',
-        authProvider: AuthProvider.email,
-        createdAt: DateTime.now(),
-        gender: 'male', // Complete!
-      );
-      when(mockProfileService.getUserProfile('test-uid')).thenAnswer((_) async => completeProfile);
+    test(
+      'Authenticated user with complete profile should show Authenticated',
+      () async {
+        final mockUser = MockFirebaseUser();
+        when(mockUser.uid).thenReturn('test-uid');
+        when(mockUser.email).thenReturn('test@example.com');
 
-      final controller = AuthFlowController(
-        mockAuthService,
-        mockProfileService,
-        mockPrefs,
-      );
+        when(
+          mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+        ).thenReturn(true);
+        when(mockAuthService.currentFirebaseUser).thenReturn(mockUser);
 
-      await Future.delayed(const Duration(milliseconds: 100));
+        // Complete profile with gender
+        final completeProfile = AppUser(
+          uid: 'test-uid',
+          email: 'test@example.com',
+          username: 'Test User',
+          authProvider: AuthProvider.email,
+          createdAt: DateTime.now(),
+          gender: 'male', // Complete!
+        );
+        when(
+          mockProfileService.getUserProfile('test-uid'),
+        ).thenAnswer((_) async => completeProfile);
 
-      expect(controller.state, isA<AuthFlowAuthenticated>());
-      final state = controller.state as AuthFlowAuthenticated;
-      expect(state.userId, equals('test-uid'));
-    });
+        final controller = AuthFlowController(
+          mockAuthService,
+          mockProfileService,
+          mockPrefs,
+        );
+
+        await Future.delayed(const Duration(milliseconds: 100));
+
+        expect(controller.state, isA<AuthFlowAuthenticated>());
+        final state = controller.state as AuthFlowAuthenticated;
+        expect(state.userId, equals('test-uid'));
+      },
+    );
 
     test('completeOnboarding() should save flag and re-evaluate', () async {
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(false);
-      when(mockPrefs.setBool(AppConstants.onboardingCompletedKey, true)).thenAnswer((_) async => true);
+      when(
+        mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+      ).thenReturn(false);
+      when(
+        mockPrefs.setBool(AppConstants.onboardingCompletedKey, true),
+      ).thenAnswer((_) async => true);
 
       final controller = AuthFlowController(
         mockAuthService,
@@ -166,12 +186,16 @@ void main() {
       expect(controller.state, isA<AuthFlowNeedsOnboarding>());
 
       // Complete onboarding
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(true);
+      when(
+        mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+      ).thenReturn(true);
       await controller.completeOnboarding();
 
       await Future.delayed(const Duration(milliseconds: 100));
       expect(controller.state, isA<AuthFlowUnauthenticated>());
-      verify(mockPrefs.setBool(AppConstants.onboardingCompletedKey, true)).called(1);
+      verify(
+        mockPrefs.setBool(AppConstants.onboardingCompletedKey, true),
+      ).called(1);
     });
 
     test('refresh() should re-evaluate auth state', () async {
@@ -179,7 +203,9 @@ void main() {
       when(mockUser.uid).thenReturn('test-uid');
       when(mockUser.email).thenReturn('test@example.com');
 
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(true);
+      when(
+        mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+      ).thenReturn(true);
       when(mockAuthService.currentFirebaseUser).thenReturn(null);
 
       final controller = AuthFlowController(
@@ -201,7 +227,9 @@ void main() {
         createdAt: DateTime.now(),
         gender: 'female',
       );
-      when(mockProfileService.getUserProfile('test-uid')).thenAnswer((_) async => completeProfile);
+      when(
+        mockProfileService.getUserProfile('test-uid'),
+      ).thenAnswer((_) async => completeProfile);
 
       await controller.refresh();
 
@@ -209,58 +237,69 @@ void main() {
       expect(controller.state, isA<AuthFlowAuthenticated>());
     });
 
-    test('onProfileUpdated() should re-evaluate and transition to Authenticated', () async {
-      final mockUser = MockFirebaseUser();
-      when(mockUser.uid).thenReturn('test-uid');
-      when(mockUser.email).thenReturn('test@example.com');
+    test(
+      'onProfileUpdated() should re-evaluate and transition to Authenticated',
+      () async {
+        final mockUser = MockFirebaseUser();
+        when(mockUser.uid).thenReturn('test-uid');
+        when(mockUser.email).thenReturn('test@example.com');
 
-      when(mockPrefs.getBool(AppConstants.onboardingCompletedKey)).thenReturn(true);
-      when(mockAuthService.currentFirebaseUser).thenReturn(mockUser);
-      
-      // Start with incomplete profile
-      final incompleteProfile = AppUser(
-        uid: 'test-uid',
-        email: 'test@example.com',
-        username: 'Test User',
-        authProvider: AuthProvider.email,
-        createdAt: DateTime.now(),
-        gender: null,
-      );
-      when(mockProfileService.getUserProfile('test-uid')).thenAnswer((_) async => incompleteProfile);
+        when(
+          mockPrefs.getBool(AppConstants.onboardingCompletedKey),
+        ).thenReturn(true);
+        when(mockAuthService.currentFirebaseUser).thenReturn(mockUser);
 
-      final controller = AuthFlowController(
-        mockAuthService,
-        mockProfileService,
-        mockPrefs,
-      );
+        // Start with incomplete profile
+        final incompleteProfile = AppUser(
+          uid: 'test-uid',
+          email: 'test@example.com',
+          username: 'Test User',
+          authProvider: AuthProvider.email,
+          createdAt: DateTime.now(),
+          gender: null,
+        );
+        when(
+          mockProfileService.getUserProfile('test-uid'),
+        ).thenAnswer((_) async => incompleteProfile);
 
-      await Future.delayed(const Duration(milliseconds: 100));
-      expect(controller.state, isA<AuthFlowNeedsProfile>());
+        final controller = AuthFlowController(
+          mockAuthService,
+          mockProfileService,
+          mockPrefs,
+        );
 
-      // Update profile
-      final completeProfile = AppUser(
-        uid: 'test-uid',
-        email: 'test@example.com',
-        username: 'Test User',
-        authProvider: AuthProvider.email,
-        createdAt: DateTime.now(),
-        gender: 'male',
-      );
-      when(mockProfileService.getUserProfile('test-uid')).thenAnswer((_) async => completeProfile);
+        await Future.delayed(const Duration(milliseconds: 100));
+        expect(controller.state, isA<AuthFlowNeedsProfile>());
 
-      await controller.onProfileUpdated();
+        // Update profile
+        final completeProfile = AppUser(
+          uid: 'test-uid',
+          email: 'test@example.com',
+          username: 'Test User',
+          authProvider: AuthProvider.email,
+          createdAt: DateTime.now(),
+          gender: 'male',
+        );
+        when(
+          mockProfileService.getUserProfile('test-uid'),
+        ).thenAnswer((_) async => completeProfile);
 
-      await Future.delayed(const Duration(milliseconds: 100));
-      expect(controller.state, isA<AuthFlowAuthenticated>());
-    });
+        await controller.onProfileUpdated();
+
+        await Future.delayed(const Duration(milliseconds: 100));
+        expect(controller.state, isA<AuthFlowAuthenticated>());
+      },
+    );
   });
 }
 
 // Mock Firebase User
 class MockFirebaseUser extends Mock implements firebase_auth.User {
   @override
-  String get uid => super.noSuchMethod(Invocation.getter(#uid), returnValue: 'mock-uid');
-  
+  String get uid =>
+      super.noSuchMethod(Invocation.getter(#uid), returnValue: 'mock-uid');
+
   @override
-  String? get email => super.noSuchMethod(Invocation.getter(#email), returnValue: null);
+  String? get email =>
+      super.noSuchMethod(Invocation.getter(#email), returnValue: null);
 }

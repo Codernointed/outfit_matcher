@@ -30,7 +30,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   /// Complete onboarding - notify AuthFlowController (no manual navigation!)
   void _completeOnboarding() {
     AppLogger.info('🎉 Onboarding complete - notifying controller');
-    
+
     // Just notify the controller - it will handle state transition
     // No manual navigation! AuthFlowController will emit AuthFlowUnauthenticated
     // and AuthWrapper will show LoginScreen automatically

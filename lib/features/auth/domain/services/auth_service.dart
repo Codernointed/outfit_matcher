@@ -10,9 +10,9 @@ class AuthService {
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
     UserProfileService? userProfileService,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn.instance,
-        _userProfileService = userProfileService ?? UserProfileService();
+  }) : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+       _googleSignIn = googleSignIn ?? GoogleSignIn.instance,
+       _userProfileService = userProfileService ?? UserProfileService();
 
   final FirebaseAuth _firebaseAuth;
   final GoogleSignIn _googleSignIn;
@@ -100,10 +100,12 @@ class AuthService {
 
       // Check if profile exists, create if not
       AppUser? appUser = await _userProfileService.getUserProfile(user.uid);
-      
+
       if (appUser == null) {
         // Profile doesn't exist - create it
-        AppLogger.warning('⚠️ Profile not found, creating new profile for: ${user.uid}');
+        AppLogger.warning(
+          '⚠️ Profile not found, creating new profile for: ${user.uid}',
+        );
         appUser = await _userProfileService.createUserProfile(
           uid: user.uid,
           email: user.email ?? email,
@@ -187,7 +189,9 @@ class AuthService {
       );
 
       // Sign in to Firebase
-      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final userCredential = await _firebaseAuth.signInWithCredential(
+        credential,
+      );
 
       final user = userCredential.user;
       if (user == null) {
@@ -196,21 +200,27 @@ class AuthService {
 
       // Check if profile exists in Firestore (more reliable than isNewUser)
       AppUser? appUser = await _userProfileService.getUserProfile(user.uid);
-      
+
       if (appUser == null) {
         // Profile doesn't exist - create it
         AppLogger.info('✅ Creating new Google user profile: ${user.uid}');
         appUser = await _userProfileService.createUserProfile(
           uid: user.uid,
           email: user.email ?? googleUser.email,
-          username: user.displayName ?? googleUser.displayName ?? user.email?.split('@')[0] ?? 'user',
+          username:
+              user.displayName ??
+              googleUser.displayName ??
+              user.email?.split('@')[0] ??
+              'user',
           displayName: user.displayName ?? googleUser.displayName,
           photoUrl: user.photoURL ?? googleUser.photoUrl?.toString(),
           authProvider: AuthProvider.google,
         );
       } else {
         // Profile exists - just update last login
-        AppLogger.info('✅ Existing Google user, updating last login: ${user.uid}');
+        AppLogger.info(
+          '✅ Existing Google user, updating last login: ${user.uid}',
+        );
         appUser = await _userProfileService.updateLastLogin(user.uid);
       }
 
@@ -297,10 +307,7 @@ class AuthService {
   // ==================== ACCOUNT MANAGEMENT ====================
 
   /// Update user profile
-  Future<void> updateProfile({
-    String? displayName,
-    String? photoURL,
-  }) async {
+  Future<void> updateProfile({String? displayName, String? photoURL}) async {
     try {
       final user = _firebaseAuth.currentUser;
       if (user == null) {

@@ -82,17 +82,16 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
       // Also update Firestore profile
       final userProfileService = getIt<UserProfileService>();
       final currentUser = FirebaseAuth.instance.currentUser;
-      
+
       if (currentUser != null) {
-        await userProfileService.updateUserProfile(
-          currentUser.uid,
-          {'gender': genderToSave.name},
-        );
+        await userProfileService.updateUserProfile(currentUser.uid, {
+          'gender': genderToSave.name,
+        });
         AppLogger.info('✅ Gender saved to Firestore');
       }
 
       AppLogger.info('✅ Gender preference saved successfully');
-      
+
       // Call the callback to notify AuthFlowController
       widget.onComplete();
     } catch (e, stackTrace) {
@@ -124,25 +123,20 @@ class _GenderSelectionScreenState extends ConsumerState<GenderSelectionScreen>
       // Also update Firestore profile
       final userProfileService = getIt<UserProfileService>();
       final currentUser = FirebaseAuth.instance.currentUser;
-      
+
       if (currentUser != null) {
-        await userProfileService.updateUserProfile(
-          currentUser.uid,
-          {'gender': Gender.female.name},
-        );
+        await userProfileService.updateUserProfile(currentUser.uid, {
+          'gender': Gender.female.name,
+        });
         AppLogger.info('✅ Default gender saved to Firestore');
       }
 
       AppLogger.info('✅ Skip completed, calling callback');
-      
+
       // Call the callback to notify AuthFlowController
       widget.onComplete();
     } catch (e, stackTrace) {
-      AppLogger.error(
-        '❌ Error during skip',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      AppLogger.error('❌ Error during skip', error: e, stackTrace: stackTrace);
       if (mounted) {
         setState(() => _isProcessing = false);
       }
