@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
 
 /// Full-screen view of all saved outfit looks with filtering and sorting
@@ -341,9 +342,14 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(20),
                         onTap: () {
+                          final user = ref.read(currentUserProvider).value;
+                          if (user == null) {
+                            AppLogger.warning('⚠️ User not authenticated');
+                            return;
+                          }
                           ref
                               .read(recentLooksProvider.notifier)
-                              .toggleFavorite(look.id);
+                              .toggleFavorite(look.id, user.uid);
                           AppLogger.info('⭐ Toggled favorite: ${look.id}');
                         },
                         child: Container(

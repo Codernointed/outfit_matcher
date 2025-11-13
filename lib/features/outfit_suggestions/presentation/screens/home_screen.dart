@@ -22,6 +22,7 @@ import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 
 // Provider for the current selected index of the BottomNavigationBar
@@ -212,8 +213,16 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   }
 
   void _toggleFavorite(String outfitId) {
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to use favorites')),
+      );
+      return;
+    }
+
     AppLogger.info('⭐ Toggling favorite for outfit: $outfitId');
-    ref.read(recentLooksProvider.notifier).toggleFavorite(outfitId);
+    ref.read(recentLooksProvider.notifier).toggleFavorite(outfitId, user.uid);
   }
 
   Color _getScoreColor(double score) {

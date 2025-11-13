@@ -49,15 +49,16 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 
 ### **1. Missing Backend & User System**
 
-❌ **No cloud sync** - Data lives only on device
-❌ **No multi-device support** - Can't access wardrobe from multiple devices
+✅ **Cloud sync** - Firebase Auth + Firestore for user profiles and favorites ✅
+⚠️ **Partial multi-device support** - Profiles and favorites sync, wardrobe items still local
 
-**Impact:** Users lose all data if they uninstall or switch devices.
+**Impact:** User profiles and favorites persist. Wardrobe items still need Firestore migration.
 
 ### **2. Incomplete Core Features**
-❌ **Home screen has placeholder data** - "View All", "Search", "Filters" don't work
-❌ **Profile screen is dummy** - Email, name, stats are hardcoded
-❌ **No favorites system** - Heart icons don't actually save favorites
+✅ **Home screen navigation** - "View All" and "Search" buttons work
+✅ **Profile screen real data** - Email, name, stats from Firebase (generations, wardrobe count, favorites)
+✅ **Favorites system** - Complete FavoritesService with Firestore sync, ready for UI integration
+⏳ **Filters** - Filter button commented out, FilterBottomSheet not yet implemented
 ❌ **Single item limitation** - Many features only work with 2+ wardrobe items
 
 ### **3. Production Code Quality Issues**

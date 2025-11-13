@@ -6,7 +6,9 @@ import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/services/favorites_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 
 // ============================================================================
 // STATE CLASSES
@@ -299,10 +301,12 @@ class RecentLooksNotifier extends StateNotifier<RecentLooksState> {
     }
   }
 
-  void toggleFavorite(String outfitId) {
+  Future<void> toggleFavorite(String outfitId, String uid) async {
     AppLogger.info('⭐ [RECENT LOOKS] Toggling favorite: $outfitId');
     final favorites = Set<String>.from(state.favoriteIds);
+    final wasAdded = !favorites.contains(outfitId);
 
+    // Optimistically update UI
     if (favorites.contains(outfitId)) {
       favorites.remove(outfitId);
       AppLogger.info('💔 Removed from favorites');
@@ -312,7 +316,22 @@ class RecentLooksNotifier extends StateNotifier<RecentLooksState> {
     }
 
     state = state.copyWith(favoriteIds: favorites);
-    // TODO: Persist to storage
+
+    // Persist to Firestore
+    try {
+      final favoritesService = FavoritesService();
+      await favoritesService.toggleFavoriteOutfit(uid, outfitId);
+      AppLogger.info('✅ [RECENT LOOKS] Favorite persisted to Firestore');
+    } catch (e) {
+      AppLogger.error('❌ [RECENT LOOKS] Failed to persist favorite', error: e);
+      // Revert on error
+      if (wasAdded) {
+        favorites.remove(outfitId);
+      } else {
+        favorites.add(outfitId);
+      }
+      state = state.copyWith(favoriteIds: favorites);
+    }
   }
 
   Future<void> refresh() async {

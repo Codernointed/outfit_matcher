@@ -7,8 +7,11 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart'
 import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/favorites_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/favorites/presentation/providers/favorites_providers.dart';
 
 /// Clean, modern preview sheet for wardrobe items
 void showWardrobeItemPreview(
@@ -622,6 +625,14 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
 
   /// Toggle favorite status for the item
   Future<void> _toggleFavorite() async {
+    final user = ref.read(currentUserProvider).value;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to use favorites')),
+      );
+      return;
+    }
+
     final isCurrentlyFavorite = _currentItem.isFavorite;
 
     AppLogger.info('⭐ [WARDROBE PREVIEW] Toggling favorite');
@@ -631,12 +642,16 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
     AppLogger.info('   Currently favorite: $isCurrentlyFavorite');
 
     try {
-      // Update the item's favorite status
+      // Toggle favorite in Firestore
+      final favoritesService = ref.read(favoritesServiceProvider);
+      await favoritesService.toggleFavoriteItem(user.uid, _currentItem.id);
+
+      // Update the item's favorite status locally
       final updatedItem = _currentItem.copyWith(
         isFavorite: !isCurrentlyFavorite,
       );
 
-      // Save to storage
+      // Save to local storage
       await _storage.updateWardrobeItem(updatedItem);
 
       // Update local state
@@ -644,9 +659,26 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
         _currentItem = updatedItem;
       });
 
+      // Invalidate favorites provider to refresh
+      ref.invalidate(favoriteItemIdsProvider);
+
       AppLogger.info(
         '✅ [WARDROBE PREVIEW] Favorite status updated successfully',
       );
+
+      // Show feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isCurrentlyFavorite 
+                ? 'Removed from favorites' 
+                : 'Added to favorites',
+            ),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
 
       if (!mounted) return;
 
