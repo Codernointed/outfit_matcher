@@ -106,55 +106,63 @@ final filterCriteriaProvider = StateProvider<WardrobeFilterCriteria>((ref) {
 // ==================== SEARCH RESULTS PROVIDER ====================
 
 /// Provider for wardrobe search results with filters
-final wardrobeSearchResultsProvider = StreamProvider.autoDispose<List<WardrobeItem>>((
-  ref,
-) async* {
-  try {
-    // Get current user
-    final user = ref.watch(currentUserProvider).value;
-    if (user == null) {
-      AppLogger.info('🔍 No user logged in, returning empty search results');
-      yield [];
-      return;
-    }
+final wardrobeSearchResultsProvider =
+    StreamProvider.autoDispose<List<WardrobeItem>>((ref) async* {
+      try {
+        // Get current user
+        final user = ref.watch(currentUserProvider).value;
+        if (user == null) {
+          AppLogger.info(
+            '🔍 No user logged in, returning empty search results',
+          );
+          yield [];
+          return;
+        }
 
-    // Watch search query and filter criteria
-    final query = ref.watch(searchQueryProvider);
-    final filters = ref.watch(filterCriteriaProvider);
+        // Watch search query and filter criteria
+        final query = ref.watch(searchQueryProvider);
+        final filters = ref.watch(filterCriteriaProvider);
 
-    AppLogger.info('🔍 Search query: "$query", filters: $filters');
+        AppLogger.info('🔍 Search query: "$query", filters: $filters');
 
-    // Get all wardrobe items
-    final wardrobeService = getIt<EnhancedWardrobeStorageService>();
-    final allItems = await wardrobeService.getWardrobeItems();
+        // Get all wardrobe items
+        final wardrobeService = getIt<EnhancedWardrobeStorageService>();
+        final allItems = await wardrobeService.getWardrobeItems();
 
-    // Apply search query
-    List<WardrobeItem> results = allItems;
+        // Apply search query
+        List<WardrobeItem> results = allItems;
 
-    if (query.trim().isNotEmpty) {
-      final queryLower = query.toLowerCase();
-      results = results.where((item) {
-        return item.analysis.itemType.toLowerCase().contains(queryLower) ||
-            item.analysis.primaryColor.toLowerCase().contains(queryLower) ||
-            (item.analysis.brand?.toLowerCase().contains(queryLower) ?? false) ||
-            item.seasons.any((tag) => tag.toLowerCase().contains(queryLower)) ||
-            item.occasions.any((tag) => tag.toLowerCase().contains(queryLower)) ||
-            item.tags.any((tag) => tag.toLowerCase().contains(queryLower));
-      }).toList();
-    }
+        if (query.trim().isNotEmpty) {
+          final queryLower = query.toLowerCase();
+          results = results.where((item) {
+            return item.analysis.itemType.toLowerCase().contains(queryLower) ||
+                item.analysis.primaryColor.toLowerCase().contains(queryLower) ||
+                (item.analysis.brand?.toLowerCase().contains(queryLower) ??
+                    false) ||
+                item.seasons.any(
+                  (tag) => tag.toLowerCase().contains(queryLower),
+                ) ||
+                item.occasions.any(
+                  (tag) => tag.toLowerCase().contains(queryLower),
+                ) ||
+                item.tags.any((tag) => tag.toLowerCase().contains(queryLower));
+          }).toList();
+        }
 
-    // Apply filters
-    if (filters.hasActiveFilters) {
-      results = results.where(filters.matchesItem).toList();
-    }
+        // Apply filters
+        if (filters.hasActiveFilters) {
+          results = results.where(filters.matchesItem).toList();
+        }
 
-    AppLogger.info('🔍 Found ${results.length} items matching search/filters');
-    yield results;
-  } catch (e) {
-    AppLogger.error('❌ Error performing wardrobe search', error: e);
-    yield [];
-  }
-});
+        AppLogger.info(
+          '🔍 Found ${results.length} items matching search/filters',
+        );
+        yield results;
+      } catch (e) {
+        AppLogger.error('❌ Error performing wardrobe search', error: e);
+        yield [];
+      }
+    });
 
 /// Provider for quick filter presets
 final quickFiltersProvider = Provider<List<QuickFilter>>((ref) {
@@ -167,22 +175,30 @@ final quickFiltersProvider = Provider<List<QuickFilter>>((ref) {
     const QuickFilter(
       label: 'Tops',
       icon: '👕',
-      criteria: WardrobeFilterCriteria(categories: ['T-Shirt', 'Shirt', 'Blouse', 'Sweater']),
+      criteria: WardrobeFilterCriteria(
+        categories: ['T-Shirt', 'Shirt', 'Blouse', 'Sweater'],
+      ),
     ),
     const QuickFilter(
       label: 'Bottoms',
       icon: '👖',
-      criteria: WardrobeFilterCriteria(categories: ['Jeans', 'Pants', 'Shorts', 'Skirt']),
+      criteria: WardrobeFilterCriteria(
+        categories: ['Jeans', 'Pants', 'Shorts', 'Skirt'],
+      ),
     ),
     const QuickFilter(
       label: 'Outerwear',
       icon: '🧥',
-      criteria: WardrobeFilterCriteria(categories: ['Jacket', 'Coat', 'Blazer']),
+      criteria: WardrobeFilterCriteria(
+        categories: ['Jacket', 'Coat', 'Blazer'],
+      ),
     ),
     const QuickFilter(
       label: 'Shoes',
       icon: '👟',
-      criteria: WardrobeFilterCriteria(categories: ['Sneakers', 'Boots', 'Heels', 'Sandals']),
+      criteria: WardrobeFilterCriteria(
+        categories: ['Sneakers', 'Boots', 'Heels', 'Sandals'],
+      ),
     ),
     const QuickFilter(
       label: 'Summer',
@@ -213,24 +229,34 @@ class QuickFilter {
 // ==================== FILTER OPTIONS PROVIDERS ====================
 
 /// Provider for available category options (extracted from wardrobe)
-final availableCategoriesProvider = FutureProvider.autoDispose<List<String>>((ref) async {
+final availableCategoriesProvider = FutureProvider.autoDispose<List<String>>((
+  ref,
+) async {
   final wardrobeService = getIt<EnhancedWardrobeStorageService>();
   final items = await wardrobeService.getWardrobeItems();
-  
-  final categories = items.map((item) => item.analysis.itemType).toSet().toList();
+
+  final categories = items
+      .map((item) => item.analysis.itemType)
+      .toSet()
+      .toList();
   categories.sort();
-  
+
   return categories;
 });
 
 /// Provider for available color options
-final availableColorsProvider = FutureProvider.autoDispose<List<String>>((ref) async {
+final availableColorsProvider = FutureProvider.autoDispose<List<String>>((
+  ref,
+) async {
   final wardrobeService = getIt<EnhancedWardrobeStorageService>();
   final items = await wardrobeService.getWardrobeItems();
-  
-  final colors = items.map((item) => item.analysis.primaryColor).toSet().toList();
+
+  final colors = items
+      .map((item) => item.analysis.primaryColor)
+      .toSet()
+      .toList();
   colors.sort();
-  
+
   return colors;
 });
 
@@ -241,5 +267,13 @@ final availableSeasonsProvider = Provider<List<String>>((ref) {
 
 /// Provider for available occasion options
 final availableOccasionsProvider = Provider<List<String>>((ref) {
-  return ['Casual', 'Formal', 'Work', 'Party', 'Athletic', 'Beach', 'Date Night'];
+  return [
+    'Casual',
+    'Formal',
+    'Work',
+    'Party',
+    'Athletic',
+    'Beach',
+    'Date Night',
+  ];
 });

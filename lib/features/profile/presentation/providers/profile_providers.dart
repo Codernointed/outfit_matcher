@@ -93,7 +93,9 @@ final favoriteItemsProvider = StreamProvider.autoDispose<List<WardrobeItem>>((
     final favoritesService = FavoritesService();
     final wardrobeService = getIt<EnhancedWardrobeStorageService>();
 
-    await for (final favoriteIds in favoritesService.watchFavoriteItemIds(user.uid)) {
+    await for (final favoriteIds in favoritesService.watchFavoriteItemIds(
+      user.uid,
+    )) {
       if (favoriteIds.isEmpty) {
         yield [];
         continue;
@@ -105,7 +107,9 @@ final favoriteItemsProvider = StreamProvider.autoDispose<List<WardrobeItem>>((
           .where((item) => favoriteIds.contains(item.id))
           .toList();
 
-      AppLogger.info('⭐ Loaded ${favoriteItems.length} favorite items from Firestore stream');
+      AppLogger.info(
+        '⭐ Loaded ${favoriteItems.length} favorite items from Firestore stream',
+      );
       yield favoriteItems;
     }
   } catch (e) {
@@ -131,7 +135,9 @@ final favoriteLooksProvider = StreamProvider.autoDispose<List<SavedOutfit>>((
     final favoritesService = FavoritesService();
     final outfitService = getIt<OutfitStorageService>();
 
-    await for (final favoriteIds in favoritesService.watchFavoriteOutfitIds(user.uid)) {
+    await for (final favoriteIds in favoritesService.watchFavoriteOutfitIds(
+      user.uid,
+    )) {
       if (favoriteIds.isEmpty) {
         yield [];
         continue;
@@ -143,7 +149,9 @@ final favoriteLooksProvider = StreamProvider.autoDispose<List<SavedOutfit>>((
           .where((look) => favoriteIds.contains(look.id))
           .toList();
 
-      AppLogger.info('⭐ Loaded ${favoriteLooks.length} favorite looks from Firestore stream');
+      AppLogger.info(
+        '⭐ Loaded ${favoriteLooks.length} favorite looks from Firestore stream',
+      );
       yield favoriteLooks;
     }
   } catch (e) {

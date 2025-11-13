@@ -33,7 +33,8 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final availableCategories = ref.watch(availableCategoriesProvider).value ?? [];
+    final availableCategories =
+        ref.watch(availableCategoriesProvider).value ?? [];
     final availableColors = ref.watch(availableColorsProvider).value ?? [];
     final availableSeasons = ref.watch(availableSeasonsProvider);
     final availableOccasions = ref.watch(availableOccasionsProvider);
@@ -125,9 +126,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     availableValues: availableColors,
                     onChanged: (values) {
                       setState(() {
-                        _localFilters = _localFilters.copyWith(
-                          colors: values,
-                        );
+                        _localFilters = _localFilters.copyWith(colors: values);
                       });
                     },
                   ),
@@ -141,9 +140,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     availableValues: availableSeasons,
                     onChanged: (values) {
                       setState(() {
-                        _localFilters = _localFilters.copyWith(
-                          seasons: values,
-                        );
+                        _localFilters = _localFilters.copyWith(seasons: values);
                       });
                     },
                   ),
