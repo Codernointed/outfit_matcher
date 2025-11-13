@@ -247,7 +247,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Add some items to your wardrobe first!'),
+              content: const Text('Add some items to your wardrobe first!'),
               action: SnackBarAction(
                 label: 'Add Items',
                 onPressed: () {
@@ -258,6 +258,33 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   );
                 },
               ),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if we have enough items to create outfit pairings
+      if (wardrobeItems.length < 2) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Add at least one more item to create outfit combinations!',
+              ),
+              backgroundColor: Colors.orange,
+              action: SnackBarAction(
+                label: 'Add Items',
+                textColor: Colors.white,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SimpleWardrobeUploadScreen(),
+                    ),
+                  );
+                },
+              ),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -2178,6 +2205,41 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
     return Column(
       children: [
+        // Show helpful banner for 1 item (can't create pairs)
+        if (wardrobe.items.length == 1) ...[
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.orange.withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.orange.shade700,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Add at least one more item to start creating outfit combinations!',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.orange.shade900,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
         // 2 rows of 3 columns
         SizedBox(
           height: 220,

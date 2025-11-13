@@ -64,9 +64,7 @@ class FavoritesService {
           .doc(uid)
           .collection('favorite_items')
           .doc(itemId)
-          .set({
-        'addedAt': FieldValue.serverTimestamp(),
-      });
+          .set({'addedAt': FieldValue.serverTimestamp()});
 
       debugPrint('✅ Added item $itemId to favorites');
 
@@ -177,9 +175,7 @@ class FavoritesService {
           .doc(uid)
           .collection('favorite_outfits')
           .doc(outfitId)
-          .set({
-        'addedAt': FieldValue.serverTimestamp(),
-      });
+          .set({'addedAt': FieldValue.serverTimestamp()});
 
       debugPrint('✅ Added outfit $outfitId to favorites');
     } catch (e) {

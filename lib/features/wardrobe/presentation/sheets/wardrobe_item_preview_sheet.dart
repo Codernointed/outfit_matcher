@@ -671,9 +671,9 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isCurrentlyFavorite 
-                ? 'Removed from favorites' 
-                : 'Added to favorites',
+              isCurrentlyFavorite
+                  ? 'Removed from favorites'
+                  : 'Added to favorites',
             ),
             duration: const Duration(seconds: 1),
           ),

@@ -13,7 +13,7 @@ final favoritesServiceProvider = Provider<FavoritesService>((ref) {
 /// Stream provider for favorite wardrobe item IDs
 final favoriteItemIdsProvider = StreamProvider<List<String>>((ref) {
   final user = ref.watch(currentUserProvider).value;
-  
+
   if (user == null) {
     return Stream.value([]);
   }
@@ -23,9 +23,12 @@ final favoriteItemIdsProvider = StreamProvider<List<String>>((ref) {
 });
 
 /// Provider to check if a specific item is favorited
-final isItemFavoritedProvider = FutureProvider.family<bool, String>((ref, itemId) async {
+final isItemFavoritedProvider = FutureProvider.family<bool, String>((
+  ref,
+  itemId,
+) async {
   final user = ref.watch(currentUserProvider).value;
-  
+
   if (user == null) return false;
 
   final favoritesService = ref.watch(favoritesServiceProvider);
@@ -37,7 +40,7 @@ final isItemFavoritedProvider = FutureProvider.family<bool, String>((ref, itemId
 /// Stream provider for favorite outfit IDs
 final favoriteOutfitIdsProvider = StreamProvider<List<String>>((ref) {
   final user = ref.watch(currentUserProvider).value;
-  
+
   if (user == null) {
     return Stream.value([]);
   }
@@ -47,9 +50,12 @@ final favoriteOutfitIdsProvider = StreamProvider<List<String>>((ref) {
 });
 
 /// Provider to check if a specific outfit is favorited
-final isOutfitFavoritedProvider = FutureProvider.family<bool, String>((ref, outfitId) async {
+final isOutfitFavoritedProvider = FutureProvider.family<bool, String>((
+  ref,
+  outfitId,
+) async {
   final user = ref.watch(currentUserProvider).value;
-  
+
   if (user == null) return false;
 
   final favoritesService = ref.watch(favoritesServiceProvider);
@@ -61,7 +67,7 @@ final isOutfitFavoritedProvider = FutureProvider.family<bool, String>((ref, outf
 /// Provider for total favorites count
 final totalFavoritesCountProvider = FutureProvider<int>((ref) async {
   final user = ref.watch(currentUserProvider).value;
-  
+
   if (user == null) return 0;
 
   final favoritesService = ref.watch(favoritesServiceProvider);
