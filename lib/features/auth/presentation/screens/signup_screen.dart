@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -56,19 +57,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           );
 
       if (mounted) {
-        AppLogger.info('✅ Signup successful');
-        // Show verification message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Account created! Please check your email for verification.',
-            ),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 4),
+        AppLogger.info('✅ Signup successful - navigating to gender selection');
+        // Navigate to gender selection after successful signup
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const OnboardingScreen(skipToGender: true),
           ),
         );
-        // Navigation handled by auth state change
-        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
