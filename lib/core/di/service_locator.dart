@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/enhanced_outfit_storage_service.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/core/services/image_processing_service.dart';
@@ -13,7 +14,10 @@ import 'package:vestiq/core/services/voice_search_service.dart';
 import 'package:vestiq/core/services/profile_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
+import 'package:vestiq/features/auth/domain/services/user_preferences_service.dart';
 import 'package:vestiq/features/wardrobe/data/firestore_wardrobe_service.dart';
+import 'package:vestiq/features/wardrobe/data/firestore_wear_history_service.dart';
+import 'package:vestiq/features/outfit_suggestions/data/firestore_outfit_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;
@@ -29,6 +33,20 @@ Future<void> setupServiceLocator() async {
   // Core Services
   getIt.registerLazySingleton<OutfitStorageService>(
     () => OutfitStorageService(sharedPreferences),
+  );
+
+  // Firestore Outfit Service
+  getIt.registerLazySingleton<FirestoreOutfitService>(
+    () => FirestoreOutfitService(),
+  );
+
+  // Enhanced Outfit Storage Service (with Firestore sync)
+  getIt.registerLazySingleton<EnhancedOutfitStorageService>(
+    () => EnhancedOutfitStorageService(
+      localService: getIt<OutfitStorageService>(),
+      firestoreService: getIt<FirestoreOutfitService>(),
+      userProfileService: getIt<UserProfileService>(),
+    ),
   );
 
   getIt.registerLazySingleton<EnhancedWardrobeStorageService>(
@@ -84,6 +102,16 @@ Future<void> setupServiceLocator() async {
   // Firestore Wardrobe Service
   getIt.registerLazySingleton<FirestoreWardrobeService>(
     () => FirestoreWardrobeService(firestore: FirebaseFirestore.instance),
+  );
+
+  // Firestore Wear History Service
+  getIt.registerLazySingleton<FirestoreWearHistoryService>(
+    () => FirestoreWearHistoryService(),
+  );
+
+  // User Preferences Service
+  getIt.registerLazySingleton<UserPreferencesService>(
+    () => UserPreferencesService(),
   );
 
   // Controllers

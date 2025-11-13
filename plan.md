@@ -178,7 +178,10 @@ Use this playbook as the blueprint for every “edit/upgrade” PR. Reference th
 | **Home Screen** | 🟢 Working | 75% | Navigation fixed, some hardcoded data |
 | **Profile System** | 🟢 Working | 95% | Real-time Firestore data, stats tracking |
 | **Favorites** | 🟢 Working | 95% | Firestore streams, real-time sync complete |
-| **Search & Filters** | � Working | 90% | Provider-based search, FilterBottomSheet complete |
+| **Search & Filters** | 🟢 Working | 90% | Provider-based search, FilterBottomSheet complete |
+| **Wear History Tracking** | 🟢 Working | 85% | WearHistoryScreen with calendar, stats, events; Firestore service complete; needs navigation wiring |
+| **Outfit Cloud Sync** | 🟢 Working | 90% | Dual-layer (Firestore + local) with auto-migration; EnhancedOutfitStorageService registered |
+| **Preference Learning System** | 🟢 Working | 80% | UserPreferences model + UserPreferencesService tracking 15+ metrics; ready to integrate into outfit generation |
 | **Settings** | 🟡 Partial | 50% | Basic theme toggle only |
 | **Multi-Upload** | 🔴 Missing | 0% | Not implemented |
 | **Social Features** | 🔴 Missing | 0% | Not planned yet |
@@ -605,7 +608,142 @@ Benefits:
 
 ---
 
-## 🚀 **Next Steps**
+## � **Recent Implementation Updates (Nov 2025)**
+
+### **Wear History Tracking System** ✅ COMPLETE (Nov 14, 2025)
+**What was built:**
+- `WearHistoryEvent` model with rich metadata (occasion, weather, rating, notes, tags)
+- `FirestoreWearHistoryService` with full CRUD, real-time streams, and analytics queries:
+  - `recordWearEvent()` - Track individual wear events
+  - `getWearHistoryByDateRange()` - Query events by date range
+  - `getMostWornItems()` - Get frequently worn items
+  - `getWearFrequencyByOccasion()` - Analyze wear patterns
+  - `watchUserWearHistory()` - Real-time stream of events
+- `WearHistoryScreen` with beautiful calendar UI:
+  - Month selector with prev/next navigation
+  - Stats dashboard (total wears, unique items, average rating)
+  - Event list grouped by date with item previews
+  - Real-time Firestore updates
+
+**Next steps:**
+- Wire screen to navigation (stats_row.dart onWearsTap)
+- Add "Mark as Worn" button to outfit preview sheets
+- Call `trackItemWear()` when items are worn to update preferences
+
+**Files created:**
+- `lib/core/models/wear_history_event.dart`
+- `lib/features/wardrobe/data/firestore_wear_history_service.dart`
+- `lib/features/wardrobe/presentation/screens/wear_history_screen.dart`
+
+---
+
+### **Outfit Cloud Sync System** ✅ COMPLETE (Nov 14, 2025)
+**What was built:**
+- `FirestoreOutfitService` - Cloud persistence for saved outfits:
+  - Full CRUD operations (save, get, update, delete)
+  - `watchUserOutfits()` - Real-time stream
+  - `bulkSaveOutfits()` - Batch migration support
+  - `getOutfitsByOccasion()` - Filter by occasion
+  - `getOutfitCount()` - User stat tracking
+- `EnhancedOutfitStorageService` - Dual-layer architecture:
+  - **Cloud-first** with local cache fallback
+  - **Auto-migration** from SharedPreferences to Firestore
+  - **Profile sync** - Updates `savedOutfitCount` in user profile
+  - **Offline support** - Local cache for offline access
+  - Mirrors `EnhancedWardrobeStorageService` pattern
+
+**Architecture:**
+```
+User Action → EnhancedOutfitStorageService
+             ├─► FirestoreOutfitService (cloud save)
+             ├─► OutfitStorageService (local cache)
+             └─► UserProfileService (update stats)
+```
+
+**Next steps:**
+- Update existing code to use `EnhancedOutfitStorageService` instead of `OutfitStorageService`
+- Test auto-migration with existing local outfits
+- Add pagination for large outfit collections
+
+**Files created:**
+- `lib/features/outfit_suggestions/data/firestore_outfit_service.dart`
+- `lib/core/services/enhanced_outfit_storage_service.dart`
+
+---
+
+### **ML-Ready Preference Learning System** ✅ COMPLETE (Nov 14, 2025)
+**What was built:**
+- `UserPreferences` comprehensive model tracking **15+ user behavior metrics**:
+  - `favoriteColors` - Map<String, int> of color preferences
+  - `favoriteStyles` - Map<String, int> of style preferences
+  - `favoriteOccasions` - Map<String, int> of occasion preferences
+  - `mostWornCategories` - Map<String, int> of category wear frequency
+  - `mostSavedCategories` - Map<String, int> of save patterns
+  - `favoritePatterns` - Map<String, int> of pattern preferences
+  - `successfulPairings` - Map<String, int> of good item combinations
+  - `rejectedPairings` - Map<String, int> of disliked combinations
+  - `favoriteBrands` - Map<String, int> of brand preferences
+  - `occasionsByTimeOfDay` - Map<String, int> of timing patterns
+  - `occasionsByWeather` - Map<String, int> of weather patterns
+  - `preferredMannequinStyle` - String preference
+  - `prefersFullOutfits` - Boolean preference
+  - `avgMatchScoreAccepted` - Double threshold
+  - Counters: `totalGenerations`, `totalSaves`, `totalViews`
+  
+- `UserPreferencesService` - **Smart Learning Engine** that tracks every user action:
+  - `trackOutfitGeneration()` - Increment generation counter
+  - `trackOutfitSave(outfit)` - **STRONGEST SIGNAL** - Extracts colors, styles, occasions, categories, pairings from saved outfit
+  - `trackOutfitView(outfit)` - Lighter signal for browsing behavior
+  - `trackOutfitRejection(outfit)` - Learn what to avoid (colors, pairings)
+  - `trackItemWear(item, occasion, timeOfDay, weather)` - **STRONGEST SIGNAL** - Double-weights colors, tracks brands, occasions, timing
+  - `getRecommendations()` - Returns personalized insights
+  - `getPreferenceStrength(category)` - Calculates 0-1 confidence score
+
+**Helper methods for ML integration:**
+- `getTopColors(n)` - Get top N preferred colors by frequency
+- `getTopStyles(n)` - Get top N preferred styles
+- `getTopOccasions(n)` - Get top N occasions
+- `isPairingSuccessful(itemId1, itemId2)` - Check if pairing is known-good
+- `isPairingRejected(itemId1, itemId2)` - Check if pairing is known-bad
+
+**Data signals ranked by strength:**
+1. 🔥 **trackItemWear()** - User actually wore it (2x weight for colors)
+2. 🔥 **trackOutfitSave()** - User saved the outfit (extracts all preferences)
+3. 🟡 **trackOutfitRejection()** - User rejected (negative signal)
+4. 🟢 **trackOutfitView()** - User viewed (weak positive signal)
+
+**Ready for "weaponization" into outfit generation:**
+```dart
+// In WardrobePairingService.generateOutfits():
+final prefs = await userPreferencesService.getUserPreferences(userId);
+final topColors = prefs.getTopColors(5);
+final topStyles = prefs.getTopStyles(3);
+
+// Boost outfits matching user preferences
+if (outfit.colors.any((c) => topColors.contains(c))) {
+  score *= 1.5; // 50% boost for preferred colors
+}
+
+// Check pairing history
+if (prefs.isPairingSuccessful(item1.id, item2.id)) {
+  score *= 2.0; // Double score for proven combinations
+}
+```
+
+**Next steps:**
+- Integrate into `WardrobePairingService.generateOutfits()`
+- Use `getTopColors/Styles/Occasions` to bias outfit selection
+- Apply `getPreferenceStrength()` as confidence multiplier
+- Wire `trackOutfitSave()` when user saves generated outfits
+- Wire `trackItemWear()` when user marks outfits as worn
+
+**Files created:**
+- `lib/core/models/user_preferences.dart`
+- `lib/features/auth/domain/services/user_preferences_service.dart`
+
+---
+
+## �🚀 **Next Steps**
 
 I can help you implement any of these improvements. What would you like to focus on first?
 
