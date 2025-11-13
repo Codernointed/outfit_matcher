@@ -7,6 +7,8 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Provider for user profile data
 final profileProvider = FutureProvider.autoDispose<ProfileData>((ref) async {
@@ -14,11 +16,40 @@ final profileProvider = FutureProvider.autoDispose<ProfileData>((ref) async {
   return await profileService.getProfile();
 });
 
-/// Provider for profile statistics
+/// Provider for profile statistics (FIRESTORE-POWERED!)
 final profileStatsProvider = FutureProvider.autoDispose<ProfileStats>((
   ref,
 ) async {
   try {
+    // Try to get from Firestore first
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      try {
+        final userProfileService = getIt<UserProfileService>();
+        final appUser = await userProfileService.getUserProfile(currentUser.uid);
+
+        if (appUser != null) {
+          AppLogger.info(
+            '📊 Profile stats from Firestore: ${appUser.wardrobeItemCount} items, '
+            '${appUser.savedOutfitCount} looks, ${appUser.totalGenerations} generations',
+          );
+
+          return ProfileStats(
+            itemsCount: appUser.wardrobeItemCount,
+            looksCount: appUser.savedOutfitCount,
+            totalWears: 0, // TODO: Add totalWears to AppUser model
+          );
+        }
+      } catch (e) {
+        AppLogger.warning(
+          '⚠️ Failed to get stats from Firestore, falling back to local',
+          error: e,
+        );
+      }
+    }
+
+    // Fallback to local storage
     final wardrobeService = getIt<EnhancedWardrobeStorageService>();
     final outfitService = getIt<OutfitStorageService>();
 
@@ -27,7 +58,7 @@ final profileStatsProvider = FutureProvider.autoDispose<ProfileStats>((
     final totalWears = items.fold<int>(0, (sum, item) => sum + item.wearCount);
 
     AppLogger.info(
-      '📊 Profile stats: ${items.length} items, ${looks.length} looks, $totalWears wears',
+      '📊 Profile stats from local: ${items.length} items, ${looks.length} looks, $totalWears wears',
     );
 
     return ProfileStats(

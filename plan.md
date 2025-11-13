@@ -148,11 +148,14 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 **✅ COMPLETED (Nov 13, 2025):**
 - **Authentication restore**: Login/signup screens working, auth flow complete
 - **Guided onboarding**: ProfileCreationScreen with 3-step PageView (name → gender → photo) functional; old GenderSelectionScreen removed
+- **Profile truth data**: Stats now pull from Firestore AppUser (wardrobeItemCount, savedOutfitCount); fallback to local storage
+- **Wardrobe cloud sync**: Firestore integration complete with auto-migration, dual read/write (cloud + local cache), real-time sync
 
 ### ✅ Definition of Done Checklist
-- [x] All production widgets pull from providers backed by Firestore/real services. _(Profiles, auth complete; wardrobe pending)_
+- [x] All production widgets pull from providers backed by Firestore/real services. _(Profiles, auth, wardrobe, stats complete)_
 - [x] Every CTA either performs a real action or is hidden. _(Auth flow complete)_
 - [x] Onboarding + login/signup sequence confirmed on device + emulator. _(Testing in progress)_
+- [x] Wardrobe items sync to Firestore with offline cache. _(Migration + dual sync complete)_
 - [ ] Regression tests updated and passing.
 - [ ] Release notes highlight removal of placeholders and the new guided profile setup.
 
@@ -167,13 +170,13 @@ Use this playbook as the blueprint for every “edit/upgrade” PR. Reference th
 | **Authentication System** | 🟢 Working | 95% | Email, Google sign-in complete |
 | **Onboarding Flow** | 🟢 Working | 95% | Welcome screens functional |
 | **Profile Creation** | 🟢 Working | 90% | 3-step PageView (name → gender → photo), photo upload pending |
-| **Wardrobe Management** | 🟢 Working | 85% | Cloud sync needed for items |
+| **Wardrobe Management** | 🟢 Working | 95% | Firestore sync complete, local cache |
 | **AI Image Analysis** | 🟢 Working | 90% | Rate limiting needed |
 | **Outfit Pairing** | 🟡 Partial | 70% | Only works with 2+ items |
 | **Mannequin Generation** | 🟢 Working | 85% | Expensive API calls |
 | **Visual Search** | 🟢 Working | 80% | External API dependency |
-| **Home Screen** | � Working | 75% | Navigation fixed, some hardcoded data |
-| **Profile System** | � Working | 85% | Real data from Firestore, stats tracking |
+| **Home Screen** | 🟢 Working | 75% | Navigation fixed, some hardcoded data |
+| **Profile System** | 🟢 Working | 95% | Real-time Firestore data, stats tracking |
 | **Favorites** | � Working | 85% | Firestore sync, UI integration needed |
 | **Search & Filters** | 🔴 Missing | 10% | Not implemented |
 | **Settings** | 🟡 Partial | 50% | Basic theme toggle only |

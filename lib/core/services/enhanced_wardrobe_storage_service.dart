@@ -8,11 +8,21 @@ import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/compatibility_cache_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/features/wardrobe/data/firestore_wardrobe_service.dart';
+import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Enhanced storage service for wardrobe items and looks with caching and migrations
+/// NOW WITH FIRESTORE SYNC!
 class EnhancedWardrobeStorageService {
   final SharedPreferences _prefs;
   final OutfitStorageService _legacyStorage;
+  FirestoreWardrobeService? _firestoreService;
+  UserProfileService? _userProfileService;
+
+  // Migration tracking
+  static const String _firestoreMigrationKey = 'firestore_migration_complete';
+  bool _isMigrating = false;
 
   // Storage keys
   static const String _wardrobeItemsKey = OutfitStorageKeys.wardrobeItems;
@@ -34,7 +44,30 @@ class EnhancedWardrobeStorageService {
 
   EnhancedWardrobeStorageService(this._prefs, this._legacyStorage) {
     _initializeStorage();
+    _initializeFirestore();
   }
+
+  /// Initialize Firestore service when available
+  void _initializeFirestore() {
+    try {
+      if (getIt.isRegistered<FirestoreWardrobeService>()) {
+        _firestoreService = getIt<FirestoreWardrobeService>();
+        AppLogger.info('✅ Firestore wardrobe service initialized');
+      }
+      if (getIt.isRegistered<UserProfileService>()) {
+        _userProfileService = getIt<UserProfileService>();
+      }
+    } catch (e) {
+      AppLogger.warning(
+        '⚠️ Firestore services not available, using local storage only',
+        error: e,
+      );
+    }
+  }
+
+  /// Check if user is logged in and Firestore is available
+  bool get _isFirestoreAvailable =>
+      _firestoreService != null && FirebaseAuth.instance.currentUser != null;
 
   /// Add a callback to be notified when wardrobe changes
   void addOnChangeListener(VoidCallback callback) {
@@ -70,6 +103,46 @@ class EnhancedWardrobeStorageService {
     // This fixes hot restart issues where providers reset but storage persists
     AppLogger.info('🔄 Initializing wardrobe storage service');
     _invalidateCache();
+
+    // Migrate to Firestore if user is logged in
+    _attemptFirestoreMigration();
+  }
+
+  /// Migrate local wardrobe items to Firestore (one-time)
+  Future<void> _attemptFirestoreMigration() async {
+    if (!_isFirestoreAvailable || _isMigrating) return;
+
+    final migrationComplete =
+        _prefs.getBool(_firestoreMigrationKey) ?? false;
+
+    if (migrationComplete) return;
+
+    try {
+      _isMigrating = true;
+      AppLogger.info('🔄 Starting Firestore migration...');
+
+      // Get local items
+      final localItems = await _getWardrobeItemsFromLocal();
+
+      if (localItems.isNotEmpty) {
+        AppLogger.info(
+          '📦 Migrating ${localItems.length} items to Firestore',
+        );
+        await _firestoreService!.bulkSaveWardrobeItems(localItems);
+        AppLogger.info('✅ Firestore migration complete');
+      }
+
+      // Mark migration complete
+      await _prefs.setBool(_firestoreMigrationKey, true);
+    } catch (e, stack) {
+      AppLogger.error(
+        '❌ Firestore migration failed',
+        error: e,
+        stackTrace: stack,
+      );
+    } finally {
+      _isMigrating = false;
+    }
   }
 
   /// Handle storage migrations
@@ -166,10 +239,24 @@ class EnhancedWardrobeStorageService {
 
   // === WARDROBE ITEMS ===
 
-  /// Save a wardrobe item
+  /// Save a wardrobe item (Firestore + Local)
   Future<void> saveWardrobeItem(WardrobeItem item) async {
     try {
-      final items = await getWardrobeItems();
+      // Save to Firestore first if available
+      if (_isFirestoreAvailable) {
+        await _firestoreService!.saveWardrobeItem(item);
+
+        // Update user's wardrobe count
+        final userId = FirebaseAuth.instance.currentUser!.uid;
+        final items = await getWardrobeItems();
+        await _userProfileService?.updateWardrobeItemCount(
+          userId,
+          items.length + 1,
+        );
+      }
+
+      // Always save to local storage as cache/backup
+      final items = await _getWardrobeItemsFromLocal();
       items.removeWhere((i) => i.id == item.id); // Remove if exists
       items.add(item);
 
@@ -183,6 +270,7 @@ class EnhancedWardrobeStorageService {
           'id': item.id,
           'type': item.analysis.itemType,
           'color': item.analysis.primaryColor,
+          'firestore': _isFirestoreAvailable,
         },
       );
     } catch (e, stackTrace) {
@@ -195,8 +283,37 @@ class EnhancedWardrobeStorageService {
     }
   }
 
-  /// Get all wardrobe items (with caching)
+  /// Get all wardrobe items (Firestore or Local with caching)
   Future<List<WardrobeItem>> getWardrobeItems() async {
+    // If Firestore available, get from there (real-time cloud data)
+    if (_isFirestoreAvailable) {
+      try {
+        final items = await _firestoreService!.getAllWardrobeItems();
+
+        // Update local cache
+        await _saveWardrobeItems(items);
+        _cachedItems = items;
+        await _updateCacheTimestamp();
+
+        AppLogger.debug(
+          '📦 Loaded ${items.length} items from Firestore',
+        );
+        return items;
+      } catch (e) {
+        AppLogger.warning(
+          '⚠️ Firestore fetch failed, falling back to local',
+          error: e,
+        );
+        // Fall through to local storage
+      }
+    }
+
+    // Fallback to local storage
+    return _getWardrobeItemsFromLocal();
+  }
+
+  /// Get wardrobe items from local storage only (private helper)
+  Future<List<WardrobeItem>> _getWardrobeItemsFromLocal() async {
     // Return cached items if valid
     if (_isCacheValid() && _cachedItems != null) {
       AppLogger.debug(
@@ -222,11 +339,11 @@ class EnhancedWardrobeStorageService {
       _cachedItems = items;
       await _updateCacheTimestamp();
 
-      AppLogger.debug('📦 Loaded ${items.length} wardrobe items from storage');
+      AppLogger.debug('📦 Loaded ${items.length} wardrobe items from local storage');
       return List.from(items);
     } catch (e, stackTrace) {
       AppLogger.error(
-        '❌ Failed to load wardrobe items',
+        '❌ Failed to load wardrobe items from local',
         error: e,
         stackTrace: stackTrace,
       );
@@ -410,7 +527,21 @@ class EnhancedWardrobeStorageService {
   /// Delete wardrobe item with proper image cleanup
   Future<void> deleteWardrobeItem(String itemId) async {
     try {
-      final items = await getWardrobeItems();
+      // Delete from Firestore first
+      if (_isFirestoreAvailable) {
+        await _firestoreService!.deleteWardrobeItem(itemId);
+
+        // Update user's wardrobe count
+        final userId = FirebaseAuth.instance.currentUser!.uid;
+        final items = await getWardrobeItems();
+        await _userProfileService?.updateWardrobeItemCount(
+          userId,
+          items.length - 1,
+        );
+      }
+
+      // Delete from local storage
+      final items = await _getWardrobeItemsFromLocal();
       final itemToDelete = items.where((i) => i.id == itemId).firstOrNull;
 
       if (itemToDelete != null) {
@@ -426,7 +557,7 @@ class EnhancedWardrobeStorageService {
 
       AppLogger.info(
         '🗑️ Wardrobe item deleted with image cleanup',
-        data: {'id': itemId},
+        data: {'id': itemId, 'firestore': _isFirestoreAvailable},
       );
     } catch (e, stackTrace) {
       AppLogger.error(

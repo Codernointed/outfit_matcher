@@ -135,14 +135,11 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         AppLogger.info(
           'ℹ️ Existing profile found. Updating user profile document...',
         );
-        await userProfileService.updateUserProfile(
-          currentUser.uid,
-          {
-            'username': username,
-            'displayName': username,
-            'gender': genderStr,
-          },
-        );
+        await userProfileService.updateUserProfile(currentUser.uid, {
+          'username': username,
+          'displayName': username,
+          'gender': genderStr,
+        });
         AppLogger.info('✅ User profile updated in Firestore');
       }
 
@@ -165,9 +162,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       );
       if (mounted) {
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to save profile: ${e.toString()}'),
             backgroundColor: Colors.red,
