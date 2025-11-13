@@ -75,6 +75,25 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 
 ---
 
+## 🧹 Placeholder & Hardcode Cleanup (Nov 2025)
+
+| Area / UI Surface | File(s) | Placeholder / Hardcode | Live Data Wiring Plan | Dependencies / Notes |
+| --- | --- | --- | --- | --- |
+| Profile stats row | `lib/features/profile/presentation/widgets/stats_row.dart`, `.../providers/profile_providers.dart` | Counts derive from local `EnhancedWardrobeStorageService` / `OutfitStorageService`, so switching devices never updates. | Replace `ProfileStats` source with Firestore `AppUser` aggregations (`wardrobeItemCount`, `savedOutfitCount`, `totalWears`) and update those fields via `UserProfileService` on wardrobe/outfit mutations. | Wire wardrobe/outfit services to call `updateWardrobeItemCount` / `updateSavedOutfitCount`; add `totalWears` collection or cloud function. |
+| Favorites carousel | `.../widgets/favorites_carousel.dart`, `favoriteItemsProvider`, `favoriteLooksProvider` | Carousel only sees per-device favorites; “View All” opens local cache. | Feed both lists from Firestore using `FavoritesService.watchFavoriteItemIds` plus remote `saved_outfits`; keep offline cache purely as mirror. | Needs migration to push existing local favorites to Firestore once. |
+| Profile share/help CTAs | `lib/features/profile/presentation/screens/profile_screen.dart` | Share to wardrobe/Instagram/help/privacy buttons show SnackBars (“coming soon”). | Implement real intents: Firebase Dynamic Links for share, platform channel export for Instagram, deep-links to hosted Help Center + policy doc. | Requires new `ShareService` and published policy URLs. |
+| Wear history CTA | `profile_screen.dart` (Stats row `onWearsTap`) | Tap displays “Wear history coming soon!”. | Add `WearHistoryScreen` fed by Firestore `wear_events` (or aggregated counts) so users can review usage. | Need to emit wear events when `WardrobeItem.wearCount` increments. |
+| Quick outfit ideas | `lib/features/outfit_suggestions/presentation/providers/home_providers.dart` | `_initialize` seeds four static `QuickIdeaCard`s; “New” badge never tied to data. | Generate cards from actual saved outfit occasions + Riverpod state that tracks unseen pairings. | Requires lightweight store for “last viewed quick idea per occasion”. |
+| Recent Generations / Saved Looks | `lib/features/outfit_suggestions/presentation/screens/home_screen.dart`, `recentLooksProvider`, `OutfitStorageService` | Section shows only SharedPreferences outfits—no sync, no pagination. | Load from Firestore `users/{uid}/savedOutfits`, stream changes, mirror to local cache for offline. | Align `SavedOutfit` schema + converters; add backfill of existing local outfits. |
+| Today’s Picks weather chip | `home_screen.dart` (`_buildTodaysPickCard`) | Chip text alternates between “Tonight” and hard-coded “22°C”. | Pull real weather from location-based `WeatherService` (or drop chip) and map to `TodayTab` (day/night). | Requires location permission + API key, or design removal. |
+| Wardrobe snapshot grid | `home_screen.dart`, `wardrobeSnapshotProvider` | Items + wear counts sourced from local storage only. | Mirror wardrobe catalog into Firestore, fetch via snapshot stream, and keep wear counts in remote profile stats. | Needs sync + conflict resolution when editing offline. |
+| Legacy wardrobe home screen | `lib/features/wardrobe/presentation/screens/home_screen.dart` | Entire screen built from static asset cards (Blue Top, Black Pants, etc.). | Remove legacy screen or refactor to use the same providers as Enhanced Closet so every tile is real data. | Clean navigation so there’s a single wardrobe entry point. |
+| Search → Inspiration tab | `lib/features/outfit_suggestions/presentation/screens/home_search_results_screen.dart` | Inspiration tab always renders “Inspiration coming soon”. | Populate with visual-search feed (Pexels/Unsplash) + ability to save looks to inspiration collection. | Needs API client + `inspiration` collection/filters. |
+| Image preview edit bar | `lib/features/wardrobe/presentation/screens/image_preview_screen.dart` | Crop/Rotate/Adjust buttons only show SnackBars. | Wire buttons to actual editing pipeline (ImageCropper/photofilter plugins) before upload. | Evaluate best plugin for offline processing; ensure iOS parity. |
+| Enhanced visual search gaps | `lib/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart` | `_buildFlatLayTab` + Share button both say “Coming soon”. | Implement flat-lay rendering using same mannequin data and hook share/export into `GalleryService`. | Depends on cost of extra AI renders + storage budgets. |
+
+---
+
 ## 📋 **Feature Status Matrix**
 
 | Feature | Status | Completion | Issues |

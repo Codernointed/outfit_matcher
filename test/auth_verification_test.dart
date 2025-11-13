@@ -7,7 +7,7 @@ void main() {
     test('AuthService should have required authentication methods', () {
       // This test verifies the existence of methods at compile time
       // If this compiles, the methods exist with correct signatures
-      
+
       // Import verification - if these imports work, files exist
       expect(true, true, reason: 'Auth service imports verified');
     });

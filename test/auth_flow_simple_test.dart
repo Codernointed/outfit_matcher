@@ -20,7 +20,10 @@ void main() {
     });
 
     test('NeedsProfile state should be identifiable and contain userId', () {
-      const state = AuthFlowNeedsProfile(userId: 'test-uid', email: 'test@example.com');
+      const state = AuthFlowNeedsProfile(
+        userId: 'test-uid',
+        email: 'test@example.com',
+      );
       expect(state, isA<AuthFlowNeedsProfile>());
       expect(state.userId, equals('test-uid'));
       expect(state.email, equals('test@example.com'));
@@ -35,7 +38,7 @@ void main() {
     test('Error state should contain error message', () {
       const errorMessage = 'Test error';
       const state = AuthFlowError(message: errorMessage);
-      
+
       expect(state, isA<AuthFlowError>());
       expect(state.message, equals(errorMessage));
     });
@@ -69,21 +72,21 @@ void main() {
     test('Should create error state with message', () {
       const errorMessage = 'Authentication failed';
       const errorState = AuthFlowError(message: errorMessage);
-      
+
       expect(errorState.message, equals(errorMessage));
     });
 
     test('Should handle network errors', () {
       const errorMessage = 'Network error occurred';
       const errorState = AuthFlowError(message: errorMessage);
-      
+
       expect(errorState.message, contains('Network'));
     });
 
     test('Should handle Firebase errors', () {
       const errorMessage = 'Firebase authentication failed';
       const errorState = AuthFlowError(message: errorMessage);
-      
+
       expect(errorState.message, contains('Firebase'));
     });
   });
