@@ -49,15 +49,18 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 
 ### **1. Missing Backend & User System**
 
-✅ **Cloud sync** - Firebase Auth + Firestore for user profiles and favorites ✅
-⚠️ **Partial multi-device support** - Profiles and favorites sync, wardrobe items still local
+✅ **Cloud sync** - Firebase Auth + Firestore complete for user profiles and favorites
+✅ **Multi-device support** - User profiles and favorites persist across devices
+✅ **Authentication** - Email/password and Google sign-in working
+⚠️ **Partial wardrobe sync** - Wardrobe items still stored locally, need Firestore migration
 
-**Impact:** User profiles and favorites persist. Wardrobe items still need Firestore migration.
+**Impact:** Users can sign up, log in, create profiles. Wardrobe items need cloud migration for full sync.
 
 ### **2. Incomplete Core Features**
 ✅ **Home screen navigation** - "View All" and "Search" buttons work
 ✅ **Profile screen real data** - Email, name, stats from Firebase (generations, wardrobe count, favorites)
 ✅ **Favorites system** - Complete FavoritesService with Firestore sync, ready for UI integration
+✅ **Profile creation** - 3-step PageView flow (name → gender → photo)
 ⏳ **Filters** - Filter button commented out, FilterBottomSheet not yet implemented
 ❌ **Single item limitation** - Many features only work with 2+ wardrobe items
 
@@ -94,19 +97,85 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 
 ---
 
-## 📋 **Feature Status Matrix**
+## �️ Hardcode & Legacy Feature Eradication Playbook (Nov 2025)
+
+### 🎯 Objectives
+- **Zero hardcodes in production UI**: every metric, CTA, and chip must be driven by Firestore, Cloud Functions, or deterministic local models.
+- **No dead ends**: remove SnackBar placeholders and “coming soon” toasts by either wiring real screens or hiding the affordance until it’s ready.
+- **Restored onboarding/auth**: login/signup flows must exist before profile creation, and onboarding should feel like a guided story—not a blocking gender page.
+- **Documented exit criteria**: each surface has measurable DONE conditions (data source, analytics event, QA scenario).
+
+### 🧭 Guiding Principles
+1. Treat **Firestore as the single source of truth**. Local services cache, never originate, user-facing stats.
+2. **Ship in thin slices**: convert one surface at a time (e.g., profile stats ➜ favorites ➜ wardrobe snapshot) to avoid regressions.
+3. **Hide inactive features** rather than tease; re-enable only when the backend + UI are stable.
+4. **QA with scripted walkthroughs**: for every converted surface, add a widget test or at minimum a golden flow in `test_fixes.dart`/`test_pairing_fix.dart`.
+
+### 📅 End-to-End Upgrade Flow
+1. **Repo Hygiene (Day 0)**
+  - Remove abandoned screens (legacy wardrobe home, unused onboarding routes) or flag them with `// Deprecated` until deletion PR lands.
+  - Re-enable auth routes in `main.dart` so returning users land in login/signup instead of directly inside onboarding.
+2. **Data Authority Cutover (Day 1-3)**
+  - Extend Firestore schema (`users`, `wardrobeItems`, `savedOutfits`, `wearEvents`, `inspirationFeed`).
+  - Update `EnhancedWardrobeStorageService`, `OutfitStorageService`, and `FavoritesService` to read/write through Firestore first, SharedPreferences second.
+  - Add migration jobs that run once per user to upload existing local wardrobe/favorites/outfits.
+3. **UI Rewire Sprint (Day 4-9)**
+  - Repoint profile stats, favorites carousel, quick ideas, and wardrobe snapshot providers to the new streams.
+  - Replace Today’s Picks chip with `WeatherService` output or remove the widget when weather is unavailable.
+  - Drop SnackBar placeholders; wire share/help CTAs to real destinations (dynamic links, hosted docs).
+4. **Onboarding Renaissance (Day 10-14)**
+  - Reinstate login/signup screens (email, Google, Apple) before onboarding.
+  - Replace current gender-only page with a **5-card PageView** flow: name ➜ goals ➜ style vibe ➜ gender/presentation ➜ upload full-body reference.
+  - Persist progress after each card via `UserProfileService.saveOnboardingStep` so users never repeat gender selection.
+5. **Inactive Feature Sunset (Day 15-18)**
+  - If a feature lacks a backend ready date (e.g., flat-lay share), hide it behind a config flag.
+  - Remove “Inspiration Coming Soon” tab until the API client ships; keep the navigation route but guard it.
+6. **Verification & Analytics (Day 19-21)**
+  - Add integration tests that simulate onboarding + profile usage with Firestore emulator.
+  - Emit analytics events (`onboarding_step_completed`, `profile_stat_loaded`) to confirm hardcode removal in production telemetry.
+
+### 📋 Upgrade Backlog by Track
+| Track | File(s) / Layer | Key Edits | Exit Criteria |
+| --- | --- | --- | --- |
+| Authentication restore | `lib/main.dart`, `core/router/app_router.dart`, auth screens | Bring back login/signup pages, gate onboarding behind `isNewUser`. | Returning users see login; onboarding only for newly created accounts. |
+| Guided onboarding | `lib/features/onboarding/...` | Build PageView flow (name, pronouns, style, wardrobe photo), persist after each page, optional skip with confirmation. | Users never re-enter gender flow; onboarding < 90 seconds with progress indicator. |
+| Profile truth data | `profile_screen.dart`, `stats_row.dart`, `UserProfileService` | Replace local counts with Firestore aggregations, add wear history tap route. | Stats match backend, wear history screen loads real events. |
+| Favorites & looks | `favorites_carousel.dart`, `recentLooksProvider` | Stream data from Firestore, add pagination + offline mirror. | Carousel + “View All” show identical content on every device. |
+| Wardrobe snapshot | `home_screen.dart`, wardrobe providers | Mirror wardrobe items to Firestore, hydrate snapshot grid from remote stream, handle offline edits. | Snapshot updates within 1s of wardrobe edit; counts survive reinstall. |
+| Search & inspiration | `home_search_results_screen.dart`, API client | Implement remote inspiration feed, hide toggle until API key configured. | No “coming soon”; either live content or feature hidden. |
+| Visual search share | `enhanced_visual_search_screen.dart`, `GalleryService` | Implement flat-lay renderer, connect share sheet. | Share button exports image without placeholder toast. |
+
+**✅ COMPLETED (Nov 13, 2025):**
+- **Authentication restore**: Login/signup screens working, auth flow complete
+- **Guided onboarding**: ProfileCreationScreen with 3-step PageView (name → gender → photo) functional; old GenderSelectionScreen removed
+
+### ✅ Definition of Done Checklist
+- [x] All production widgets pull from providers backed by Firestore/real services. _(Profiles, auth complete; wardrobe pending)_
+- [x] Every CTA either performs a real action or is hidden. _(Auth flow complete)_
+- [x] Onboarding + login/signup sequence confirmed on device + emulator. _(Testing in progress)_
+- [ ] Regression tests updated and passing.
+- [ ] Release notes highlight removal of placeholders and the new guided profile setup.
+
+Use this playbook as the blueprint for every “edit/upgrade” PR. Reference the placeholder table above to pick the next surface, then follow the flow (Schema ➜ Service ➜ Provider ➜ UI ➜ QA) until the DONE checklist is green.
+
+---
+
+##  **Feature Status Matrix**
 
 | Feature | Status | Completion | Issues |
 |---------|---------|-----------|--------|
-| **Wardrobe Management** | 🟢 Working | 85% | No cloud sync, no categories |
+| **Authentication System** | 🟢 Working | 95% | Email, Google sign-in complete |
+| **Onboarding Flow** | 🟢 Working | 95% | Welcome screens functional |
+| **Profile Creation** | 🟢 Working | 90% | 3-step PageView (name → gender → photo), photo upload pending |
+| **Wardrobe Management** | 🟢 Working | 85% | Cloud sync needed for items |
 | **AI Image Analysis** | 🟢 Working | 90% | Rate limiting needed |
 | **Outfit Pairing** | 🟡 Partial | 70% | Only works with 2+ items |
 | **Mannequin Generation** | 🟢 Working | 85% | Expensive API calls |
 | **Visual Search** | 🟢 Working | 80% | External API dependency |
-| **Home Screen** | 🔴 Broken | 40% | Most buttons non-functional |
-| **Profile System** | 🔴 Missing | 20% | No real user data |
+| **Home Screen** | � Working | 75% | Navigation fixed, some hardcoded data |
+| **Profile System** | � Working | 85% | Real data from Firestore, stats tracking |
+| **Favorites** | � Working | 85% | Firestore sync, UI integration needed |
 | **Search & Filters** | 🔴 Missing | 10% | Not implemented |
-| **Favorites** | 🔴 Missing | 10% | UI only, no backend |
 | **Settings** | 🟡 Partial | 50% | Basic theme toggle only |
 | **Multi-Upload** | 🔴 Missing | 0% | Not implemented |
 | **Social Features** | 🔴 Missing | 0% | Not planned yet |

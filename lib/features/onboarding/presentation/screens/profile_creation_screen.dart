@@ -92,16 +92,18 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         throw Exception('No authenticated user');
       }
 
+      AppLogger.info('💾 Starting profile save for ${currentUser.uid}');
+
       final userProfileService = getIt<UserProfileService>();
       final profileService = getIt<ProfileService>();
 
       // Prepare profile data
-      final Map<String, dynamic> profileData = {
-        'username': _nameController.text.trim().isNotEmpty
-            ? _nameController.text.trim()
-            : 'Fashion Enthusiast',
-        'gender': _selectedGender?.name ?? Gender.female.name,
-      };
+      final username = _nameController.text.trim().isNotEmpty
+          ? _nameController.text.trim()
+          : 'Fashion Enthusiast';
+      final genderStr = _selectedGender?.name ?? Gender.female.name;
+
+      AppLogger.info('👤 Profile data: username=$username, gender=$genderStr');
 
       // TODO: Upload mannequin photo to Firebase Storage
       // For now, just save the data
@@ -121,10 +123,10 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         await userProfileService.createUserProfile(
           uid: currentUser.uid,
           email: currentUser.email ?? 'unknown@example.com',
-          username: profileData['username'] as String,
-          displayName: profileData['username'] as String,
+          username: username,
+          displayName: username,
           phoneNumber: currentUser.phoneNumber,
-          gender: profileData['gender'] as String?,
+          gender: genderStr,
           authProvider:
               app_user.AuthProvider.email, // TODO: derive from providerData
         );
@@ -135,16 +137,23 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         );
         await userProfileService.updateUserProfile(
           currentUser.uid,
-          profileData,
+          {
+            'username': username,
+            'displayName': username,
+            'gender': genderStr,
+          },
         );
+        AppLogger.info('✅ User profile updated in Firestore');
       }
 
       // Save gender to local ProfileService
+      AppLogger.info('💾 Saving gender to local profile service...');
       await profileService.updateGenderPreference(
         _selectedGender ?? Gender.female,
       );
+      AppLogger.info('✅ Gender saved to local storage');
 
-      AppLogger.info('✅ Profile created successfully');
+      AppLogger.info('🎉 Profile created successfully - calling onComplete');
 
       // Notify completion
       widget.onComplete();
@@ -158,7 +167,13 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
         setState(() => _isProcessing = false);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save profile: $e')));
+        ).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save profile: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
       }
     }
   }
