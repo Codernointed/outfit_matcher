@@ -1,0 +1,29 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "vestiq-app",
+          "appId": "1:722272019813:android:9cb00b45ace10d2e4aed8c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "vestiq-app",
+          "configurations": {
+            "android": "1:722272019813:android:9cb00b45ace10d2e4aed8c",
+            "ios": "1:722272019813:ios:80060558cd32ce174aed8c",
+            "macos": "1:722272019813:ios:80060558cd32ce174aed8c",
+            "web": "1:722272019813:web:0521cdb1286a0c334aed8c",
+            "windows": "1:722272019813:web:9a6e77671e2701c54aed8c"
+          }
+        }
+      }
+    }
+  }
+}

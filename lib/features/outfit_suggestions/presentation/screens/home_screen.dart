@@ -43,14 +43,14 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  void _openFilters(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => const FilterBottomSheet(),
-    );
-  }
+  // void _openFilters(BuildContext context) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     builder: (context) => const FilterBottomSheet(),
+  //   );
+  // }
 
   void _toggleTheme(WidgetRef ref, BuildContext context) {
     final currentMode = ref.read(appThemeModeProvider);
@@ -1690,26 +1690,26 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     return _buildItemImagePlaceholder(item, theme);
   }
 
-  Widget _buildWardrobeItemImage(WardrobeItem item, ThemeData theme) {
-    // Try to show actual image first
-    if (item.originalImagePath.isNotEmpty) {
-      try {
-        return Image.file(
-          File(item.originalImagePath),
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          errorBuilder: (context, error, stackTrace) =>
-              _buildItemImagePlaceholder(item, theme),
-        );
-      } catch (e) {
-        // Fall through to placeholder
-      }
-    }
+  // Widget _buildWardrobeItemImage(WardrobeItem item, ThemeData theme) {
+  //   // Try to show actual image first
+  //   if (item.originalImagePath.isNotEmpty) {
+  //     try {
+  //       return Image.file(
+  //         File(item.originalImagePath),
+  //         fit: BoxFit.cover,
+  //         width: double.infinity,
+  //         height: double.infinity,
+  //         errorBuilder: (context, error, stackTrace) =>
+  //             _buildItemImagePlaceholder(item, theme),
+  //       );
+  //     } catch (e) {
+  //       // Fall through to placeholder
+  //     }
+  //   }
 
-    // Show placeholder with item info
-    return _buildItemImagePlaceholder(item, theme);
-  }
+  //   // Show placeholder with item info
+  //   return _buildItemImagePlaceholder(item, theme);
+  // }
 
   Widget _buildItemImagePlaceholder(WardrobeItem item, ThemeData theme) {
     return Container(

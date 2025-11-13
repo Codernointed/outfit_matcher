@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "722272019813",
+    "project_id": "vestiq-app",
+    "storage_bucket": "vestiq-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:722272019813:android:9cb00b45ace10d2e4aed8c",
+        "android_client_info": {
+          "package_name": "com.codernointed.vestiq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARXBqNoEhIKC5PZlPpjsV5M2OE8j6Anos"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

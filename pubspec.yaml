@@ -38,6 +38,12 @@ dependencies:
   # Storage
   shared_preferences: ^2.2.2
   
+  # Firebase
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  cloud_firestore: ^6.1.0
+  google_sign_in: ^7.2.0
+  
   # State management
   flutter_riverpod: ^2.4.9
   riverpod_annotation: ^2.3.3
