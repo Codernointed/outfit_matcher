@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:vestiq/core/models/profile_data.dart';
 import 'package:vestiq/core/services/profile_service.dart';
+import 'package:vestiq/core/services/storage_service.dart';
+import 'package:vestiq/core/services/analytics_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/reset_utils.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
@@ -15,6 +17,7 @@ import 'package:vestiq/features/profile/presentation/widgets/favorites_carousel.
 import 'package:vestiq/features/profile/presentation/widgets/profile_section_tile.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 
 /// Premium profile screen with stats, favorites, preferences, and settings
@@ -172,12 +175,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _clearCache() async {
+    // First calculate storage
+    final storageService = StorageService();
+    final storageInfo = await storageService.calculateStorage();
+
+    if (!mounted) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Cache'),
-        content: const Text(
-          'This will clear all cached images and data. '
+        content: Text(
+          'This will clear ${storageInfo.formattedCache} of cached data.\n'
           'Your wardrobe items will not be affected.',
         ),
         actions: [
@@ -196,14 +205,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (confirmed == true && mounted) {
       HapticFeedback.mediumImpact();
-      // TODO: Implement cache clearing when cache services have clear methods
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cache clearing coming soon!'),
-          duration: Duration(seconds: 2),
+      
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
         ),
       );
-      AppLogger.info('🗑️ Cache clear requested');
+
+      try {
+        final clearedMB = await storageService.clearCache();
+        
+        // Track analytics
+        final analytics = AnalyticsService();
+        await analytics.logCacheCleared(sizeMB: clearedMB);
+
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Cache cleared: ${clearedMB.toStringAsFixed(2)} MB'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+        AppLogger.info('✅ Cache cleared: ${clearedMB}MB');
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error clearing cache: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        AppLogger.error('❌ Cache clear error: $e');
+      }
     }
   }
 
@@ -242,6 +282,333 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             duration: Duration(seconds: 3),
           ),
         );
+      }
+    }
+  }
+
+  Future<void> _signOut() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sign Out'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      HapticFeedback.mediumImpact();
+      
+      try {
+        // Track analytics
+        final analytics = AnalyticsService();
+        await analytics.logSignOut();
+
+        // Sign out
+        final authService = ref.read(authServiceProvider);
+        await authService.signOut();
+
+        AppLogger.info('👋 User signed out');
+        
+        // Navigation is handled by AuthWrapper
+      } catch (e) {
+        AppLogger.error('❌ Sign out error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error signing out: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Account'),
+        icon: const Icon(Icons.warning, color: Colors.red, size: 48),
+        content: const Text(
+          '⚠️ This action cannot be undone!\n\n'
+          'All your data including:\n'
+          '• Wardrobe items\n'
+          '• Saved outfits\n'
+          '• Preferences\n'
+          '• Generation history\n\n'
+          'will be permanently deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete Account'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      // Second confirmation
+      final finalConfirmation = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Final Confirmation'),
+          content: const Text(
+            'Are you absolutely sure?\n\n'
+            'Type DELETE below to confirm:',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('Confirm Delete'),
+            ),
+          ],
+        ),
+      );
+
+      if (finalConfirmation == true && mounted) {
+        HapticFeedback.heavyImpact();
+        
+        // Show loading
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+
+        try {
+          // Track analytics before deletion
+          final analytics = AnalyticsService();
+          await analytics.logAccountDeleted();
+
+          // Delete account
+          final authService = ref.read(authServiceProvider);
+          await authService.deleteAccount();
+
+          AppLogger.info('🗑️ Account deleted');
+          
+          // Navigation is handled by AuthWrapper
+        } catch (e) {
+          AppLogger.error('❌ Account deletion error: $e');
+          if (mounted) {
+            Navigator.pop(context); // Close loading
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error deleting account: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> _showStorageInfo() async {
+    HapticFeedback.lightImpact();
+    
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final storageService = StorageService();
+      final storageInfo = await storageService.calculateStorage();
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Storage Usage'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total: ${storageInfo.formattedTotal}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  ...storageInfo.breakdown.entries.map((entry) {
+                    if (entry.value > 0) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(entry.key),
+                            Text(
+                              '${entry.value.toStringAsFixed(2)} MB',
+                              style: const TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }).toList(),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+              if (storageInfo.cacheSize > 0)
+                FilledButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _clearCache();
+                  },
+                  child: const Text('Clear Cache'),
+                ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error calculating storage: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _editProfile() async {
+    final currentUser = ref.read(currentUserProvider).value;
+    if (currentUser == null) return;
+
+    HapticFeedback.lightImpact();
+    
+    final nameController = TextEditingController(text: currentUser.displayName);
+    final bioController = TextEditingController(text: currentUser.bio);
+
+    final result = await showDialog<Map<String, String>?>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Display Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: bioController,
+              decoration: const InputDecoration(
+                labelText: 'Bio',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              maxLength: 150,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context, {
+                'displayName': nameController.text,
+                'bio': bioController.text,
+              });
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && mounted) {
+      HapticFeedback.mediumImpact();
+      
+      try {
+        final userProfileService = ref.read(userProfileServiceProvider);
+        await userProfileService.updateUserProfile(
+          currentUser.uid,
+          {
+            'displayName': result['displayName'],
+            'bio': result['bio'],
+            'updatedAt': DateTime.now(),
+          },
+        );
+
+        // Track analytics
+        final analytics = AnalyticsService();
+        await analytics.logProfileUpdated(
+          fieldsUpdated: ['displayName', 'bio'],
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        
+        _refreshProfile();
+        AppLogger.info('✅ Profile updated');
+      } catch (e) {
+        AppLogger.error('❌ Profile update error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating profile: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
@@ -334,7 +701,108 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onProfileUpdated: _refreshProfile,
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+
+              // Generations indicator (from AppUser data)
+              ref.watch(currentUserProvider).when(
+                data: (appUser) {
+                  if (appUser == null) return const SizedBox.shrink();
+                  
+                  final todayGen = appUser.todayGenerations;
+                  final totalGen = appUser.totalGenerations;
+                  final limit = appUser.generationsLimit;
+                  final tier = appUser.subscriptionTier;
+                  
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.1),
+                          theme.colorScheme.secondary.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  color: theme.colorScheme.primary,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Generations',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                tier.name.toUpperCase(),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildGenerationStat(
+                              context,
+                              theme,
+                              'Today',
+                              '$todayGen/$limit',
+                              todayGen >= limit ? Colors.red : theme.colorScheme.primary,
+                            ),
+                            Container(
+                              height: 40,
+                              width: 1,
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                            ),
+                            _buildGenerationStat(
+                              context,
+                              theme,
+                              'Total',
+                              totalGen.toString(),
+                              theme.colorScheme.primary,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+
+              const SizedBox(height: 24),
 
               // Stats Row
               statsAsync.when(
@@ -509,6 +977,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const ProfileSectionHeader(title: 'Account'),
 
               ProfileSectionTile(
+                icon: Icons.edit,
+                title: 'Edit Profile',
+                subtitle: 'Update your name and bio',
+                iconColor: Colors.blue,
+                onTap: _editProfile,
+              ),
+
+              ProfileSectionTile(
+                icon: Icons.storage,
+                title: 'Storage Usage',
+                subtitle: 'View app storage details',
+                iconColor: Colors.purple,
+                onTap: _showStorageInfo,
+              ),
+
+              ProfileSectionTile(
                 icon: Icons.delete_outline,
                 title: 'Clear Cache',
                 subtitle: 'Free up storage space',
@@ -524,17 +1008,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: _resetOnboarding,
               ),
 
+              const Divider(height: 32),
+              
               ProfileSectionTile(
                 icon: Icons.logout,
                 title: 'Sign Out',
-                subtitle: 'Coming soon',
+                subtitle: 'Sign out of your account',
                 iconColor: Colors.red,
-                enabled: false,
-                onTap: null,
+                onTap: _signOut,
+              ),
+
+              ProfileSectionTile(
+                icon: Icons.delete_forever,
+                title: 'Delete Account',
+                subtitle: 'Permanently delete your account',
+                iconColor: Colors.red,
+                onTap: _deleteAccount,
               ),
 
               const SizedBox(height: 40),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenerationStat(
+    BuildContext context,
+    ThemeData theme,
+    String label,
+    String value,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],

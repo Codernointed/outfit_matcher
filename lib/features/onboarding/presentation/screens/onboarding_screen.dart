@@ -11,12 +11,9 @@ import 'package:vestiq/core/utils/logger.dart';
 class OnboardingScreen extends StatefulWidget {
   /// Skip directly to gender selection (for signed-in users without gender)
   final bool skipToGender;
-  
+
   /// Default constructor
-  const OnboardingScreen({
-    super.key,
-    this.skipToGender = false,
-  });
+  const OnboardingScreen({super.key, this.skipToGender = false});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();

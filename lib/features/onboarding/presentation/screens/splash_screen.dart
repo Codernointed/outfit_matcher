@@ -19,7 +19,7 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> 
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -28,20 +28,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Setup animations
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward();
 
@@ -62,11 +64,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
 
     final prefs = getIt<SharedPreferences>();
-    final hasSeenOnboarding = prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
-    
+    final hasSeenOnboarding =
+        prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
+
     // Check auth state
     final authState = ref.read(authStateProvider);
-    
+
     authState.when(
       data: (user) {
         if (user == null) {
@@ -82,36 +85,44 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         } else {
           // User is signed in → Check if profile is complete
-          ref.read(currentUserProvider).when(
-            data: (appUser) {
-              if (appUser?.gender == null || appUser?.gender?.isEmpty == true) {
-                // Signed in but no gender selected → Go to gender selection
-                AppLogger.info('👤 User signed in, profile incomplete → Gender selection');
-                _navigateTo(const OnboardingScreen(skipToGender: true));
-              } else {
-                // Fully set up → Go to home
-                AppLogger.info('✅ User signed in, profile complete → Home');
-                _navigateTo(HomeScreen());
-              }
-            },
-            loading: () {
-              // Wait a bit more
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (mounted) {
+          ref
+              .read(currentUserProvider)
+              .when(
+                data: (appUser) {
+                  if (appUser?.gender == null ||
+                      appUser?.gender?.isEmpty == true) {
+                    // Signed in but no gender selected → Go to gender selection
+                    AppLogger.info(
+                      '👤 User signed in, profile incomplete → Gender selection',
+                    );
+                    _navigateTo(const OnboardingScreen(skipToGender: true));
+                  } else {
+                    // Fully set up → Go to home
+                    AppLogger.info('✅ User signed in, profile complete → Home');
+                    _navigateTo(HomeScreen());
+                  }
+                },
+                loading: () {
+                  // Wait a bit more
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (mounted) {
+                      _navigateTo(HomeScreen());
+                    }
+                  });
+                },
+                error: (_, __) {
+                  // Error loading profile → Go to home anyway
                   _navigateTo(HomeScreen());
-                }
-              });
-            },
-            error: (_, __) {
-              // Error loading profile → Go to home anyway
-              _navigateTo(HomeScreen());
-            },
-          );
+                },
+              );
         }
       },
       loading: () {
         // Still loading auth state, wait
-        Future.delayed(const Duration(milliseconds: 500), _navigateToNextScreen);
+        Future.delayed(
+          const Duration(milliseconds: 500),
+          _navigateToNextScreen,
+        );
       },
       error: (error, _) {
         // Error with auth → Show login
@@ -212,7 +223,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         width: 40,
                         height: 40,
                         child: CircularProgressIndicator(
-                          valueColor: const AlwaysStoppedAnimation<Color>(primaryColor),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            primaryColor,
+                          ),
                           strokeWidth: 3,
                         ),
                       ),

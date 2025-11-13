@@ -48,10 +48,9 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 ## 🚨 **Critical Issues (Must Fix)**
 
 ### **1. Missing Backend & User System**
-❌ **No user authentication** - Everything is local-only
+
 ❌ **No cloud sync** - Data lives only on device
 ❌ **No multi-device support** - Can't access wardrobe from multiple devices
-❌ **No user profiles** - Hardcoded "User Name" in profile screen
 
 **Impact:** Users lose all data if they uninstall or switch devices.
 
