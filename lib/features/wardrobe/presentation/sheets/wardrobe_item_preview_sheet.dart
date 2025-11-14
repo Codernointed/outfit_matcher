@@ -7,7 +7,6 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart'
 import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:vestiq/core/services/favorites_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';

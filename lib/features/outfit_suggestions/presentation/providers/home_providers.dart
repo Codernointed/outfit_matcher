@@ -8,7 +8,6 @@ import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/favorites_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 
 // ============================================================================
 // STATE CLASSES

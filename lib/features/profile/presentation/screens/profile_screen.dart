@@ -16,6 +16,7 @@ import 'package:vestiq/features/profile/presentation/widgets/stats_row.dart';
 import 'package:vestiq/features/profile/presentation/widgets/favorites_carousel.dart';
 import 'package:vestiq/features/profile/presentation/widgets/profile_section_tile.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/wear_history_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
@@ -832,9 +833,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     );
                   },
                   onWearsTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Wear history coming soon!'),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const WearHistoryScreen(),
                       ),
                     );
                   },

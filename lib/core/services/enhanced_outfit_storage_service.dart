@@ -18,9 +18,9 @@ class EnhancedOutfitStorageService {
     required OutfitStorageService localService,
     required FirestoreOutfitService firestoreService,
     required UserProfileService userProfileService,
-  })  : _localService = localService,
-        _firestoreService = firestoreService,
-        _userProfileService = userProfileService;
+  }) : _localService = localService,
+       _firestoreService = firestoreService,
+       _userProfileService = userProfileService;
 
   // ==================== SAVE OUTFIT ====================
 
@@ -57,14 +57,18 @@ class EnhancedOutfitStorageService {
             }
           }
         } catch (firestoreError) {
-          debugPrint('⚠️ Firestore save failed, saving locally: $firestoreError');
+          debugPrint(
+            '⚠️ Firestore save failed, saving locally: $firestoreError',
+          );
           // Continue to local save - don't rethrow
         }
       }
 
       // ALWAYS save to local cache (works even if Firestore fails)
       await _localService.save(outfit);
-      debugPrint('✅ Saved outfit locally: ${outfit.id} (Firestore: $firestoreSaved)');
+      debugPrint(
+        '✅ Saved outfit locally: ${outfit.id} (Firestore: $firestoreSaved)',
+      );
 
       return outfit;
     } catch (e) {
@@ -82,7 +86,9 @@ class EnhancedOutfitStorageService {
 
       if (user != null) {
         // Try to get from Firestore
-        final firestoreOutfits = await _firestoreService.getAllOutfits(user.uid);
+        final firestoreOutfits = await _firestoreService.getAllOutfits(
+          user.uid,
+        );
 
         if (firestoreOutfits.isNotEmpty) {
           // Cache to local storage
@@ -90,7 +96,9 @@ class EnhancedOutfitStorageService {
             await _localService.save(outfit);
           }
 
-          debugPrint('✅ Loaded ${firestoreOutfits.length} outfits from Firestore');
+          debugPrint(
+            '✅ Loaded ${firestoreOutfits.length} outfits from Firestore',
+          );
           return firestoreOutfits;
         }
 
@@ -205,7 +213,10 @@ class EnhancedOutfitStorageService {
       debugPrint('✅ Migrated ${localOutfits.length} outfits to Firestore');
 
       // Update user's outfit count
-      await _userProfileService.updateSavedOutfitCount(userId, localOutfits.length);
+      await _userProfileService.updateSavedOutfitCount(
+        userId,
+        localOutfits.length,
+      );
 
       _hasMigratedToFirestore = true;
     } catch (e) {
