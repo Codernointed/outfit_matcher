@@ -83,7 +83,9 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
                         Text(
                           '${item.analysis.primaryColor} • ${item.analysis.style}',
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ),
                       ],

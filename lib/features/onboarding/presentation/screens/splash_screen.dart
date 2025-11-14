@@ -225,11 +225,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: primaryColor.withOpacity(0.2),
+                              color: primaryColor.withValues(alpha: 0.2),
                               blurRadius: 20,
                               spreadRadius: 5,
                             ),
@@ -262,7 +262,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: primaryColor.withOpacity(0.7),
+                          color: primaryColor.withValues(alpha: 0.7),
                           fontFamily: 'Poppins',
                           letterSpacing: 1,
                         ),

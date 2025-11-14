@@ -34,7 +34,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _selectedImages.isNotEmpty && !_isUploading ? _uploadImages : null,
+            onPressed: _selectedImages.isNotEmpty && !_isUploading
+                ? _uploadImages
+                : null,
             child: Text(
               'Upload (${_selectedImages.length})',
               style: TextStyle(
@@ -53,10 +55,10 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              border: Border(
-                bottom: BorderSide(color: theme.dividerColor),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
               ),
+              border: Border(bottom: BorderSide(color: theme.dividerColor)),
             ),
             child: Column(
               children: [
@@ -189,10 +191,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
                 icon: const Icon(Icons.close, size: 16, color: Colors.white),
                 onPressed: () => _removeImage(index),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(
-                  minWidth: 24,
-                  minHeight: 24,
-                ),
+                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
               ),
             ),
           ),
@@ -229,9 +228,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        border: Border(
-          top: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(top: BorderSide(color: theme.dividerColor)),
       ),
       child: Column(
         children: [
@@ -251,7 +248,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
                     Text(
                       '$_uploadProgress of ${_selectedImages.length} items uploaded',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.7,
+                        ),
                       ),
                     ),
                   ],
@@ -270,7 +269,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           LinearProgressIndicator(
             value: _uploadProgress / _selectedImages.length,
             backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.primary,
+            ),
           ),
         ],
       ),
@@ -284,9 +285,7 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(color: theme.dividerColor),
-        ),
+        border: Border(top: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -335,14 +334,16 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
           );
         });
 
-        AppLogger.info('📸 Selected ${pickedFiles.length} images for batch upload');
+        AppLogger.info(
+          '📸 Selected ${pickedFiles.length} images for batch upload',
+        );
       }
     } catch (e) {
       AppLogger.error('❌ Error selecting images', error: e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error selecting images')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Error selecting images')));
       }
     }
   }
@@ -366,9 +367,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
     } catch (e) {
       AppLogger.error('❌ Error taking photo', error: e);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error taking photo')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Error taking photo')));
       }
     }
   }
@@ -389,7 +390,9 @@ class _BatchUploadScreenState extends ConsumerState<BatchUploadScreen> {
 
     try {
       final storage = getIt<EnhancedWardrobeStorageService>();
-      final uploadedCount = await storage.batchUploadWardrobeItems(_selectedImages);
+      final uploadedCount = await storage.batchUploadWardrobeItems(
+        _selectedImages,
+      );
 
       if (mounted) {
         setState(() {

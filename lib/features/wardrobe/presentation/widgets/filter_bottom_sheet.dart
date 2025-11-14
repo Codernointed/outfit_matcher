@@ -53,7 +53,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withOpacity(0.2),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -174,7 +174,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               color: theme.colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -224,7 +224,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           title,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface.withOpacity(0.7),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 12),
@@ -259,7 +259,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                 borderRadius: BorderRadius.circular(8),
                 side: BorderSide(
                   color: isSelected
-                      ? theme.colorScheme.primary.withOpacity(0.5)
+                      ? theme.colorScheme.primary.withValues(alpha: 0.5)
                       : Colors.transparent,
                   width: 1,
                 ),

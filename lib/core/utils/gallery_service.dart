@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 
 /// Service for saving images to device gallery
@@ -24,7 +23,7 @@ class GalleryService {
 
       return await _saveImageToGallery(imageBytes, fileName);
     } catch (e) {
-      print('❌ Error saving base64 image to gallery: $e');
+      debugPrint('❌ Error saving base64 image to gallery: $e');
       return false;
     }
   }
@@ -47,7 +46,7 @@ class GalleryService {
 
       return await saveBase64ImageToGallery(base64Data, fileName);
     } catch (e) {
-      print('❌ Error saving data URL image to gallery: $e');
+      debugPrint('❌ Error saving data URL image to gallery: $e');
       return false;
     }
   }
@@ -70,7 +69,7 @@ class GalleryService {
 
       return await _saveImageToGallery(response.bodyBytes, fileName);
     } catch (e) {
-      print('❌ Error saving URL image to gallery: $e');
+      debugPrint('❌ Error saving URL image to gallery: $e');
       return false;
     }
   }
@@ -88,13 +87,14 @@ class GalleryService {
       // Request permissions first
       final PermissionState ps = await PhotoManager.requestPermissionExtend();
       if (!ps.isAuth) {
-        print('❌ Gallery permission denied');
+        debugPrint('❌ Gallery permission denied');
         return false;
       }
 
       // Ensure file has proper extension
-      final fileNameWithExt = fileName.endsWith('.png') || fileName.endsWith('.jpg') 
-          ? fileName 
+      final fileNameWithExt =
+          fileName.endsWith('.png') || fileName.endsWith('.jpg')
+          ? fileName
           : '$fileName.png';
 
       // Save to temporary file first
@@ -111,10 +111,10 @@ class GalleryService {
       // Clean up temp file
       await tempFile.delete();
 
-      print('✅ Image saved to gallery: ${entity.id}');
+      debugPrint('✅ Image saved to gallery: ${entity.id}');
       return true;
-        } catch (e) {
-      print('❌ Error saving image to gallery: $e');
+    } catch (e) {
+      debugPrint('❌ Error saving image to gallery: $e');
       return false;
     }
   }
@@ -129,7 +129,7 @@ class GalleryService {
       // Handle plain base64
       return dataUrl;
     } catch (e) {
-      print('❌ Error extracting base64 from data URL: $e');
+      debugPrint('❌ Error extracting base64 from data URL: $e');
       return null;
     }
   }
@@ -179,7 +179,11 @@ class GalleryService {
 
       final directory = await getExternalStorageDirectory();
       if (directory != null) {
-        final galleryPath = path.join(directory.path, 'Pictures', 'ManikinOutfits');
+        final galleryPath = path.join(
+          directory.path,
+          'Pictures',
+          'ManikinOutfits',
+        );
         final galleryDir = Directory(galleryPath);
 
         if (!await galleryDir.exists()) {
@@ -190,7 +194,7 @@ class GalleryService {
       }
       return null;
     } catch (e) {
-      print('❌ Error getting gallery directory: $e');
+      debugPrint('❌ Error getting gallery directory: $e');
       return null;
     }
   }
@@ -203,7 +207,11 @@ class GalleryService {
       final directory = await getExternalStorageDirectory();
       if (directory == null) return false;
 
-      final galleryPath = path.join(directory.path, 'Pictures', 'ManikinOutfits');
+      final galleryPath = path.join(
+        directory.path,
+        'Pictures',
+        'ManikinOutfits',
+      );
       final galleryDir = Directory(galleryPath);
 
       if (!await galleryDir.exists()) {
@@ -217,7 +225,7 @@ class GalleryService {
 
       return true;
     } catch (e) {
-      print('❌ Gallery access check failed: $e');
+      debugPrint('❌ Gallery access check failed: $e');
       return false;
     }
   }

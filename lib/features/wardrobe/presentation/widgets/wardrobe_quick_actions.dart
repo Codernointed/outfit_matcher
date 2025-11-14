@@ -200,7 +200,9 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                       Text(
                         widget.item.analysis.primaryColor,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                         ),
                       ),
                     ],

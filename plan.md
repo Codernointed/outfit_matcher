@@ -511,11 +511,11 @@ I/flutter (25548): ℹ️ ⏭️ Skip button pressed, defaulting to Female
 I/flutter (25548): ℹ️ ✅ Profile updated: Fashion Enthusiast
 I/flutter (25548): ℹ️ 👤 Gender preference updated: Female
 I/flutter (25548): ❌ ❌ Error during skip
-If hes are returing user no need to select denger, if hes sined out no need, 
+
 
 It seems the login signup pages are gone again
 
-ALso the select gender let it come only after create account(sign up), and even that let it be a create profile(picture, name, some prefs, a request to upload a full body pic(to use as mannuqeuins))
+ALso the select gender let it come only after create account(sign up), and even that let it be a create profile picture, name, some prefs, a request to upload a 
 Let you be like this Page view things it shouldn't be one long annoying form It should be like maybe something like let's get you started. What's your name? What shall we call you this that then? When do you finish you swipe? Gender then you select I am this swipe who Oh No, we are almost there one more thing See that kind of friendly thing then maybe upload a picture a full picture that we can be using for your mannequin then Swipe for next you can be or maybe go back to previous it has this minimal animated smooth transitions as they could Create your profile Also, it should be very user-friendly a very intuitive Let's just get rid of just a gender page and then do it like that so without the male-female UI should be very very small because it's going to have our other pages. Let's get that one good
 ---
 
@@ -712,7 +712,7 @@ User Action → EnhancedOutfitStorageService
 3. 🟡 **trackOutfitRejection()** - User rejected (negative signal)
 4. 🟢 **trackOutfitView()** - User viewed (weak positive signal)
 
-**Ready for "weaponization" into outfit generation:**
+**Ready for "use" into outfit generation:**
 ```dart
 // In WardrobePairingService.generateOutfits():
 final prefs = await userPreferencesService.getUserPreferences(userId);

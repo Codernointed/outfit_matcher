@@ -112,10 +112,10 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   static const Map<ClothingPattern, List<String>> _patternKeywordMap = {
     ClothingPattern.solid: ['solid', 'plain', 'minimal', 'clean'],
     ClothingPattern.striped: ['stripe', 'striped', 'pinstripe', 'banded'],
-    ClothingPattern.polka_dot: ['polka', 'dot', 'dotted', 'spotted'],
+    ClothingPattern.polkaDot: ['polka', 'dot', 'dotted', 'spotted'],
     ClothingPattern.floral: ['floral', 'flower', 'botanical', 'bloom'],
     ClothingPattern.plaid: ['plaid', 'check', 'checkered', 'tartan'],
-    ClothingPattern.animal_print: [
+    ClothingPattern.animalPrint: [
       'animal',
       'leopard',
       'zebra',

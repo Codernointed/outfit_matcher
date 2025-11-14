@@ -27,7 +27,7 @@ class VisualSearchScreen extends ConsumerStatefulWidget {
   final String imagePath;
   final Map<String, dynamic>? analysis;
   final List<Map<String, dynamic>>? mannequinOutfits;
-  
+
   // Main constructor with analysis data
   const VisualSearchScreen({
     super.key,
@@ -35,7 +35,7 @@ class VisualSearchScreen extends ConsumerStatefulWidget {
     this.analysis,
     this.mannequinOutfits,
   });
-  
+
   // Factory constructor for backward compatibility
   factory VisualSearchScreen.withDetails({
     Key? key,
@@ -59,7 +59,8 @@ class VisualSearchScreen extends ConsumerStatefulWidget {
   ConsumerState<VisualSearchScreen> createState() => _VisualSearchScreenState();
 }
 
-class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with SingleTickerProviderStateMixin {
+class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoadingSimilar = true;
   bool _isLoadingComplements = true;
   String? _errorMessageSimilar;
@@ -67,65 +68,70 @@ class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with Si
   List<CatalogItem> _similarItems = [];
   List<CatalogItem> _complementaryItems = [];
   final ScrollController _scrollController = ScrollController();
-  
+
   // Item properties extracted from analysis
   late String _itemType;
   late String _primaryColor;
   late String _patternType;
-  
+
   // Tab controller for the tab bar
   late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize with default values
     _itemType = 'clothing';
     _primaryColor = 'neutral';
     _patternType = 'solid';
-    
+
     // If we have analysis data, use it
     if (widget.analysis != null) {
       _itemType = widget.analysis!['itemType'] ?? _itemType;
       _primaryColor = widget.analysis!['primaryColor'] ?? _primaryColor;
       _patternType = widget.analysis!['patternType'] ?? _patternType;
     }
-    
+
     // Initialize tab controller
     _tabController = TabController(length: 2, vsync: this);
-    
+
     // Load data
     _loadInitialData();
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
-  
+
   Future<void> _loadInitialData() async {
     // If we have mannequin outfits, add them to the similar items
-    if (widget.mannequinOutfits != null && widget.mannequinOutfits!.isNotEmpty) {
+    if (widget.mannequinOutfits != null &&
+        widget.mannequinOutfits!.isNotEmpty) {
       setState(() {
-        _similarItems = widget.mannequinOutfits!.map((outfit) => CatalogItem(
-          id: 'mannequin_${outfit['pose'] ?? 'pose'}_${DateTime.now().millisecondsSinceEpoch}',
-          imageUrl: outfit['imageUrl'] ?? '',
-          title: 'Mannequin (${outfit['pose'] ?? 'view'})',
-          description: 'Generated mannequin wearing your item',
-          price: 0.0,
-          type: _itemType,
-          color: _primaryColor,
-          pattern: _patternType,
-        )).toList();
+        _similarItems = widget.mannequinOutfits!
+            .map(
+              (outfit) => CatalogItem(
+                id: 'mannequin_${outfit['pose'] ?? 'pose'}_${DateTime.now().millisecondsSinceEpoch}',
+                imageUrl: outfit['imageUrl'] ?? '',
+                title: 'Mannequin (${outfit['pose'] ?? 'view'})',
+                description: 'Generated mannequin wearing your item',
+                price: 0.0,
+                type: _itemType,
+                color: _primaryColor,
+                pattern: _patternType,
+              ),
+            )
+            .toList();
         _isLoadingSimilar = false;
       });
     } else {
       await _loadSimilarItems();
     }
-    
+
     await _loadComplementaryItems();
   }
 
@@ -133,7 +139,7 @@ class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with Si
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // This would be replaced with actual API call
       if (mounted) {
         setState(() {
@@ -157,7 +163,8 @@ class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with Si
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessageSimilar = 'Failed to load similar items. Please try again.';
+          _errorMessageSimilar =
+              'Failed to load similar items. Please try again.';
           _isLoadingSimilar = false;
         });
       }
@@ -192,7 +199,8 @@ class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with Si
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessageComplements = 'Failed to load complementary items. Please try again.';
+          _errorMessageComplements =
+              'Failed to load complementary items. Please try again.';
           _isLoadingComplements = false;
         });
       }
@@ -240,15 +248,15 @@ class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with Si
   Widget _buildItemCard(CatalogItem item) {
     return Card(
       elevation: 2.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8.0)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(8.0),
+              ),
               child: Image.network(
                 item.imageUrl,
                 fit: BoxFit.cover,
@@ -311,10 +319,7 @@ class _VisualSearchScreenState extends ConsumerState<VisualSearchScreen> with Si
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildSimilarItemsTab(),
-          _buildComplementsTab(),
-        ],
+        children: [_buildSimilarItemsTab(), _buildComplementsTab()],
       ),
     );
   }

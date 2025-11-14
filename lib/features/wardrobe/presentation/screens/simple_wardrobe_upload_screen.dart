@@ -239,7 +239,9 @@ class _SimpleWardrobeUploadScreenState
                   valueColor: AlwaysStoppedAnimation<Color>(
                     theme.colorScheme.primary,
                   ),
-                  backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  backgroundColor: theme.colorScheme.primary.withValues(
+                    alpha: 0.2,
+                  ),
                 ),
                 if (_totalToProcess > 1)
                   Text(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -115,44 +115,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _shareWardrobe() async {
-    HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Share feature coming soon!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    AppLogger.info('📤 Share wardrobe requested');
-  }
-
-  Future<void> _shareToInstagram() async {
-    HapticFeedback.mediumImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Instagram share coming soon!'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-    AppLogger.info('📷 Instagram share requested');
-  }
-
-  Future<void> _copyProfileLink() async {
-    HapticFeedback.mediumImpact();
-    await Clipboard.setData(
-      const ClipboardData(text: 'https://vestiq.app/profile/user'),
-    );
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile link copied! (Feature coming soon)'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-    AppLogger.info('🔗 Profile link copied');
   }
 
   Future<void> _showHelpScreen() async {
@@ -481,7 +443,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       );
                     }
                     return const SizedBox.shrink();
-                  }).toList(),
+                  }),
                 ],
               ),
             ),

@@ -10,7 +10,8 @@ class UploadOptionsScreen extends ConsumerStatefulWidget {
   const UploadOptionsScreen({super.key});
 
   @override
-  ConsumerState<UploadOptionsScreen> createState() => _UploadOptionsScreenState();
+  ConsumerState<UploadOptionsScreen> createState() =>
+      _UploadOptionsScreenState();
 }
 
 class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
@@ -25,7 +26,9 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          _selectedImages.isEmpty ? 'Add to Generate Your Outfit' : '${_selectedImages.length} Selected',
+          _selectedImages.isEmpty
+              ? 'Add to Generate Your Outfit'
+              : '${_selectedImages.length} Selected',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -69,17 +72,18 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
             children: [
               // Header Section
               _buildHeaderSection(context),
-              
+
               const SizedBox(height: 16),
-              
+
               // Selected Images Preview
-              if (_selectedImages.isNotEmpty) ..._buildSelectedImagesPreview(theme),
-              
+              if (_selectedImages.isNotEmpty)
+                ..._buildSelectedImagesPreview(theme),
+
               // Options
               Expanded(
                 child: Column(
-                  mainAxisAlignment: _selectedImages.isEmpty 
-                      ? MainAxisAlignment.center 
+                  mainAxisAlignment: _selectedImages.isEmpty
+                      ? MainAxisAlignment.center
                       : MainAxisAlignment.start,
                   children: [
                     _buildPremiumOptionCard(
@@ -87,7 +91,9 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                       icon: Icons.camera_alt_rounded,
                       title: 'Take a Photo',
                       subtitle: 'Capture your clothing item with camera',
-                      onPressed: _isLoading ? null : () => _pickImage(ImageSource.camera),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _pickImage(ImageSource.camera),
                       gradient: LinearGradient(
                         colors: [
                           theme.colorScheme.primary,
@@ -95,15 +101,17 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     _buildPremiumOptionCard(
                       context: context,
                       icon: Icons.photo_library_rounded,
                       title: 'Choose from Gallery',
                       subtitle: 'Select from your existing photos',
-                      onPressed: _isLoading ? null : () => _pickImage(ImageSource.gallery),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _pickImage(ImageSource.gallery),
                       gradient: LinearGradient(
                         colors: [
                           Colors.purple.shade400,
@@ -111,7 +119,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                         ],
                       ),
                     ),
-                    
+
                     if (_selectedImages.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       _buildNextButton(theme),
@@ -128,17 +136,20 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     if (_isLoading) return;
-    
-    AppLogger.info('📸 Starting image picker', data: {
-      'source': source.toString(),
-      'current_images': _selectedImages.length,
-    });
-    
+
+    AppLogger.info(
+      '📸 Starting image picker',
+      data: {
+        'source': source.toString(),
+        'current_images': _selectedImages.length,
+      },
+    );
+
     setState(() => _isLoading = true);
-    
+
     try {
       List<XFile> images = [];
-      
+
       if (source == ImageSource.camera) {
         AppLogger.debug('📷 Opening camera');
         // For camera, use single image picker with better error handling
@@ -149,7 +160,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
           imageQuality: 85,
           preferredCameraDevice: CameraDevice.rear,
         );
-        
+
         if (image != null) {
           AppLogger.info('✅ Camera image captured', data: {'path': image.path});
           images = [image];
@@ -165,9 +176,15 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
             maxHeight: 1200,
             imageQuality: 85,
           );
-          AppLogger.info('✅ Gallery images selected', data: {'count': images.length});
+          AppLogger.info(
+            '✅ Gallery images selected',
+            data: {'count': images.length},
+          );
         } catch (galleryError) {
-          AppLogger.warning('Gallery selection error, trying single image picker', error: galleryError);
+          AppLogger.warning(
+            'Gallery selection error, trying single image picker',
+            error: galleryError,
+          );
           // Fallback to single image picker if multi-image fails
           final XFile? singleImage = await _picker.pickImage(
             source: ImageSource.gallery,
@@ -184,15 +201,18 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
 
       if (images.isNotEmpty && mounted) {
         final imagePaths = images.map((e) => e.path).toList();
-        AppLogger.info('📱 Adding images to selection', data: {
-          'new_images': imagePaths.length,
-          'total_after': _selectedImages.length + imagePaths.length,
-        });
-        
+        AppLogger.info(
+          '📱 Adding images to selection',
+          data: {
+            'new_images': imagePaths.length,
+            'total_after': _selectedImages.length + imagePaths.length,
+          },
+        );
+
         setState(() {
           _selectedImages.addAll(imagePaths);
         });
-        
+
         // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -207,28 +227,36 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
         AppLogger.info('📷 No images selected (user likely cancelled)');
       }
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Error in image picker', error: e, stackTrace: stackTrace);
-      
+      AppLogger.error(
+        '❌ Error in image picker',
+        error: e,
+        stackTrace: stackTrace,
+      );
+
       // Handle specific error types
-      if (e.toString().contains('camera_access_denied') || 
+      if (e.toString().contains('camera_access_denied') ||
           e.toString().contains('photo_access_denied')) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Camera/Photo access denied. Please enable permissions in settings.'),
+              content: Text(
+                'Camera/Photo access denied. Please enable permissions in settings.',
+              ),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 4),
             ),
           );
         }
-      } else if (e.toString().contains('User cancelled') || 
-                 e.toString().contains('cancelled')) {
+      } else if (e.toString().contains('User cancelled') ||
+          e.toString().contains('cancelled')) {
         AppLogger.info('📷 Image picker cancelled by user');
         // User canceled - no error message needed
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error accessing ${source == ImageSource.camera ? 'camera' : 'gallery'}: ${e.toString()}'),
+            content: Text(
+              'Error accessing ${source == ImageSource.camera ? 'camera' : 'gallery'}: ${e.toString()}',
+            ),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 3),
           ),
@@ -244,12 +272,10 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
 
   void _navigateToItemDetails() {
     if (_selectedImages.isEmpty) return;
-    
+
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ItemDetailsScreen(
-          imagePaths: _selectedImages,
-        ),
+        builder: (context) => ItemDetailsScreen(imagePaths: _selectedImages),
       ),
     );
   }
@@ -260,10 +286,9 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
     });
   }
 
-  
   Widget _buildHeaderSection(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       child: _selectedImages.isEmpty
@@ -384,10 +409,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
         ),
         child: const Text(
           'Continue to Details',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -403,25 +425,27 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
     bool isDisabled = false,
   }) {
     final theme = Theme.of(context);
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: double.infinity,
       height: _selectedImages.isNotEmpty ? 80 : 100,
-      margin: _selectedImages.isNotEmpty 
-          ? const EdgeInsets.only(bottom: 12) 
+      margin: _selectedImages.isNotEmpty
+          ? const EdgeInsets.only(bottom: 12)
           : null,
       decoration: BoxDecoration(
         gradient: isDisabled ? null : gradient,
         color: isDisabled ? Colors.grey.shade200 : null,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: isDisabled ? null : [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isDisabled
+            ? null
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -443,9 +467,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                   child: Icon(
                     icon,
                     size: _selectedImages.isNotEmpty ? 24 : 28,
-                    color: isDisabled 
-                        ? Colors.grey.shade600 
-                        : Colors.white,
+                    color: isDisabled ? Colors.grey.shade600 : Colors.white,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -457,8 +479,8 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                       Text(
                         title,
                         style: theme.textTheme.titleMedium?.copyWith(
-                          color: isDisabled 
-                              ? Colors.grey.shade600 
+                          color: isDisabled
+                              ? Colors.grey.shade600
                               : Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: _selectedImages.isNotEmpty ? 15 : 16,
@@ -469,8 +491,8 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                         Text(
                           subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDisabled 
-                                ? Colors.grey.shade500 
+                            color: isDisabled
+                                ? Colors.grey.shade500
                                 : Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
@@ -479,12 +501,12 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                   ),
                 ),
                 Icon(
-                  _selectedImages.isEmpty 
-                      ? Icons.arrow_forward_ios_rounded 
+                  _selectedImages.isEmpty
+                      ? Icons.arrow_forward_ios_rounded
                       : Icons.add_rounded,
                   size: 16,
-                  color: isDisabled 
-                      ? Colors.grey.shade500 
+                  color: isDisabled
+                      ? Colors.grey.shade500
                       : Colors.white.withValues(alpha: 0.8),
                 ),
               ],

@@ -53,7 +53,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         })
         .catchError((Object e) {
           if (e is CameraException) {
-            debugPrint('Error initializing camera: ${e.code}\n${e.description}');
+            debugPrint(
+              'Error initializing camera: ${e.code}\n${e.description}',
+            );
             // Handle camera initialization errors (e.g., show a message)
           }
         });
@@ -68,12 +70,11 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   Future<void> _toggleFlash() async {
     if (_controller == null || !_controller!.value.isInitialized) return;
     try {
-      final newFlashMode =
-          _currentFlashMode == FlashMode.auto
-              ? FlashMode.torch
-              : _currentFlashMode == FlashMode.torch
-              ? FlashMode.off
-              : FlashMode.auto;
+      final newFlashMode = _currentFlashMode == FlashMode.auto
+          ? FlashMode.torch
+          : _currentFlashMode == FlashMode.torch
+          ? FlashMode.off
+          : FlashMode.auto;
       await _controller!.setFlashMode(newFlashMode);
       setState(() {
         _currentFlashMode = newFlashMode;
@@ -98,7 +99,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
   Future<void> _takePicture() async {
     try {
       await _initializeControllerFuture;
-      
+
       // Ensure camera is ready
       if (!_controller!.value.isInitialized) {
         throw Exception('Camera not initialized');
@@ -106,32 +107,30 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
 
       // Take the picture
       final XFile image = await _controller!.takePicture();
-      
+
       if (!mounted) return;
-      
+
       // Navigate to preview screen with the captured image
       await Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ImagePreviewScreen(
-            imagePath: image.path,
-            fromCamera: true,
-          ),
+          builder: (context) =>
+              ImagePreviewScreen(imagePath: image.path, fromCamera: true),
         ),
       );
     } on CameraException catch (e) {
       debugPrint('Camera error: ${e.description}');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Camera error: ${e.code}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Camera error: ${e.code}')));
       }
     } catch (e) {
       debugPrint('Error taking picture: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error taking picture')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Error taking picture')));
       }
     }
   }
@@ -217,13 +216,12 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error:
-            (err, stack) => Center(
-              child: Text(
-                'Error loading cameras: $err',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
+        error: (err, stack) => Center(
+          child: Text(
+            'Error loading cameras: $err',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton.large(
@@ -238,11 +236,10 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
 class CameraFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.6)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.0;
+    final paint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
 
     // Example: A simple rectangle in the middle
     final frameWidth = size.width * 0.8;

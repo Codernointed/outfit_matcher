@@ -4,7 +4,6 @@ import 'package:vestiq/core/models/swipe_closet_request.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
-import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 part 'swipe_planner_providers.freezed.dart';

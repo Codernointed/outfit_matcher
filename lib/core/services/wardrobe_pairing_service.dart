@@ -1,9 +1,6 @@
 import 'dart:math';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/compatibility_cache_service.dart';
-import 'package:vestiq/core/services/profile_service.dart';
-import 'package:vestiq/core/di/service_locator.dart';
-import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for generating outfit pairings from wardrobe items
@@ -628,65 +625,6 @@ class WardrobePairingService {
     return candidates.first;
   }
 
-  /// Pick diverse hero candidates prioritizing occasion relevance and rotation
-  List<WardrobeItem> _selectHeroCandidates(
-    WardrobeItem initialHero,
-    List<WardrobeItem> availableItems,
-  ) {
-    final initialType = initialHero.analysis.itemType.toLowerCase();
-
-    // Occasion-aligned same-type items
-    List<WardrobeItem> sameTypeOccasionAligned = availableItems.where((w) {
-      final typeMatch = w.analysis.itemType.toLowerCase() == initialType;
-      final occasions = w.analysis.occasions ?? const <String>[];
-      final initialOcc = initialHero.analysis.occasions ?? const <String>[];
-      final aligned = occasions.any((o) => initialOcc.contains(o));
-      return typeMatch && aligned;
-    }).toList();
-
-    if (sameTypeOccasionAligned.isEmpty) {
-      sameTypeOccasionAligned = availableItems
-          .where((w) => w.analysis.itemType.toLowerCase() == initialType)
-          .toList();
-    }
-
-    // Add a few different-type candidates for exploration
-    final differentType = availableItems
-        .where((w) => w.analysis.itemType.toLowerCase() != initialType)
-        .take(3)
-        .toList();
-
-    // Prefer less-worn items first
-    sameTypeOccasionAligned.sort((a, b) => a.wearCount.compareTo(b.wearCount));
-
-    final result = <WardrobeItem>{}
-      ..add(initialHero)
-      ..addAll(sameTypeOccasionAligned.take(4))
-      ..addAll(differentType);
-
-    return result.toList(growable: false);
-  }
-
-  /// Get a varied hero item for different outfit combinations
-  WardrobeItem _getVariedHeroItem(
-    WardrobeItem originalHero,
-    List<WardrobeItem> availableItems,
-    int index,
-  ) {
-    // For variety, alternate between different item types
-    final sameTypeItems = availableItems.where((item) {
-      return item.analysis.itemType.toLowerCase() ==
-          originalHero.analysis.itemType.toLowerCase();
-    }).toList();
-
-    if (sameTypeItems.length > index && index < sameTypeItems.length) {
-      return sameTypeItems[index % sameTypeItems.length];
-    }
-
-    // Fallback to original hero
-    return originalHero;
-  }
-
   /// Generate location/weather-based pairings
   Future<List<OutfitPairing>> _generateLocationBasedPairings(
     WardrobeItem heroItem,
@@ -749,54 +687,6 @@ class WardrobePairingService {
 
     // Generate pairings using suitable items
     return _generatePerfectPairings(heroItem, suitableItems);
-  }
-
-  /// Enhance pairings with AI-generated mannequin images
-  Future<List<OutfitPairing>> _enhancePairingsWithImages(
-    List<OutfitPairing> pairings, {
-    required PairingMode mode,
-  }) async {
-    AppLogger.info('🎨 Enhancing pairings with mannequin images');
-
-    final enhancedPairings = <OutfitPairing>[];
-
-    for (final pairing in pairings) {
-      try {
-        // Convert WardrobeItems to ClothingAnalysis for Gemini API
-        final analyses = pairing.items.map((item) => item.analysis).toList();
-
-        // Get current gender preference
-        final profileService = getIt<ProfileService>();
-        final profile = await profileService.getProfile();
-        final gender = profile.preferredGender.apiValue;
-
-        final mannequinOutfits =
-            await GeminiApiService.generateEnhancedMannequinOutfits(
-              analyses,
-              userNotes:
-                  pairing.metadata['stylingNotes'] as String? ??
-                  'Create a polished wardrobe pairing showcasing these items together.',
-              gender: gender,
-            );
-
-        if (mannequinOutfits.isNotEmpty) {
-          final enhanced = pairing.copyWith(
-            mannequinImageUrl: mannequinOutfits.first.imageUrl,
-          );
-          enhancedPairings.add(enhanced);
-        } else {
-          enhancedPairings.add(pairing);
-        }
-      } catch (e) {
-        AppLogger.warning(
-          '⚠️ Failed to generate mannequin for pairing',
-          error: e,
-        );
-        enhancedPairings.add(pairing);
-      }
-    }
-
-    return enhancedPairings;
   }
 
   /// Generate fallback pairings when main generation fails
@@ -1193,14 +1083,6 @@ class WardrobePairingService {
 
     // Return top 3-4 most relevant tips
     return tips.take(4).toList();
-  }
-
-  String _getCurrentSeason(DateTime date) {
-    final month = date.month;
-    if (month >= 3 && month <= 5) return 'Spring';
-    if (month >= 6 && month <= 8) return 'Summer';
-    if (month >= 9 && month <= 11) return 'Fall';
-    return 'Winter';
   }
 
   /// Check if two colors are in the same family or match

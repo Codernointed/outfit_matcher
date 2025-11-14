@@ -66,10 +66,9 @@ class OutfitSuggestion {
         orElse: () => OutfitStyle.casual,
       ),
       description: json['description'] as String,
-      items:
-          (json['items'] as List<dynamic>)
-              .map((e) => ClothingItem.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      items: (json['items'] as List<dynamic>)
+          .map((e) => ClothingItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
       isFavorite: json['isFavorite'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );

@@ -18,9 +18,9 @@ class FirestoreOutfitService {
   /// Save an outfit to Firestore
   Future<void> saveOutfit(String userId, SavedOutfit outfit) async {
     try {
-      await _getUserOutfitsCollection(userId).doc(outfit.id).set(
-            outfit.toJson(),
-          );
+      await _getUserOutfitsCollection(
+        userId,
+      ).doc(outfit.id).set(outfit.toJson());
 
       debugPrint('✅ Saved outfit to Firestore: ${outfit.id}');
     } catch (e) {
@@ -30,10 +30,7 @@ class FirestoreOutfitService {
   }
 
   /// Bulk save outfits (for migration)
-  Future<void> bulkSaveOutfits(
-    String userId,
-    List<SavedOutfit> outfits,
-  ) async {
+  Future<void> bulkSaveOutfits(String userId, List<SavedOutfit> outfits) async {
     try {
       final batch = _firestore.batch();
       final collection = _getUserOutfitsCollection(userId);
@@ -55,9 +52,9 @@ class FirestoreOutfitService {
   /// Get all outfits for a user
   Future<List<SavedOutfit>> getAllOutfits(String userId) async {
     try {
-      final snapshot = await _getUserOutfitsCollection(userId)
-          .orderBy('createdAt', descending: true)
-          .get();
+      final snapshot = await _getUserOutfitsCollection(
+        userId,
+      ).orderBy('createdAt', descending: true).get();
 
       return snapshot.docs.map((doc) {
         final data = doc.data();
@@ -92,10 +89,12 @@ class FirestoreOutfitService {
     return _getUserOutfitsCollection(userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-              final data = doc.data();
-              return SavedOutfit.fromJson(data);
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs.map((doc) {
+            final data = doc.data();
+            return SavedOutfit.fromJson(data);
+          }).toList(),
+        );
   }
 
   // ==================== UPDATE ====================
@@ -103,9 +102,9 @@ class FirestoreOutfitService {
   /// Update an outfit
   Future<void> updateOutfit(String userId, SavedOutfit outfit) async {
     try {
-      await _getUserOutfitsCollection(userId)
-          .doc(outfit.id)
-          .update(outfit.toJson());
+      await _getUserOutfitsCollection(
+        userId,
+      ).doc(outfit.id).update(outfit.toJson());
 
       debugPrint('✅ Updated outfit: ${outfit.id}');
     } catch (e) {

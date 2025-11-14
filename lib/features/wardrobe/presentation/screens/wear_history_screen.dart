@@ -19,7 +19,7 @@ class WearHistoryScreen extends ConsumerStatefulWidget {
 
 class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
   DateTime _selectedMonth = DateTime.now();
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -44,7 +44,9 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
         ],
       ),
       body: StreamBuilder<List<WearHistoryEvent>>(
-        stream: getIt<FirestoreWearHistoryService>().watchUserWearHistory(user.uid),
+        stream: getIt<FirestoreWearHistoryService>().watchUserWearHistory(
+          user.uid,
+        ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -57,16 +59,22 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
                 children: [
                   const Icon(Icons.error_outline, size: 64, color: Colors.grey),
                   const SizedBox(height: 16),
-                  Text('Error loading wear history', style: theme.textTheme.titleMedium),
+                  Text(
+                    'Error loading wear history',
+                    style: theme.textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
-                  Text(snapshot.error.toString(), style: theme.textTheme.bodySmall),
+                  Text(
+                    snapshot.error.toString(),
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ],
               ),
             );
           }
 
           final allEvents = snapshot.data ?? [];
-          
+
           if (allEvents.isEmpty) {
             return _buildEmptyState(theme);
           }
@@ -74,15 +82,13 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
           // Filter events for selected month
           final monthEvents = allEvents.where((event) {
             return event.wornAt.year == _selectedMonth.year &&
-                   event.wornAt.month == _selectedMonth.month;
+                event.wornAt.month == _selectedMonth.month;
           }).toList();
 
           return CustomScrollView(
             slivers: [
               // Month selector
-              SliverToBoxAdapter(
-                child: _buildMonthSelector(theme),
-              ),
+              SliverToBoxAdapter(child: _buildMonthSelector(theme)),
 
               // Stats overview
               SliverToBoxAdapter(
@@ -109,7 +115,7 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
           Icon(
             Icons.checkroom_outlined,
             size: 80,
-            color: theme.colorScheme.primary.withOpacity(0.3),
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 24),
           Text(
@@ -122,7 +128,7 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
           Text(
             'Start tracking when you wear items to see insights',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
             textAlign: TextAlign.center,
           ),
@@ -163,7 +169,9 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
                 _selectedMonth.year,
                 _selectedMonth.month + 1,
               );
-              if (nextMonth.isBefore(DateTime.now().add(const Duration(days: 1)))) {
+              if (nextMonth.isBefore(
+                DateTime.now().add(const Duration(days: 1)),
+              )) {
                 setState(() {
                   _selectedMonth = nextMonth;
                 });
@@ -183,16 +191,20 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
     // Calculate stats
     final totalWears = monthEvents.length;
     final uniqueItems = monthEvents.map((e) => e.itemId).toSet().length;
-    final avgRating = monthEvents
-        .where((e) => e.userRating != null)
-        .fold<double>(0, (sum, e) => sum + (e.userRating ?? 0)) /
-        (monthEvents.where((e) => e.userRating != null).length.clamp(1, double.infinity));
+    final avgRating =
+        monthEvents
+            .where((e) => e.userRating != null)
+            .fold<double>(0, (sum, e) => sum + (e.userRating ?? 0)) /
+        (monthEvents
+            .where((e) => e.userRating != null)
+            .length
+            .clamp(1, double.infinity));
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -241,17 +253,14 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
         Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildWearHistoryList(
-    ThemeData theme,
-    List<WearHistoryEvent> events,
-  ) {
+  Widget _buildWearHistoryList(ThemeData theme, List<WearHistoryEvent> events) {
     if (events.isEmpty) {
       return SliverToBoxAdapter(
         child: Center(
@@ -260,7 +269,7 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
             child: Text(
               'No wears recorded for this month',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -283,29 +292,26 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
       ..sort((a, b) => b.compareTo(a));
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final date = sortedDates[index];
-          final dateEvents = eventsByDate[date]!;
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final date = sortedDates[index];
+        final dateEvents = eventsByDate[date]!;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 8, top: 16, bottom: 8),
-                child: Text(
-                  DateFormat('EEEE, MMMM d').format(date),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 8, top: 16, bottom: 8),
+              child: Text(
+                DateFormat('EEEE, MMMM d').format(date),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              ...dateEvents.map((event) => _buildWearEventCard(theme, event)),
-            ],
-          );
-        },
-        childCount: sortedDates.length,
-      ),
+            ),
+            ...dateEvents.map((event) => _buildWearEventCard(theme, event)),
+          ],
+        );
+      }, childCount: sortedDates.length),
     );
   }
 
@@ -336,9 +342,7 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
                             ),
                     ),
                   )
-                : const CircleAvatar(
-                    child: Icon(Icons.checkroom),
-                  ),
+                : const CircleAvatar(child: Icon(Icons.checkroom)),
             title: Text(
               item != null
                   ? '${item.analysis.primaryColor} ${item.analysis.itemType}'
@@ -385,7 +389,7 @@ class _WearHistoryScreenState extends ConsumerState<WearHistoryScreen> {
 
   Future<WardrobeItem?> _getItemById(String? itemId) async {
     if (itemId == null) return null;
-    
+
     try {
       final wardrobeService = getIt<EnhancedWardrobeStorageService>();
       final items = await wardrobeService.getWardrobeItems();

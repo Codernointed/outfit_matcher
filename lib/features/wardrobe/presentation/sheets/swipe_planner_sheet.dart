@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/core/models/swipe_closet_request.dart';
-import 'package:vestiq/features/wardrobe/presentation/providers/swipe_planner_providers.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/providers/swipe_planner_providers.dart'
     as swipePlannerProviders;

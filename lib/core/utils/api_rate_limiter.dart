@@ -49,7 +49,9 @@ class ApiRateLimiter {
 
     // Record this request
     _requestTimes.add(now);
-    AppLogger.debug('✅ API request allowed (${_requestTimes.length}/$_maxRequestsPerMinute)');
+    AppLogger.debug(
+      '✅ API request allowed (${_requestTimes.length}/$_maxRequestsPerMinute)',
+    );
     return true;
   }
 
@@ -137,7 +139,9 @@ class ApiRateLimiter {
       }
 
       if (expiredKeys.isNotEmpty) {
-        AppLogger.info('🧹 Cleaned up ${expiredKeys.length} expired cache entries');
+        AppLogger.info(
+          '🧹 Cleaned up ${expiredKeys.length} expired cache entries',
+        );
       }
     });
   }
@@ -162,8 +166,5 @@ class _CacheEntry {
   final String response;
   final DateTime timestamp;
 
-  const _CacheEntry({
-    required this.response,
-    required this.timestamp,
-  });
+  const _CacheEntry({required this.response, required this.timestamp});
 }

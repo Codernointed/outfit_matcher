@@ -40,7 +40,11 @@ class FileBasedStorageService {
       _initialized = true;
       AppLogger.info('✅ File-based storage initialized');
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to initialize file-based storage', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to initialize file-based storage',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -69,7 +73,11 @@ class FileBasedStorageService {
 
       AppLogger.info('💾 Saved ${items.length} wardrobe items to file');
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to save wardrobe items', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to save wardrobe items',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -81,7 +89,9 @@ class FileBasedStorageService {
       final file = File(filePath);
 
       if (!await file.exists()) {
-        AppLogger.debug('📄 Wardrobe items file does not exist, returning empty list');
+        AppLogger.debug(
+          '📄 Wardrobe items file does not exist, returning empty list',
+        );
         return [];
       }
 
@@ -95,7 +105,11 @@ class FileBasedStorageService {
       AppLogger.info('📂 Loaded ${items.length} wardrobe items from file');
       return items;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to load wardrobe items', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to load wardrobe items',
+        error: e,
+        stackTrace: stackTrace,
+      );
       // Return empty list on error to prevent crashes
       return [];
     }
@@ -118,7 +132,11 @@ class FileBasedStorageService {
 
       AppLogger.info('💾 Saved ${looks.length} wardrobe looks to file');
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to save wardrobe looks', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to save wardrobe looks',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -130,7 +148,9 @@ class FileBasedStorageService {
       final file = File(filePath);
 
       if (!await file.exists()) {
-        AppLogger.debug('📄 Wardrobe looks file does not exist, returning empty list');
+        AppLogger.debug(
+          '📄 Wardrobe looks file does not exist, returning empty list',
+        );
         return [];
       }
 
@@ -144,7 +164,11 @@ class FileBasedStorageService {
       AppLogger.info('📂 Loaded ${looks.length} wardrobe looks from file');
       return looks;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to load wardrobe looks', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to load wardrobe looks',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }
@@ -164,7 +188,11 @@ class FileBasedStorageService {
 
       AppLogger.info('💾 Saved user preferences to file');
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to save user preferences', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to save user preferences',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -176,7 +204,9 @@ class FileBasedStorageService {
       final file = File(filePath);
 
       if (!await file.exists()) {
-        AppLogger.debug('📄 User preferences file does not exist, returning empty map');
+        AppLogger.debug(
+          '📄 User preferences file does not exist, returning empty map',
+        );
         return {};
       }
 
@@ -186,7 +216,11 @@ class FileBasedStorageService {
       AppLogger.info('📂 Loaded user preferences from file');
       return preferences;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to load user preferences', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to load user preferences',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return {};
     }
   }
@@ -206,7 +240,11 @@ class FileBasedStorageService {
 
       AppLogger.info('💾 Saved app settings to file');
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to save app settings', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to save app settings',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -218,7 +256,9 @@ class FileBasedStorageService {
       final file = File(filePath);
 
       if (!await file.exists()) {
-        AppLogger.debug('📄 App settings file does not exist, returning empty map');
+        AppLogger.debug(
+          '📄 App settings file does not exist, returning empty map',
+        );
         return {};
       }
 
@@ -228,7 +268,11 @@ class FileBasedStorageService {
       AppLogger.info('📂 Loaded app settings from file');
       return settings;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to load app settings', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to load app settings',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return {};
     }
   }
@@ -243,7 +287,9 @@ class FileBasedStorageService {
     required Map<String, dynamic> appSettings,
   }) async {
     try {
-      AppLogger.info('🚚 Starting migration from SharedPreferences to file storage');
+      AppLogger.info(
+        '🚚 Starting migration from SharedPreferences to file storage',
+      );
 
       await initialize();
 
@@ -297,15 +343,27 @@ class FileBasedStorageService {
         'wardrobeLooks': wardrobeLooks.length,
         'userPreferences': userPreferences.length,
         'appSettings': appSettings.length,
-        'itemsFileSize': await itemsFile.exists() ? await itemsFile.length() : 0,
-        'looksFileSize': await looksFile.exists() ? await looksFile.length() : 0,
-        'prefsFileSize': await prefsFile.exists() ? await prefsFile.length() : 0,
-        'settingsFileSize': await settingsFile.exists() ? await settingsFile.length() : 0,
+        'itemsFileSize': await itemsFile.exists()
+            ? await itemsFile.length()
+            : 0,
+        'looksFileSize': await looksFile.exists()
+            ? await looksFile.length()
+            : 0,
+        'prefsFileSize': await prefsFile.exists()
+            ? await prefsFile.length()
+            : 0,
+        'settingsFileSize': await settingsFile.exists()
+            ? await settingsFile.length()
+            : 0,
         'storagePath': _dataDir.path,
         'lastUpdated': DateTime.now().toIso8601String(),
       };
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to get storage stats', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to get storage stats',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return {};
     }
   }
@@ -334,7 +392,11 @@ class FileBasedStorageService {
 
       AppLogger.info('🧹 All data cleared');
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to clear all data', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to clear all data',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -343,15 +405,23 @@ class FileBasedStorageService {
   Future<Map<String, dynamic>> exportData() async {
     try {
       return {
-        'wardrobeItems': (await loadWardrobeItems()).map((i) => i.toJson()).toList(),
-        'wardrobeLooks': (await loadWardrobeLooks()).map((l) => l.toJson()).toList(),
+        'wardrobeItems': (await loadWardrobeItems())
+            .map((i) => i.toJson())
+            .toList(),
+        'wardrobeLooks': (await loadWardrobeLooks())
+            .map((l) => l.toJson())
+            .toList(),
         'userPreferences': await loadUserPreferences(),
         'appSettings': await loadAppSettings(),
         'exportedAt': DateTime.now().toIso8601String(),
         'version': '2.0', // File-based storage version
       };
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Failed to export data', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Failed to export data',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return {};
     }
   }
@@ -379,7 +449,9 @@ class FileBasedStorageService {
 
       // Import user preferences
       if (data['userPreferences'] != null) {
-        await saveUserPreferences(data['userPreferences'] as Map<String, dynamic>);
+        await saveUserPreferences(
+          data['userPreferences'] as Map<String, dynamic>,
+        );
       }
 
       // Import app settings

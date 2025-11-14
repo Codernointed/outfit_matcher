@@ -482,8 +482,7 @@ class EnhancedWardrobeStorageService {
       // Weather filter (check seasons and material)
       if (weather != null) {
         final weatherLower = weather.toLowerCase();
-        final seasons = item.analysis.seasons ?? [];
-        final material = item.analysis.material ?? '';
+        final seasons = item.analysis.seasons;
 
         if (weatherLower.contains('cold') || weatherLower.contains('cool')) {
           if (!seasons.any(
@@ -522,7 +521,7 @@ class EnhancedWardrobeStorageService {
       // Gender filter (check if item fits the preferred gender)
       if (gender != null) {
         final formality = item.analysis.formality ?? '';
-        final style = item.analysis.style ?? '';
+        final style = item.analysis.style;
 
         // For now, use formality and style as proxies for gender appropriateness
         // This could be enhanced with better gender detection in the future

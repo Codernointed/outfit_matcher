@@ -14,9 +14,10 @@ class FirestoreWearHistoryService {
   /// Record a wear event
   Future<void> recordWearEvent(WearHistoryEvent event) async {
     try {
-      await _firestore.collection(_collectionName).doc(event.id).set(
-            event.toFirestore(),
-          );
+      await _firestore
+          .collection(_collectionName)
+          .doc(event.id)
+          .set(event.toFirestore());
 
       debugPrint('✅ Recorded wear event: ${event.id}');
     } catch (e) {
@@ -99,7 +100,10 @@ class FirestoreWearHistoryService {
       final snapshot = await _firestore
           .collection(_collectionName)
           .where('userId', isEqualTo: userId)
-          .where('wornAt', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where(
+            'wornAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          )
           .where('wornAt', isLessThanOrEqualTo: Timestamp.fromDate(endDate))
           .orderBy('wornAt', descending: true)
           .get();
@@ -122,9 +126,11 @@ class FirestoreWearHistoryService {
         .where('userId', isEqualTo: userId)
         .orderBy('wornAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => WearHistoryEvent.fromFirestore(doc))
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => WearHistoryEvent.fromFirestore(doc))
+              .toList(),
+        );
   }
 
   // ==================== STATISTICS ====================
@@ -142,7 +148,10 @@ class FirestoreWearHistoryService {
   }
 
   /// Get most worn items (by count)
-  Future<Map<String, int>> getMostWornItems(String userId, {int limit = 10}) async {
+  Future<Map<String, int>> getMostWornItems(
+    String userId, {
+    int limit = 10,
+  }) async {
     final allHistory = await getUserWearHistory(userId);
     final itemCounts = <String, int>{};
 
@@ -166,7 +175,8 @@ class FirestoreWearHistoryService {
 
     for (final event in allHistory) {
       if (event.occasion != null && event.occasion!.isNotEmpty) {
-        occasionCounts[event.occasion!] = (occasionCounts[event.occasion!] ?? 0) + 1;
+        occasionCounts[event.occasion!] =
+            (occasionCounts[event.occasion!] ?? 0) + 1;
       }
     }
 

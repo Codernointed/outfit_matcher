@@ -130,22 +130,21 @@ class WelcomeScreen extends StatelessWidget {
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
       ),
-      child:
-          imagePath != null
-              ? ClipRRect(
-                borderRadius: BorderRadius.circular(
-                  AppConstants.defaultBorderRadius,
-                ),
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
-              )
-              : const Center(
-                child: Icon(Icons.image, size: 40, color: Colors.grey),
+      child: imagePath != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(
+                AppConstants.defaultBorderRadius,
               ),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            )
+          : const Center(
+              child: Icon(Icons.image, size: 40, color: Colors.grey),
+            ),
     );
   }
 }

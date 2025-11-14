@@ -17,7 +17,10 @@ class UserPreferencesService {
   /// Get user preferences (creates if doesn't exist)
   Future<UserPreferences> getUserPreferences(String userId) async {
     try {
-      final doc = await _firestore.collection(_collectionName).doc(userId).get();
+      final doc = await _firestore
+          .collection(_collectionName)
+          .doc(userId)
+          .get();
 
       if (!doc.exists) {
         // Create empty preferences for new user
@@ -36,10 +39,10 @@ class UserPreferencesService {
   /// Save preferences to Firestore
   Future<void> _savePreferences(UserPreferences prefs) async {
     try {
-      await _firestore.collection(_collectionName).doc(prefs.userId).set(
-            prefs.toFirestore(),
-            SetOptions(merge: true),
-          );
+      await _firestore
+          .collection(_collectionName)
+          .doc(prefs.userId)
+          .set(prefs.toFirestore(), SetOptions(merge: true));
     } catch (e) {
       debugPrint('❌ Error saving preferences: $e');
     }
@@ -110,7 +113,8 @@ class UserPreferencesService {
 
       // Calculate new average match score
       final totalSaves = prefs.totalSaves + 1;
-      final newAvgScore = (prefs.avgMatchScoreAccepted * prefs.totalSaves + outfit.matchScore) /
+      final newAvgScore =
+          (prefs.avgMatchScoreAccepted * prefs.totalSaves + outfit.matchScore) /
           totalSaves;
 
       final updated = prefs.copyWith(
@@ -184,7 +188,11 @@ class UserPreferencesService {
   }
 
   /// Track when user wears an item (strongest signal!)
-  Future<void> trackItemWear(String userId, WardrobeItem item, {String? occasion}) async {
+  Future<void> trackItemWear(
+    String userId,
+    WardrobeItem item, {
+    String? occasion,
+  }) async {
     try {
       final prefs = await getUserPreferences(userId);
 
@@ -243,8 +251,11 @@ class UserPreferencesService {
   /// Calculate preference strength (0-1) for outfit generation weighting
   double getPreferenceStrength(UserPreferences prefs) {
     // More data = stronger preferences
-    final dataPoints = prefs.totalSaves + (prefs.totalViews * 0.1) + prefs.totalGenerations * 0.05;
-    
+    final dataPoints =
+        prefs.totalSaves +
+        (prefs.totalViews * 0.1) +
+        prefs.totalGenerations * 0.05;
+
     // Sigmoid function to map data points to 0-1
     // 0 saves = 0.0, 50+ saves = ~0.9+
     return 1 / (1 + (50 / (dataPoints + 1)));
@@ -262,7 +273,11 @@ class UserPreferencesService {
 
   /// Watch user preferences for real-time updates
   Stream<UserPreferences> watchUserPreferences(String userId) {
-    return _firestore.collection(_collectionName).doc(userId).snapshots().map(
+    return _firestore
+        .collection(_collectionName)
+        .doc(userId)
+        .snapshots()
+        .map(
           (doc) => doc.exists
               ? UserPreferences.fromFirestore(doc)
               : UserPreferences.empty(userId),

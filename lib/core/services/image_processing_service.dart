@@ -21,12 +21,15 @@ class ImageProcessingService {
     String? itemType,
     String? color,
   }) async {
-    AppLogger.info('🖼️ Processing uploaded image', data: {
-      'itemId': itemId,
-      'enablePolishing': enablePolishing,
-      'itemType': itemType,
-      'color': color,
-    });
+    AppLogger.info(
+      '🖼️ Processing uploaded image',
+      data: {
+        'itemId': itemId,
+        'enablePolishing': enablePolishing,
+        'itemType': itemType,
+        'color': color,
+      },
+    );
 
     try {
       // Save original image
@@ -40,9 +43,17 @@ class ImageProcessingService {
       String? polishedPath;
       if (enablePolishing) {
         AppLogger.info('✨ Starting image polishing');
-        polishedPath = await _polishImage(File(originalPath), itemId, itemType: itemType ?? 'clothing', color: color ?? 'unknown');
+        polishedPath = await _polishImage(
+          File(originalPath),
+          itemId,
+          itemType: itemType ?? 'clothing',
+          color: color ?? 'unknown',
+        );
         if (polishedPath != null) {
-          AppLogger.info('✅ Image polished and saved', data: {'path': polishedPath});
+          AppLogger.info(
+            '✅ Image polished and saved',
+            data: {'path': polishedPath},
+          );
         }
       }
 
@@ -56,7 +67,11 @@ class ImageProcessingService {
         processingTime: DateTime.now(),
       );
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Image processing failed', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Image processing failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -68,18 +83,18 @@ class ImageProcessingService {
     required String itemType,
     required String color,
   }) async {
-    AppLogger.info('✨ Starting image polishing', data: {
-      'itemId': itemId,
-      'itemType': itemType,
-      'color': color,
-    });
+    AppLogger.info(
+      '✨ Starting image polishing',
+      data: {'itemId': itemId, 'itemType': itemType, 'color': color},
+    );
 
     try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
 
       // Enhanced prompt for polishing clothing items
-      final polishingPrompt = '''
+      final polishingPrompt =
+          '''
 Create a premium, polished version of this clothing item for a luxury wardrobe app.
 
 Requirements:
@@ -121,9 +136,10 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
       if (apiKey == null) {
         throw Exception('GEMINI_API_KEY not found in environment');
       }
-      
-      final url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$apiKey';
-      
+
+      final url =
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$apiKey';
+
       final response = await http.post(
         Uri.parse(url),
         headers: {'Content-Type': 'application/json'},
@@ -140,10 +156,16 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
               final inlineData = part['inlineData'];
               if (inlineData != null && inlineData['data'] != null) {
                 final polishedBase64 = inlineData['data'] as String;
-                
+
                 // Save polished image
-                final polishedPath = await _savePolishedImage(polishedBase64, itemId);
-                AppLogger.info('✅ Image polished and saved', data: {'path': polishedPath});
+                final polishedPath = await _savePolishedImage(
+                  polishedBase64,
+                  itemId,
+                );
+                AppLogger.info(
+                  '✅ Image polished and saved',
+                  data: {'path': polishedPath},
+                );
                 return polishedPath;
               }
             }
@@ -154,20 +176,27 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
       AppLogger.warning('⚠️ No polished image returned from API');
       return null;
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Image polishing failed', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Image polishing failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return null;
     }
   }
 
   /// Save original image to storage
-  static Future<String> _saveOriginalImage(File imageFile, String itemId) async {
+  static Future<String> _saveOriginalImage(
+    File imageFile,
+    String itemId,
+  ) async {
     final directory = await _getImagesDirectory();
     final originalDir = Directory('${directory.path}/$_originalSubdir');
     await originalDir.create(recursive: true);
 
     final fileName = '${itemId}_original.jpg';
     final targetPath = '${originalDir.path}/$fileName';
-    
+
     await imageFile.copy(targetPath);
     return targetPath;
   }
@@ -182,13 +211,16 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
     // In production, you'd want to resize using image package
     final fileName = '${itemId}_thumb.jpg';
     final targetPath = '${thumbnailDir.path}/$fileName';
-    
+
     await imageFile.copy(targetPath);
     return targetPath;
   }
 
   /// Save polished image from base64 data
-  static Future<String> _savePolishedImage(String base64Data, String itemId) async {
+  static Future<String> _savePolishedImage(
+    String base64Data,
+    String itemId,
+  ) async {
     final directory = await _getImagesDirectory();
     final polishedDir = Directory('${directory.path}/$_polishedSubdir');
     await polishedDir.create(recursive: true);
@@ -212,23 +244,25 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
 
     final appDir = await getApplicationDocumentsDirectory();
     final imagesDir = Directory('${appDir.path}/$_imagesDir');
-    
+
     if (!await imagesDir.exists()) {
       await imagesDir.create(recursive: true);
     }
-    
+
     return imagesDir;
   }
 
-
   /// Clean up old images (for maintenance)
   static Future<void> cleanupOldImages({int maxAgeInDays = 30}) async {
-    AppLogger.info('🧹 Starting image cleanup', data: {'maxAgeInDays': maxAgeInDays});
+    AppLogger.info(
+      '🧹 Starting image cleanup',
+      data: {'maxAgeInDays': maxAgeInDays},
+    );
 
     try {
       final directory = await _getImagesDirectory();
       final cutoffDate = DateTime.now().subtract(Duration(days: maxAgeInDays));
-      
+
       int deletedCount = 0;
       await for (final entity in directory.list(recursive: true)) {
         if (entity is File) {
@@ -240,9 +274,16 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
         }
       }
 
-      AppLogger.info('✅ Image cleanup complete', data: {'deletedFiles': deletedCount});
+      AppLogger.info(
+        '✅ Image cleanup complete',
+        data: {'deletedFiles': deletedCount},
+      );
     } catch (e, stackTrace) {
-      AppLogger.error('❌ Image cleanup failed', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Image cleanup failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -250,7 +291,7 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
   static Future<StorageStats> getStorageStats() async {
     try {
       final directory = await _getImagesDirectory();
-      
+
       int totalFiles = 0;
       int totalSize = 0;
       int originalCount = 0;
@@ -261,7 +302,7 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
         if (entity is File) {
           totalFiles++;
           totalSize += await entity.length();
-          
+
           if (entity.path.contains(_originalSubdir)) originalCount++;
           if (entity.path.contains(_polishedSubdir)) polishedCount++;
           if (entity.path.contains(_thumbnailSubdir)) thumbnailCount++;
@@ -281,7 +322,6 @@ Generate a clean, magazine-quality image suitable for a premium fashion app.
     }
   }
 }
-
 
 /// Result of image processing operation
 class ImageProcessingResult {

@@ -8,8 +8,6 @@ import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/features/wardrobe/presentation/providers/swipe_planner_providers.dart'
     as swipe_planner_providers;
 import 'package:vestiq/core/services/outfit_storage_service.dart';
-import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
-import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
@@ -141,7 +139,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
                   Expanded(
                     child: Text(
                       totalItems > 0
-                          ? 'Showing ${totalItems} items for "${request.occasion}"'
+                          ? 'Showing $totalItems items for "${request.occasion}"'
                           : 'No exact matches for "${request.occasion}"',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurface,

@@ -83,16 +83,16 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             Text(
                               'Relaxed',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 
-                                  0.6,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                             ),
                             Text(
                               'Polished',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 
-                                  0.6,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                             ),
@@ -109,8 +109,8 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             );
                           },
                           activeColor: theme.colorScheme.primary,
-                          inactiveColor: theme.colorScheme.primary.withValues(alpha: 
-                            0.2,
+                          inactiveColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.2,
                           ),
                         ),
                       ],
@@ -178,16 +178,16 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             Text(
                               'Safe',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 
-                                  0.6,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                             ),
                             Text(
                               'Bold',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface.withValues(alpha: 
-                                  0.6,
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
                               ),
                             ),
@@ -204,8 +204,8 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
                             );
                           },
                           activeColor: theme.colorScheme.primary,
-                          inactiveColor: theme.colorScheme.primary.withValues(alpha: 
-                            0.2,
+                          inactiveColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.2,
                           ),
                         ),
                       ],

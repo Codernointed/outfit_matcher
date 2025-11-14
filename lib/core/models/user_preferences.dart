@@ -98,21 +98,45 @@ class UserPreferences {
     final data = doc.data()!;
     return UserPreferences(
       userId: data['userId'] as String,
-      favoriteColors: Map<String, int>.from(data['favoriteColors'] as Map? ?? {}),
+      favoriteColors: Map<String, int>.from(
+        data['favoriteColors'] as Map? ?? {},
+      ),
       avoidedColors: Map<String, int>.from(data['avoidedColors'] as Map? ?? {}),
-      favoriteStyles: Map<String, int>.from(data['favoriteStyles'] as Map? ?? {}),
-      favoriteOccasions: Map<String, int>.from(data['favoriteOccasions'] as Map? ?? {}),
-      mostWornCategories: Map<String, int>.from(data['mostWornCategories'] as Map? ?? {}),
-      mostSavedCategories: Map<String, int>.from(data['mostSavedCategories'] as Map? ?? {}),
-      favoritePatterns: Map<String, int>.from(data['favoritePatterns'] as Map? ?? {}),
-      successfulPairings: Map<String, int>.from(data['successfulPairings'] as Map? ?? {}),
-      rejectedPairings: Map<String, int>.from(data['rejectedPairings'] as Map? ?? {}),
-      favoriteBrands: Map<String, int>.from(data['favoriteBrands'] as Map? ?? {}),
-      occasionsByTimeOfDay: Map<String, int>.from(data['occasionsByTimeOfDay'] as Map? ?? {}),
-      occasionsByWeather: Map<String, int>.from(data['occasionsByWeather'] as Map? ?? {}),
-      preferredMannequinStyle: data['preferredMannequinStyle'] as String? ?? 'realistic',
+      favoriteStyles: Map<String, int>.from(
+        data['favoriteStyles'] as Map? ?? {},
+      ),
+      favoriteOccasions: Map<String, int>.from(
+        data['favoriteOccasions'] as Map? ?? {},
+      ),
+      mostWornCategories: Map<String, int>.from(
+        data['mostWornCategories'] as Map? ?? {},
+      ),
+      mostSavedCategories: Map<String, int>.from(
+        data['mostSavedCategories'] as Map? ?? {},
+      ),
+      favoritePatterns: Map<String, int>.from(
+        data['favoritePatterns'] as Map? ?? {},
+      ),
+      successfulPairings: Map<String, int>.from(
+        data['successfulPairings'] as Map? ?? {},
+      ),
+      rejectedPairings: Map<String, int>.from(
+        data['rejectedPairings'] as Map? ?? {},
+      ),
+      favoriteBrands: Map<String, int>.from(
+        data['favoriteBrands'] as Map? ?? {},
+      ),
+      occasionsByTimeOfDay: Map<String, int>.from(
+        data['occasionsByTimeOfDay'] as Map? ?? {},
+      ),
+      occasionsByWeather: Map<String, int>.from(
+        data['occasionsByWeather'] as Map? ?? {},
+      ),
+      preferredMannequinStyle:
+          data['preferredMannequinStyle'] as String? ?? 'realistic',
       prefersFullOutfits: data['prefersFullOutfits'] as bool? ?? true,
-      avgMatchScoreAccepted: (data['avgMatchScoreAccepted'] as num?)?.toDouble() ?? 0.7,
+      avgMatchScoreAccepted:
+          (data['avgMatchScoreAccepted'] as num?)?.toDouble() ?? 0.7,
       lastUpdated: (data['lastUpdated'] as Timestamp).toDate(),
       totalGenerations: data['totalGenerations'] as int? ?? 0,
       totalSaves: data['totalSaves'] as int? ?? 0,
@@ -122,10 +146,7 @@ class UserPreferences {
 
   /// Create empty preferences for new user
   factory UserPreferences.empty(String userId) {
-    return UserPreferences(
-      userId: userId,
-      lastUpdated: DateTime.now(),
-    );
+    return UserPreferences(userId: userId, lastUpdated: DateTime.now());
   }
 
   /// Get top N favorite colors sorted by frequency
@@ -209,9 +230,11 @@ class UserPreferences {
       favoriteBrands: favoriteBrands ?? this.favoriteBrands,
       occasionsByTimeOfDay: occasionsByTimeOfDay ?? this.occasionsByTimeOfDay,
       occasionsByWeather: occasionsByWeather ?? this.occasionsByWeather,
-      preferredMannequinStyle: preferredMannequinStyle ?? this.preferredMannequinStyle,
+      preferredMannequinStyle:
+          preferredMannequinStyle ?? this.preferredMannequinStyle,
       prefersFullOutfits: prefersFullOutfits ?? this.prefersFullOutfits,
-      avgMatchScoreAccepted: avgMatchScoreAccepted ?? this.avgMatchScoreAccepted,
+      avgMatchScoreAccepted:
+          avgMatchScoreAccepted ?? this.avgMatchScoreAccepted,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       totalGenerations: totalGenerations ?? this.totalGenerations,
       totalSaves: totalSaves ?? this.totalSaves,

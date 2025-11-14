@@ -12,7 +12,8 @@ part of 'swipe_closet_request.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 SwipeClosetRequest _$SwipeClosetRequestFromJson(Map<String, dynamic> json) {
   return _SwipeClosetRequest.fromJson(json);
@@ -36,16 +37,18 @@ mixin _$SwipeClosetRequest {
 /// @nodoc
 abstract class $SwipeClosetRequestCopyWith<$Res> {
   factory $SwipeClosetRequestCopyWith(
-          SwipeClosetRequest value, $Res Function(SwipeClosetRequest) then) =
-      _$SwipeClosetRequestCopyWithImpl<$Res, SwipeClosetRequest>;
+    SwipeClosetRequest value,
+    $Res Function(SwipeClosetRequest) then,
+  ) = _$SwipeClosetRequestCopyWithImpl<$Res, SwipeClosetRequest>;
   @useResult
-  $Res call(
-      {String occasion,
-      String? mood,
-      String? weather,
-      String? colorPreference,
-      String? notes,
-      String gender});
+  $Res call({
+    String occasion,
+    String? mood,
+    String? weather,
+    String? colorPreference,
+    String? notes,
+    String gender,
+  });
 }
 
 /// @nodoc
@@ -68,59 +71,65 @@ class _$SwipeClosetRequestCopyWithImpl<$Res, $Val extends SwipeClosetRequest>
     Object? notes = freezed,
     Object? gender = null,
   }) {
-    return _then(_value.copyWith(
-      occasion: null == occasion
-          ? _value.occasion
-          : occasion // ignore: cast_nullable_to_non_nullable
-              as String,
-      mood: freezed == mood
-          ? _value.mood
-          : mood // ignore: cast_nullable_to_non_nullable
-              as String?,
-      weather: freezed == weather
-          ? _value.weather
-          : weather // ignore: cast_nullable_to_non_nullable
-              as String?,
-      colorPreference: freezed == colorPreference
-          ? _value.colorPreference
-          : colorPreference // ignore: cast_nullable_to_non_nullable
-              as String?,
-      notes: freezed == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as String?,
-      gender: null == gender
-          ? _value.gender
-          : gender // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            occasion: null == occasion
+                ? _value.occasion
+                : occasion // ignore: cast_nullable_to_non_nullable
+                      as String,
+            mood: freezed == mood
+                ? _value.mood
+                : mood // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            weather: freezed == weather
+                ? _value.weather
+                : weather // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            colorPreference: freezed == colorPreference
+                ? _value.colorPreference
+                : colorPreference // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            notes: freezed == notes
+                ? _value.notes
+                : notes // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            gender: null == gender
+                ? _value.gender
+                : gender // ignore: cast_nullable_to_non_nullable
+                      as String,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$SwipeClosetRequestImplCopyWith<$Res>
     implements $SwipeClosetRequestCopyWith<$Res> {
-  factory _$$SwipeClosetRequestImplCopyWith(_$SwipeClosetRequestImpl value,
-          $Res Function(_$SwipeClosetRequestImpl) then) =
-      __$$SwipeClosetRequestImplCopyWithImpl<$Res>;
+  factory _$$SwipeClosetRequestImplCopyWith(
+    _$SwipeClosetRequestImpl value,
+    $Res Function(_$SwipeClosetRequestImpl) then,
+  ) = __$$SwipeClosetRequestImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String occasion,
-      String? mood,
-      String? weather,
-      String? colorPreference,
-      String? notes,
-      String gender});
+  $Res call({
+    String occasion,
+    String? mood,
+    String? weather,
+    String? colorPreference,
+    String? notes,
+    String gender,
+  });
 }
 
 /// @nodoc
 class __$$SwipeClosetRequestImplCopyWithImpl<$Res>
     extends _$SwipeClosetRequestCopyWithImpl<$Res, _$SwipeClosetRequestImpl>
     implements _$$SwipeClosetRequestImplCopyWith<$Res> {
-  __$$SwipeClosetRequestImplCopyWithImpl(_$SwipeClosetRequestImpl _value,
-      $Res Function(_$SwipeClosetRequestImpl) _then)
-      : super(_value, _then);
+  __$$SwipeClosetRequestImplCopyWithImpl(
+    _$SwipeClosetRequestImpl _value,
+    $Res Function(_$SwipeClosetRequestImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -132,45 +141,48 @@ class __$$SwipeClosetRequestImplCopyWithImpl<$Res>
     Object? notes = freezed,
     Object? gender = null,
   }) {
-    return _then(_$SwipeClosetRequestImpl(
-      occasion: null == occasion
-          ? _value.occasion
-          : occasion // ignore: cast_nullable_to_non_nullable
-              as String,
-      mood: freezed == mood
-          ? _value.mood
-          : mood // ignore: cast_nullable_to_non_nullable
-              as String?,
-      weather: freezed == weather
-          ? _value.weather
-          : weather // ignore: cast_nullable_to_non_nullable
-              as String?,
-      colorPreference: freezed == colorPreference
-          ? _value.colorPreference
-          : colorPreference // ignore: cast_nullable_to_non_nullable
-              as String?,
-      notes: freezed == notes
-          ? _value.notes
-          : notes // ignore: cast_nullable_to_non_nullable
-              as String?,
-      gender: null == gender
-          ? _value.gender
-          : gender // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+    return _then(
+      _$SwipeClosetRequestImpl(
+        occasion: null == occasion
+            ? _value.occasion
+            : occasion // ignore: cast_nullable_to_non_nullable
+                  as String,
+        mood: freezed == mood
+            ? _value.mood
+            : mood // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        weather: freezed == weather
+            ? _value.weather
+            : weather // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        colorPreference: freezed == colorPreference
+            ? _value.colorPreference
+            : colorPreference // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        notes: freezed == notes
+            ? _value.notes
+            : notes // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        gender: null == gender
+            ? _value.gender
+            : gender // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$SwipeClosetRequestImpl implements _SwipeClosetRequest {
-  const _$SwipeClosetRequestImpl(
-      {required this.occasion,
-      this.mood,
-      this.weather,
-      this.colorPreference,
-      this.notes,
-      this.gender = ''});
+  const _$SwipeClosetRequestImpl({
+    required this.occasion,
+    this.mood,
+    this.weather,
+    this.colorPreference,
+    this.notes,
+    this.gender = '',
+  });
 
   factory _$SwipeClosetRequestImpl.fromJson(Map<String, dynamic> json) =>
       _$$SwipeClosetRequestImplFromJson(json);
@@ -212,31 +224,39 @@ class _$SwipeClosetRequestImpl implements _SwipeClosetRequest {
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType, occasion, mood, weather, colorPreference, notes, gender);
+    runtimeType,
+    occasion,
+    mood,
+    weather,
+    colorPreference,
+    notes,
+    gender,
+  );
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$SwipeClosetRequestImplCopyWith<_$SwipeClosetRequestImpl> get copyWith =>
       __$$SwipeClosetRequestImplCopyWithImpl<_$SwipeClosetRequestImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$SwipeClosetRequestImplToJson(
-      this,
-    );
+    return _$$SwipeClosetRequestImplToJson(this);
   }
 }
 
 abstract class _SwipeClosetRequest implements SwipeClosetRequest {
-  const factory _SwipeClosetRequest(
-      {required final String occasion,
-      final String? mood,
-      final String? weather,
-      final String? colorPreference,
-      final String? notes,
-      final String gender}) = _$SwipeClosetRequestImpl;
+  const factory _SwipeClosetRequest({
+    required final String occasion,
+    final String? mood,
+    final String? weather,
+    final String? colorPreference,
+    final String? notes,
+    final String gender,
+  }) = _$SwipeClosetRequestImpl;
 
   factory _SwipeClosetRequest.fromJson(Map<String, dynamic> json) =
       _$SwipeClosetRequestImpl.fromJson;
@@ -279,14 +299,16 @@ mixin _$SwipeClosetPools {
 /// @nodoc
 abstract class $SwipeClosetPoolsCopyWith<$Res> {
   factory $SwipeClosetPoolsCopyWith(
-          SwipeClosetPools value, $Res Function(SwipeClosetPools) then) =
-      _$SwipeClosetPoolsCopyWithImpl<$Res, SwipeClosetPools>;
+    SwipeClosetPools value,
+    $Res Function(SwipeClosetPools) then,
+  ) = _$SwipeClosetPoolsCopyWithImpl<$Res, SwipeClosetPools>;
   @useResult
-  $Res call(
-      {List<WardrobeItem> tops,
-      List<WardrobeItem> bottoms,
-      List<WardrobeItem> footwear,
-      List<WardrobeItem> accessories});
+  $Res call({
+    List<WardrobeItem> tops,
+    List<WardrobeItem> bottoms,
+    List<WardrobeItem> footwear,
+    List<WardrobeItem> accessories,
+  });
 }
 
 /// @nodoc
@@ -307,49 +329,55 @@ class _$SwipeClosetPoolsCopyWithImpl<$Res, $Val extends SwipeClosetPools>
     Object? footwear = null,
     Object? accessories = null,
   }) {
-    return _then(_value.copyWith(
-      tops: null == tops
-          ? _value.tops
-          : tops // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-      bottoms: null == bottoms
-          ? _value.bottoms
-          : bottoms // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-      footwear: null == footwear
-          ? _value.footwear
-          : footwear // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-      accessories: null == accessories
-          ? _value.accessories
-          : accessories // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            tops: null == tops
+                ? _value.tops
+                : tops // ignore: cast_nullable_to_non_nullable
+                      as List<WardrobeItem>,
+            bottoms: null == bottoms
+                ? _value.bottoms
+                : bottoms // ignore: cast_nullable_to_non_nullable
+                      as List<WardrobeItem>,
+            footwear: null == footwear
+                ? _value.footwear
+                : footwear // ignore: cast_nullable_to_non_nullable
+                      as List<WardrobeItem>,
+            accessories: null == accessories
+                ? _value.accessories
+                : accessories // ignore: cast_nullable_to_non_nullable
+                      as List<WardrobeItem>,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$SwipeClosetPoolsImplCopyWith<$Res>
     implements $SwipeClosetPoolsCopyWith<$Res> {
-  factory _$$SwipeClosetPoolsImplCopyWith(_$SwipeClosetPoolsImpl value,
-          $Res Function(_$SwipeClosetPoolsImpl) then) =
-      __$$SwipeClosetPoolsImplCopyWithImpl<$Res>;
+  factory _$$SwipeClosetPoolsImplCopyWith(
+    _$SwipeClosetPoolsImpl value,
+    $Res Function(_$SwipeClosetPoolsImpl) then,
+  ) = __$$SwipeClosetPoolsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {List<WardrobeItem> tops,
-      List<WardrobeItem> bottoms,
-      List<WardrobeItem> footwear,
-      List<WardrobeItem> accessories});
+  $Res call({
+    List<WardrobeItem> tops,
+    List<WardrobeItem> bottoms,
+    List<WardrobeItem> footwear,
+    List<WardrobeItem> accessories,
+  });
 }
 
 /// @nodoc
 class __$$SwipeClosetPoolsImplCopyWithImpl<$Res>
     extends _$SwipeClosetPoolsCopyWithImpl<$Res, _$SwipeClosetPoolsImpl>
     implements _$$SwipeClosetPoolsImplCopyWith<$Res> {
-  __$$SwipeClosetPoolsImplCopyWithImpl(_$SwipeClosetPoolsImpl _value,
-      $Res Function(_$SwipeClosetPoolsImpl) _then)
-      : super(_value, _then);
+  __$$SwipeClosetPoolsImplCopyWithImpl(
+    _$SwipeClosetPoolsImpl _value,
+    $Res Function(_$SwipeClosetPoolsImpl) _then,
+  ) : super(_value, _then);
 
   @pragma('vm:prefer-inline')
   @override
@@ -359,39 +387,41 @@ class __$$SwipeClosetPoolsImplCopyWithImpl<$Res>
     Object? footwear = null,
     Object? accessories = null,
   }) {
-    return _then(_$SwipeClosetPoolsImpl(
-      tops: null == tops
-          ? _value._tops
-          : tops // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-      bottoms: null == bottoms
-          ? _value._bottoms
-          : bottoms // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-      footwear: null == footwear
-          ? _value._footwear
-          : footwear // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-      accessories: null == accessories
-          ? _value._accessories
-          : accessories // ignore: cast_nullable_to_non_nullable
-              as List<WardrobeItem>,
-    ));
+    return _then(
+      _$SwipeClosetPoolsImpl(
+        tops: null == tops
+            ? _value._tops
+            : tops // ignore: cast_nullable_to_non_nullable
+                  as List<WardrobeItem>,
+        bottoms: null == bottoms
+            ? _value._bottoms
+            : bottoms // ignore: cast_nullable_to_non_nullable
+                  as List<WardrobeItem>,
+        footwear: null == footwear
+            ? _value._footwear
+            : footwear // ignore: cast_nullable_to_non_nullable
+                  as List<WardrobeItem>,
+        accessories: null == accessories
+            ? _value._accessories
+            : accessories // ignore: cast_nullable_to_non_nullable
+                  as List<WardrobeItem>,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$SwipeClosetPoolsImpl implements _SwipeClosetPools {
-  const _$SwipeClosetPoolsImpl(
-      {final List<WardrobeItem> tops = const [],
-      final List<WardrobeItem> bottoms = const [],
-      final List<WardrobeItem> footwear = const [],
-      final List<WardrobeItem> accessories = const []})
-      : _tops = tops,
-        _bottoms = bottoms,
-        _footwear = footwear,
-        _accessories = accessories;
+  const _$SwipeClosetPoolsImpl({
+    final List<WardrobeItem> tops = const [],
+    final List<WardrobeItem> bottoms = const [],
+    final List<WardrobeItem> footwear = const [],
+    final List<WardrobeItem> accessories = const [],
+  }) : _tops = tops,
+       _bottoms = bottoms,
+       _footwear = footwear,
+       _accessories = accessories;
 
   factory _$SwipeClosetPoolsImpl.fromJson(Map<String, dynamic> json) =>
       _$$SwipeClosetPoolsImplFromJson(json);
@@ -445,40 +475,44 @@ class _$SwipeClosetPoolsImpl implements _SwipeClosetPools {
             const DeepCollectionEquality().equals(other._tops, _tops) &&
             const DeepCollectionEquality().equals(other._bottoms, _bottoms) &&
             const DeepCollectionEquality().equals(other._footwear, _footwear) &&
-            const DeepCollectionEquality()
-                .equals(other._accessories, _accessories));
+            const DeepCollectionEquality().equals(
+              other._accessories,
+              _accessories,
+            ));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      const DeepCollectionEquality().hash(_tops),
-      const DeepCollectionEquality().hash(_bottoms),
-      const DeepCollectionEquality().hash(_footwear),
-      const DeepCollectionEquality().hash(_accessories));
+    runtimeType,
+    const DeepCollectionEquality().hash(_tops),
+    const DeepCollectionEquality().hash(_bottoms),
+    const DeepCollectionEquality().hash(_footwear),
+    const DeepCollectionEquality().hash(_accessories),
+  );
 
   @JsonKey(ignore: true)
   @override
   @pragma('vm:prefer-inline')
   _$$SwipeClosetPoolsImplCopyWith<_$SwipeClosetPoolsImpl> get copyWith =>
       __$$SwipeClosetPoolsImplCopyWithImpl<_$SwipeClosetPoolsImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$SwipeClosetPoolsImplToJson(
-      this,
-    );
+    return _$$SwipeClosetPoolsImplToJson(this);
   }
 }
 
 abstract class _SwipeClosetPools implements SwipeClosetPools {
-  const factory _SwipeClosetPools(
-      {final List<WardrobeItem> tops,
-      final List<WardrobeItem> bottoms,
-      final List<WardrobeItem> footwear,
-      final List<WardrobeItem> accessories}) = _$SwipeClosetPoolsImpl;
+  const factory _SwipeClosetPools({
+    final List<WardrobeItem> tops,
+    final List<WardrobeItem> bottoms,
+    final List<WardrobeItem> footwear,
+    final List<WardrobeItem> accessories,
+  }) = _$SwipeClosetPoolsImpl;
 
   factory _SwipeClosetPools.fromJson(Map<String, dynamic> json) =
       _$SwipeClosetPoolsImpl.fromJson;

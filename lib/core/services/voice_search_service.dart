@@ -16,7 +16,7 @@ class VoiceSearchService {
     if (status.isGranted) {
       return true;
     }
-    
+
     final result = await Permission.microphone.request();
     return result.isGranted;
   }
@@ -43,11 +43,11 @@ class VoiceSearchService {
           },
         );
       }
-      
+
       if (!_isInitialized) {
         _lastError = 'Speech recognition not available on this device';
       }
-      
+
       return _isInitialized;
     } catch (e) {
       AppLogger.error('🎤 Error initializing speech recognition', error: e);

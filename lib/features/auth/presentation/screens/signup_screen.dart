@@ -156,7 +156,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     controller: _usernameController,
                     decoration: InputDecoration(
                       labelText: 'Username',
-                      hintText: 'johndoe',
+                      hintText: 'banserahmat',
                       prefixIcon: const Icon(Icons.person_outline),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),

@@ -51,9 +51,7 @@ class AppRouter {
   static void navigateToItemDetails(BuildContext context, String imagePath) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ItemDetailsScreen(
-          imagePaths: [imagePath],
-        ),
+        builder: (context) => ItemDetailsScreen(imagePaths: [imagePath]),
       ),
     );
   }
