@@ -237,22 +237,44 @@ class EnhancedWardrobeStorageService {
   // === WARDROBE ITEMS ===
 
   /// Save a wardrobe item (Firestore + Local)
+  /// RESILIENT: Always saves locally even if Firestore fails
   Future<void> saveWardrobeItem(WardrobeItem item) async {
-    try {
-      // Save to Firestore first if available
-      if (_isFirestoreAvailable) {
-        await _firestoreService!.saveWardrobeItem(item);
+    bool firestoreSaved = false;
 
-        // Update user's wardrobe count
-        final userId = FirebaseAuth.instance.currentUser!.uid;
-        final items = await getWardrobeItems();
-        await _userProfileService?.updateWardrobeItemCount(
-          userId,
-          items.length + 1,
-        );
+    try {
+      // Try Firestore first if available
+      if (_isFirestoreAvailable) {
+        try {
+          await _firestoreService!.saveWardrobeItem(item);
+          firestoreSaved = true;
+          AppLogger.info('☁️ Saved to Firestore successfully');
+
+          // Update user's wardrobe count
+          try {
+            final userId = FirebaseAuth.instance.currentUser!.uid;
+            final items = await _getWardrobeItemsFromLocal();
+            items.removeWhere((i) => i.id == item.id);
+            items.add(item);
+            await _userProfileService?.updateWardrobeItemCount(
+              userId,
+              items.length,
+            );
+          } catch (profileError) {
+            AppLogger.warning(
+              '⚠️ Failed to update profile count, continuing',
+              error: profileError,
+            );
+          }
+        } catch (firestoreError) {
+          AppLogger.warning(
+            '⚠️ Firestore save failed, saving locally only',
+            error: firestoreError,
+          );
+          // Continue to local save - don't rethrow
+        }
       }
 
-      // Always save to local storage as cache/backup
+      // ALWAYS save to local storage (works as cache if Firestore succeeded, or primary storage if it failed)
       final items = await _getWardrobeItemsFromLocal();
       items.removeWhere((i) => i.id == item.id); // Remove if exists
       items.add(item);
@@ -262,17 +284,18 @@ class EnhancedWardrobeStorageService {
       _notifyListeners(); // Notify listeners after save
 
       AppLogger.info(
-        '💾 Wardrobe item saved',
+        '✅ Wardrobe item saved successfully',
         data: {
           'id': item.id,
           'type': item.analysis.itemType,
           'color': item.analysis.primaryColor,
-          'firestore': _isFirestoreAvailable,
+          'savedToFirestore': firestoreSaved,
+          'savedLocally': true,
         },
       );
     } catch (e, stackTrace) {
       AppLogger.error(
-        '❌ Failed to save wardrobe item',
+        '❌ CRITICAL: Failed to save wardrobe item even locally',
         error: e,
         stackTrace: stackTrace,
       );

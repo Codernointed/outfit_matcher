@@ -25,35 +25,51 @@ class EnhancedOutfitStorageService {
   // ==================== SAVE OUTFIT ====================
 
   /// Save an outfit (cloud + local)
+  /// RESILIENT: Always saves locally even if Firestore fails
   Future<SavedOutfit> saveOutfit(SavedOutfit outfit) async {
+    bool firestoreSaved = false;
+
     try {
       final user = FirebaseAuth.instance.currentUser;
 
+      // Try Firestore if user is logged in
       if (user != null) {
-        // Save to Firestore first
-        await _firestoreService.saveOutfit(user.uid, outfit);
-        debugPrint('✅ Saved outfit to Firestore: ${outfit.id}');
+        try {
+          // Save to Firestore
+          await _firestoreService.saveOutfit(user.uid, outfit);
+          firestoreSaved = true;
+          debugPrint('☁️ Saved outfit to Firestore: ${outfit.id}');
 
-        // Update user's saved outfit count
-        final count = await _firestoreService.getOutfitCount(user.uid);
-        await _userProfileService.updateSavedOutfitCount(user.uid, count);
+          // Update user's saved outfit count
+          try {
+            final count = await _firestoreService.getOutfitCount(user.uid);
+            await _userProfileService.updateSavedOutfitCount(user.uid, count);
+          } catch (profileError) {
+            debugPrint('⚠️ Failed to update profile count: $profileError');
+          }
 
-        // Attempt migration if not done yet
-        if (!_hasMigratedToFirestore) {
-          await _attemptFirestoreMigration(user.uid);
+          // Attempt migration if not done yet
+          if (!_hasMigratedToFirestore) {
+            try {
+              await _attemptFirestoreMigration(user.uid);
+            } catch (migrationError) {
+              debugPrint('⚠️ Migration failed: $migrationError');
+            }
+          }
+        } catch (firestoreError) {
+          debugPrint('⚠️ Firestore save failed, saving locally: $firestoreError');
+          // Continue to local save - don't rethrow
         }
       }
 
-      // Save to local cache
+      // ALWAYS save to local cache (works even if Firestore fails)
       await _localService.save(outfit);
-      debugPrint('✅ Saved outfit to local cache: ${outfit.id}');
+      debugPrint('✅ Saved outfit locally: ${outfit.id} (Firestore: $firestoreSaved)');
 
       return outfit;
     } catch (e) {
-      debugPrint('❌ Error saving outfit: $e');
-
-      // Fallback to local only
-      return await _localService.save(outfit);
+      debugPrint('❌ CRITICAL: Failed to save outfit even locally: $e');
+      rethrow;
     }
   }
 

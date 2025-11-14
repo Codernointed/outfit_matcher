@@ -29,7 +29,12 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
       
-      // Subcollections - wardrobe items (if stored in Firestore)
+      // Subcollections - wardrobe items (NEW PATH)
+      match /wardrobeItems/{itemId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - wardrobe items (LEGACY PATH - keep for migration)
       match /wardrobe/{itemId} {
         allow read, write: if isOwner(userId);
       }
@@ -39,8 +44,23 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
       
+      // Subcollections - saved outfits (ALTERNATIVE PATH)
+      match /savedOutfits/{outfitId} {
+        allow read, write: if isOwner(userId);
+      }
+      
       // Subcollections - wardrobe looks
       match /looks/{lookId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - wear history events
+      match /wearHistory/{eventId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Subcollections - user preferences
+      match /preferences/{prefsId} {
         allow read, write: if isOwner(userId);
       }
     }
