@@ -339,7 +339,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: theme.shadowColor.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -363,15 +363,17 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                     child: GestureDetector(
                       onTap: () => _removeImage(index),
                       child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         padding: const EdgeInsets.all(4),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
                           size: 16,
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
                         ),
                       ),
                     ),
@@ -400,7 +402,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
         onPressed: _navigateToItemDetails,
         style: ElevatedButton.styleFrom(
           backgroundColor: theme.colorScheme.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: theme.colorScheme.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -441,7 +443,7 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -461,13 +463,17 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
                   width: _selectedImages.isNotEmpty ? 48 : 60,
                   height: _selectedImages.isNotEmpty ? 48 : 60,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
                     icon,
                     size: _selectedImages.isNotEmpty ? 24 : 28,
-                    color: isDisabled ? Colors.grey.shade600 : Colors.white,
+                    color: isDisabled
+                        ? Colors.grey.shade600
+                        : Theme.of(context).colorScheme.surface,
                   ),
                 ),
                 const SizedBox(width: 16),

@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
@@ -267,6 +267,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       // Check if we have enough items to create outfit pairings
       if (wardrobeItems.length < 2) {
         if (mounted) {
+          final theme = Theme.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
@@ -275,7 +276,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               backgroundColor: Colors.orange,
               action: SnackBarAction(
                 label: 'Add Items',
-                textColor: Colors.white,
+                textColor: theme.colorScheme.onPrimary,
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -501,12 +502,16 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.camera_alt_rounded, color: Colors.white, size: 24),
+              Icon(
+                Icons.camera_alt_rounded,
+                color: theme.colorScheme.onPrimary,
+                size: 24,
+              ),
               const SizedBox(width: 12),
               Text(
                 'Generate Your Outfit',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
+                  color: theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -621,28 +626,37 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   Widget _buildOccasionCard(BuildContext context, QuickIdeaCard idea) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     // Use distinct icons based on occasion instead of generic string mapping
     final icon = _getDistinctIconForOccasion(idea.occasion);
 
-    // Use direct color mapping based on occasion for reliability
+    // Use theme-aware color mapping based on occasion
     Color bgColor;
     Color iconColor;
     switch (idea.occasion.toLowerCase()) {
       case 'casual':
-        bgColor = Colors.blue.shade100;
-        iconColor = Colors.blue.shade700;
+        bgColor = isDark
+            ? Colors.blue.shade900.withValues(alpha: 0.3)
+            : Colors.blue.shade100;
+        iconColor = isDark ? Colors.blue.shade300 : Colors.blue.shade700;
         break;
       case 'work':
-        bgColor = Colors.purple.shade100;
-        iconColor = Colors.purple.shade700;
+        bgColor = isDark
+            ? Colors.purple.shade900.withValues(alpha: 0.3)
+            : Colors.purple.shade100;
+        iconColor = isDark ? Colors.purple.shade300 : Colors.purple.shade700;
         break;
       case 'date':
-        bgColor = Colors.pink.shade100;
-        iconColor = Colors.pink.shade700;
+        bgColor = isDark
+            ? Colors.pink.shade900.withValues(alpha: 0.3)
+            : Colors.pink.shade100;
+        iconColor = isDark ? Colors.pink.shade300 : Colors.pink.shade700;
         break;
       case 'party':
-        bgColor = Colors.orange.shade100;
-        iconColor = Colors.orange.shade700;
+        bgColor = isDark
+            ? Colors.orange.shade900.withValues(alpha: 0.3)
+            : Colors.orange.shade100;
+        iconColor = isDark ? Colors.orange.shade300 : Colors.orange.shade700;
         break;
       default:
         bgColor = theme.colorScheme.primaryContainer;
@@ -712,10 +726,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
+                      child: Text(
                         '✨ New',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                           fontSize: 9,
                           fontWeight: FontWeight.w600,
                         ),
@@ -860,7 +874,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -982,7 +996,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: theme.shadowColor.withValues(alpha: 0.1),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -1442,13 +1456,13 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: todaysPicks.activeTab == TodayTab.today
-                        ? Colors.white
+                        ? theme.colorScheme.surface
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: todaysPicks.activeTab == TodayTab.today
                         ? [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: theme.shadowColor.withValues(alpha: 0.1),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1489,13 +1503,13 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: todaysPicks.activeTab == TodayTab.tonight
-                        ? Colors.white
+                        ? theme.colorScheme.surface
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: todaysPicks.activeTab == TodayTab.tonight
                         ? [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: theme.shadowColor.withValues(alpha: 0.1),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -1855,11 +1869,11 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
       height: 194, // Updated to accommodate increased content height
       margin: EdgeInsets.only(right: index == 4 ? 0 : 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16), // Match Recent Generations
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1976,7 +1990,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -1987,13 +2001,13 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                             ? Icons.nightlight_round
                             : Icons.wb_sunny_rounded,
                         size: 10,
-                        color: Colors.white,
+                        color: theme.colorScheme.surface,
                       ),
                       const SizedBox(width: 2),
                       Text(
                         index.isEven ? 'Tonight' : '22°C',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: theme.colorScheme.surface,
                           fontSize: 8,
                           fontWeight: FontWeight.w500,
                         ),
@@ -2286,7 +2300,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: theme.shadowColor.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -2321,7 +2335,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withValues(alpha: 0.7),
+                      theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ],
                     stops: const [0.0, 1.0],
                   ),
@@ -2343,7 +2357,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: theme.colorScheme.surface.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -2363,13 +2377,17 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         Icon(
                           Icons.repeat_rounded,
                           size: 10,
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.8,
+                          ),
                         ),
                         const SizedBox(width: 2),
                         Text(
                           'Worn ${item.wearCount}x',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.8,
+                            ),
                             fontSize: 9,
                             fontWeight: FontWeight.w500,
                           ),
@@ -2469,11 +2487,11 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                 right: 16,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(Icons.close, color: theme.colorScheme.surface),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -2491,7 +2509,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.8),
+                        theme.colorScheme.onSurface.withValues(alpha: 0.8),
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
@@ -2505,8 +2523,8 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     children: [
                       Text(
                         outfit.title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: theme.colorScheme.surface,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -2514,8 +2532,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         '${outfit.items.length} items',
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: theme.colorScheme.surface.withValues(
+                            alpha: 0.7,
+                          ),
                           fontSize: 14,
                         ),
                       ),
@@ -2523,8 +2543,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         const SizedBox(height: 8),
                         Text(
                           outfit.items.map((item) => item.itemType).join(' • '),
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.7,
+                            ),
                             fontSize: 12,
                           ),
                         ),
@@ -2563,11 +2585,16 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                 right: 16,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
+                    icon: Icon(
+                      Icons.close,
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -2585,7 +2612,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.8),
+                        Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.8),
                       ],
                     ),
                     borderRadius: const BorderRadius.only(
@@ -2599,8 +2628,8 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                     children: [
                       Text(
                         item.analysis.itemType,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.surface,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -2609,8 +2638,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                         const SizedBox(height: 4),
                         Text(
                           item.analysis.subcategory!,
-                          style: const TextStyle(
-                            color: Colors.white70,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withValues(alpha: 0.7),
                             fontSize: 14,
                           ),
                         ),
@@ -2618,8 +2649,10 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                       const SizedBox(height: 4),
                       Text(
                         item.analysis.primaryColor,
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surface.withValues(alpha: 0.7),
                           fontSize: 14,
                         ),
                       ),
@@ -2635,13 +2668,14 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   }
 
   void _showWardrobeItemActions(BuildContext context, WardrobeItem item) {
+    final theme = Theme.of(context);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
