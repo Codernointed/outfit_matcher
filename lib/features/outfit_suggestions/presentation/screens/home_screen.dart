@@ -24,6 +24,10 @@ import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
+import 'package:vestiq/core/services/app_settings_service.dart';
+import 'package:vestiq/core/models/user_profile.dart';
+import 'package:vestiq/features/subscriptions/presentation/screens/subscription_overview_screen.dart';
+import 'package:vestiq/features/subscriptions/presentation/widgets/subscription_upgrade_card.dart';
 
 // Provider for the current selected index of the BottomNavigationBar
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -400,6 +404,9 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
             children: [
               // Hero Section
               _buildHeroSection(context),
+
+              // Subscription upgrade CTA for free users
+              _buildSubscriptionCTA(context),
 
               // Quick Actions
               _buildQuickActions(context, quickIdeas),
@@ -2160,6 +2167,30 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           else
             _buildWardrobeGrid(context, wardrobe, theme),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSubscriptionCTA(BuildContext context) {
+    final settings = getIt<AppSettingsService>();
+    final subscription = settings.subscriptionSnapshot;
+    
+    // Only show to free users
+    if (subscription.tier != SubscriptionTier.free) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: SubscriptionUpgradeCard(
+        compact: true,
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const SubscriptionOverviewScreen(),
+            ),
+          );
+        },
       ),
     );
   }

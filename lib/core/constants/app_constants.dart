@@ -41,4 +41,61 @@ class AppConstants {
 
   /// Storage key for outfit suggestions
   static const String outfitSuggestionsKey = 'outfit_suggestions';
+
+  // ---------------------------------------------------------------------------
+  // Subscription + Paystack configuration
+  // ---------------------------------------------------------------------------
+
+  /// Environment key for Paystack public key (safe to bundle client-side)
+  static const String envPaystackPublicKey = 'PAYSTACK_PUBLIC_KEY';
+
+  /// Environment key for Paystack secret key (only used server-side — kept for parity)
+  static const String envPaystackSecretKey = 'PAYSTACK_SECRET_KEY';
+
+  /// Environment key for the Paystack premium monthly plan code
+  static const String envPaystackPlanPremium = 'PAYSTACK_PLAN_PREMIUM';
+
+  /// Environment key for the Paystack pro plan code (future use)
+  static const String envPaystackPlanPro = 'PAYSTACK_PLAN_PRO';
+
+  /// Environment key for backend initialize endpoint
+  static const String envSubscriptionInitializeUrl =
+      'SUBSCRIPTIONS_INITIALIZE_URL';
+
+  /// Environment key for backend verify endpoint
+  static const String envSubscriptionVerifyUrl = 'SUBSCRIPTIONS_VERIFY_URL';
+
+  /// Environment key for backend entitlement snapshot endpoint
+  static const String envSubscriptionEntitlementUrl =
+      'SUBSCRIPTIONS_ENTITLEMENT_URL';
+
+  /// Human-readable label for the Free tier
+  static const String subscriptionFreeLabel = 'Free';
+
+  /// Human-readable label for the Premium tier
+  static const String subscriptionPremiumLabel = 'Premium';
+
+  /// Human-readable label for the Pro tier
+  static const String subscriptionProLabel = 'Pro';
+
+  /// Free tier daily upload limit
+  static const int freeDailyUploadLimit = 8;
+
+  /// Premium tier daily upload limit
+  static const int premiumDailyUploadLimit = 16;
+
+  /// Free tier monthly mannequin allowance
+  static const int freeMonthlyMannequinLimit = 240;
+
+  /// Premium tier monthly mannequin allowance
+  static const int premiumMonthlyMannequinLimit = 540;
+
+  /// Free tier monthly pairing allowance
+  static const int freeMonthlyPairingLimit = 50;
+
+  /// Free tier monthly inspiration search allowance
+  static const int freeMonthlyInspirationLimit = 100;
+
+  /// Premium tier monthly polishing allowance
+  static const int premiumMonthlyPolishingLimit = 500;
 }

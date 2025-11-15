@@ -18,6 +18,7 @@ import 'package:vestiq/features/profile/presentation/widgets/profile_section_til
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/wear_history_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
+import 'package:vestiq/features/subscriptions/presentation/screens/subscription_overview_screen.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 
@@ -474,7 +475,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         );
       }
+      AppLogger.error('❌ Storage calculation error: $e');
     }
+  }
+
+  Future<void> _showSubscriptionScreen() async {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SubscriptionOverviewScreen(),
+      ),
+    );
   }
 
   Future<void> _editProfile() async {
@@ -946,6 +957,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               // Account Section
               const ProfileSectionHeader(title: 'Account'),
+
+              ProfileSectionTile(
+                icon: Icons.workspace_premium_outlined,
+                title: 'Subscription & Billing',
+                subtitle: 'Manage your Premium plan',
+                iconColor: theme.colorScheme.primary,
+                onTap: _showSubscriptionScreen,
+              ),
 
               ProfileSectionTile(
                 icon: Icons.edit,

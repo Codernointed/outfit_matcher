@@ -14,6 +14,7 @@ migrate_working_dir/
 
 # Environment variables (CRITICAL - contains sensitive data)
 .env
+.env.paystack
 .env.local
 .env.*.local
 .env.development

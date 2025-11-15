@@ -21,6 +21,14 @@ Future main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
+  // Load sensitive Paystack config if the private file exists
+  try {
+    await dotenv.load(fileName: ".env.paystack", mergeWith: dotenv.env);
+    AppLogger.info('🔐 Paystack env loaded');
+  } catch (e) {
+    AppLogger.warning('⚠️ Paystack env not found, falling back to defaults');
+  }
+
   // Initialize Firebase
   try {
     await Firebase.initializeApp(
