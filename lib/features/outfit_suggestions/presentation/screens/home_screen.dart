@@ -4,40 +4,117 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/models/walkthrough_step.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
+import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/walkthrough_service.dart';
+import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/walkthrough_overlay.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_search_results_screen.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/widgets/customize_mood_sheet.dart';
+import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_screen.dart';
-// import 'package:vestiq/features/wardrobe/presentation/screens/closet_screen.dart';
-import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
-import 'package:vestiq/features/profile/presentation/screens/profile_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
-import 'package:vestiq/core/models/saved_outfit.dart';
-import 'package:vestiq/core/models/wardrobe_item.dart';
-import 'package:vestiq/core/models/clothing_analysis.dart';
-import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/widgets/customize_mood_sheet.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_search_results_screen.dart';
-import 'package:vestiq/core/di/service_locator.dart';
-import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
-import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
-import 'package:vestiq/core/services/outfit_storage_service.dart';
-import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 // Subscription imports removed - premium prompts now shown via LimitReachedModal only
 
 // Provider for the current selected index of the BottomNavigationBar
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
-class HomeScreen extends ConsumerWidget {
-  HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
 
-  // List of main screens for IndexedStack
-  final List<Widget> _mainScreens = [
-    const MainContentHomeScreen(),
-    const EnhancedClosetScreen(),
-    const ProfileScreen(),
-  ];
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final GlobalKey _heroKey = GlobalKey();
+  final GlobalKey _quickActionsKey = GlobalKey();
+  final GlobalKey _primaryCtaKey = GlobalKey();
+  final GlobalKey _wardrobeKey = GlobalKey();
+  final GlobalKey _bottomNavKey = GlobalKey();
+
+  late final List<Widget> _mainScreens;
+  WalkthroughService? _walkthroughService;
+  bool _showHomeWalkthrough = false;
+  List<WalkthroughStep> _homeSteps = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _mainScreens = [
+      MainContentHomeScreen(
+        heroKey: _heroKey,
+        quickActionsKey: _quickActionsKey,
+        primaryCtaKey: _primaryCtaKey,
+        wardrobeKey: _wardrobeKey,
+      ),
+      const EnhancedClosetScreen(),
+      const ProfileScreen(),
+    ];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initWalkthrough());
+  }
+
+  Future<void> _initWalkthrough() async {
+    final prefs = getIt<SharedPreferences>();
+    _walkthroughService = WalkthroughService(prefs);
+    if (!mounted) return;
+    if (!(_walkthroughService?.shouldShowHomeWalkthrough() ?? false)) return;
+
+    setState(() {
+      _homeSteps = [
+        WalkthroughStep(
+          targetKey: _heroKey,
+          title: 'Welcome to Vestiq',
+          description: 'See fresh looks or start your own.',
+          position: TooltipPosition.below,
+        ),
+        WalkthroughStep(
+          targetKey: _quickActionsKey,
+          title: 'Instant ideas',
+          description: 'Tap an occasion for a styled outfit.',
+          position: TooltipPosition.below,
+        ),
+        WalkthroughStep(
+          targetKey: _primaryCtaKey,
+          title: 'Build your wardrobe',
+          description: 'Upload pieces to unlock smarter fits.',
+          position: TooltipPosition.above,
+        ),
+        WalkthroughStep(
+          targetKey: _wardrobeKey,
+          title: 'Your closet preview',
+          description: 'Peek at items and jump into Closet.',
+          position: TooltipPosition.above,
+        ),
+        WalkthroughStep(
+          targetKey: _bottomNavKey,
+          title: 'Navigate fast',
+          description: 'Home, Closet, Profile — always here.',
+          position: TooltipPosition.above,
+        ),
+      ];
+      _showHomeWalkthrough = true;
+    });
+  }
+
+  void _endWalkthrough() {
+    _walkthroughService?.completeHomeWalkthrough();
+    setState(() => _showHomeWalkthrough = false);
+  }
 
   void _openSearch(BuildContext context) {
     Navigator.of(context).push(
@@ -75,86 +152,96 @@ class HomeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final ref = this.ref;
     final theme = Theme.of(context);
     final currentIndex = ref.watch(bottomNavIndexProvider);
 
-    // The body will now be an IndexedStack to switch between screens
-    // The original ListView content of HomeScreen will become its own widget (MainContentHomeScreen)
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        title: Row(
-          children: [
-            Icon(Icons.checkroom, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            Text('vestiq', style: theme.textTheme.titleLarge),
-          ],
-        ),
-        actions: [
-          // Search button
-          IconButton(
-            icon: const Icon(Icons.search_rounded),
-            onPressed: () {
-              AppLogger.info('🔍 Opening search');
-              _openSearch(context);
-            },
-            tooltip: 'Search',
-          ),
-          // Filter button
-          // IconButton(
-          //   icon: const Icon(Icons.tune_rounded),
-          //   onPressed: () {
-          //     AppLogger.info('🎛️ Opening filters');
-          //     _openFilters(context);
-          //   },
-          //   tooltip: 'Filters',
-          // ),
-          // Theme toggle
-          IconButton(
-            icon: Icon(
-              Theme.of(context).brightness == Brightness.light
-                  ? Icons.dark_mode_outlined
-                  : Icons.light_mode_outlined,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            title: Row(
+              children: [
+                Icon(Icons.checkroom, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Text('vestiq', style: theme.textTheme.titleLarge),
+              ],
             ),
-            onPressed: () {
-              _toggleTheme(ref, context);
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.search_rounded),
+                onPressed: () {
+                  AppLogger.info('🔍 Opening search');
+                  _openSearch(context);
+                },
+                tooltip: 'Search',
+              ),
+              IconButton(
+                icon: Icon(
+                  Theme.of(context).brightness == Brightness.light
+                      ? Icons.dark_mode_outlined
+                      : Icons.light_mode_outlined,
+                ),
+                onPressed: () {
+                  _toggleTheme(ref, context);
+                },
+                tooltip: 'Toggle theme',
+              ),
+            ],
+          ),
+          body: IndexedStack(index: currentIndex, children: _mainScreens),
+          bottomNavigationBar: DynamicIslandNavBar(
+            key: _bottomNavKey,
+            currentIndex: currentIndex,
+            onTap: (index) {
+              ref.read(bottomNavIndexProvider.notifier).state = index;
             },
-            tooltip: 'Toggle theme',
+            items: [
+              DynamicIslandNavItem(
+                icon: Icons.home_rounded,
+                activeIcon: Icons.home_rounded,
+                label: 'Home',
+              ),
+              const DynamicIslandNavItem(
+                icon: Icons.checkroom_outlined,
+                activeIcon: Icons.checkroom,
+                label: 'Closet',
+              ),
+              const DynamicIslandNavItem(
+                icon: CupertinoIcons.person,
+                activeIcon: Icons.person,
+                label: 'Profile',
+              ),
+            ],
           ),
-        ],
-      ),
-      body: IndexedStack(index: currentIndex, children: _mainScreens),
-      bottomNavigationBar: DynamicIslandNavBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          ref.read(bottomNavIndexProvider.notifier).state = index;
-        },
-        items: [
-          DynamicIslandNavItem(
-            icon: Icons.home_rounded,
-            activeIcon: Icons.home_rounded,
-            label: 'Home',
+        ),
+        if (_showHomeWalkthrough && _homeSteps.isNotEmpty)
+          WalkthroughOverlay(
+            steps: _homeSteps,
+            onFinish: _endWalkthrough,
+            onSkip: _endWalkthrough,
           ),
-          const DynamicIslandNavItem(
-            icon: Icons.checkroom_outlined,
-            activeIcon: Icons.checkroom,
-            label: 'Closet',
-          ),
-          const DynamicIslandNavItem(
-            icon: CupertinoIcons.person,
-            activeIcon: Icons.person,
-            label: 'Profile',
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
 class MainContentHomeScreen extends ConsumerStatefulWidget {
-  const MainContentHomeScreen({super.key});
+  const MainContentHomeScreen({
+    super.key,
+    required this.heroKey,
+    required this.quickActionsKey,
+    required this.primaryCtaKey,
+    required this.wardrobeKey,
+  });
+
+  final GlobalKey heroKey;
+  final GlobalKey quickActionsKey;
+  final GlobalKey primaryCtaKey;
+  final GlobalKey wardrobeKey;
 
   @override
   ConsumerState<MainContentHomeScreen> createState() =>
@@ -429,6 +516,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     final theme = Theme.of(context);
 
     return Container(
+      key: widget.heroKey,
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -474,6 +562,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     final theme = Theme.of(context);
 
     return Container(
+      key: widget.primaryCtaKey,
       width: double.infinity,
       height: 60,
       decoration: BoxDecoration(
@@ -553,6 +642,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
         : _getDefaultQuickIdeas();
 
     return Padding(
+      key: widget.quickActionsKey,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2118,6 +2208,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     final theme = Theme.of(context);
 
     return Padding(
+      key: widget.wardrobeKey,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

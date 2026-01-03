@@ -2,24 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:vestiq/core/models/profile_data.dart';
-import 'package:vestiq/core/services/profile_service.dart';
-import 'package:vestiq/core/services/storage_service.dart';
-import 'package:vestiq/core/services/analytics_service.dart';
-import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/core/utils/reset_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/models/profile_data.dart';
+import 'package:vestiq/core/services/analytics_service.dart';
+import 'package:vestiq/core/services/profile_service.dart';
+import 'package:vestiq/core/services/storage_service.dart';
+import 'package:vestiq/core/services/walkthrough_service.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/utils/reset_utils.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
 import 'package:vestiq/features/profile/presentation/providers/profile_providers.dart';
-import 'package:vestiq/features/profile/presentation/widgets/profile_header.dart';
-import 'package:vestiq/features/profile/presentation/widgets/stats_row.dart';
 import 'package:vestiq/features/profile/presentation/widgets/favorites_carousel.dart';
+import 'package:vestiq/features/profile/presentation/widgets/profile_header.dart';
 import 'package:vestiq/features/profile/presentation/widgets/profile_section_tile.dart';
+import 'package:vestiq/features/profile/presentation/widgets/stats_row.dart';
+import 'package:vestiq/features/subscriptions/presentation/screens/subscription_overview_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/wear_history_screen.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
-import 'package:vestiq/features/subscriptions/presentation/screens/subscription_overview_screen.dart';
-import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 
 /// Premium profile screen with stats, favorites, preferences, and settings
@@ -34,6 +36,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _profileService = getIt<ProfileService>();
   PermissionStatus _cameraPermission = PermissionStatus.denied;
   PermissionStatus _micPermission = PermissionStatus.denied;
+  late final WalkthroughService _walkthroughService =
+      WalkthroughService(getIt<SharedPreferences>());
 
   @override
   void initState() {
@@ -244,6 +248,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SnackBar(
             content: Text('Please restart the app to see onboarding'),
             duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _resetWalkthroughs() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Replay Tutorial'),
+        content: const Text(
+          'This will reset the Home and Closet walkthroughs so you can view them again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _walkthroughService.resetAllWalkthroughs();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Walkthroughs reset. They will show next time.'),
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -996,6 +1034,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 subtitle: 'Show welcome screens again',
                 iconColor: Colors.orange,
                 onTap: _resetOnboarding,
+              ),
+
+              ProfileSectionTile(
+                icon: Icons.school_outlined,
+                title: 'Replay Tutorial',
+                subtitle: 'Show Home & Closet walkthroughs again',
+                iconColor: Colors.blue,
+                onTap: _resetWalkthroughs,
               ),
 
               const Divider(height: 32),

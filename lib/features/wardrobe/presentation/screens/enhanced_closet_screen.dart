@@ -3,21 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/models/walkthrough_step.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/services/app_settings_service.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/services/walkthrough_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
-import 'package:vestiq/core/di/service_locator.dart';
-import 'package:vestiq/core/services/app_settings_service.dart';
-import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/walkthrough_overlay.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/swipe_closet_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/sheets/swipe_planner_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_quick_actions_sheet.dart';
-import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing_sheet.dart';
-import 'package:vestiq/features/wardrobe/presentation/sheets/swipe_planner_sheet.dart';
-import 'package:vestiq/core/utils/logger.dart';
 
 // Providers for wardrobe state management
 final wardrobeStorageProvider = Provider<EnhancedWardrobeStorageService>((ref) {
@@ -98,17 +101,68 @@ class EnhancedClosetScreen extends ConsumerStatefulWidget {
 class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  final GlobalKey _categoryTabsKey = GlobalKey();
+  final GlobalKey _searchKey = GlobalKey();
+  final GlobalKey _firstItemKey = GlobalKey();
+  final GlobalKey _plannerKey = GlobalKey();
+
+  WalkthroughService? _walkthroughService;
+  bool _showClosetWalkthrough = false;
+  List<WalkthroughStep> _closetSteps = const [];
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initWalkthrough());
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initWalkthrough() async {
+    final prefs = getIt<SharedPreferences>();
+    _walkthroughService = WalkthroughService(prefs);
+    if (!mounted) return;
+    if (!(_walkthroughService?.shouldShowClosetWalkthrough() ?? false)) return;
+
+    setState(() {
+      _closetSteps = [
+        WalkthroughStep(
+          targetKey: _categoryTabsKey,
+          title: 'Filter by vibe',
+          description: 'Switch categories to narrow your closet.',
+          position: TooltipPosition.below,
+        ),
+        WalkthroughStep(
+          targetKey: _searchKey,
+          title: 'Find it fast',
+          description: 'Search by color or item name.',
+          position: TooltipPosition.below,
+        ),
+        WalkthroughStep(
+          targetKey: _firstItemKey,
+          title: 'Tap or press',
+          description: 'Tap to preview. Long-press for quick actions.',
+          position: TooltipPosition.above,
+        ),
+        WalkthroughStep(
+          targetKey: _plannerKey,
+          title: 'Plan an outfit',
+          description: 'Let the assistant build a look.',
+          position: TooltipPosition.above,
+        ),
+      ];
+      _showClosetWalkthrough = true;
+    });
+  }
+
+  void _endClosetWalkthrough() {
+    _walkthroughService?.completeClosetWalkthrough();
+    setState(() => _showClosetWalkthrough = false);
   }
 
   void _onSearchChanged() {
@@ -122,61 +176,67 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     final filteredItemsAsync = ref.watch(filteredWardrobeItemsProvider);
     final showFavoritesOnly = ref.watch(showFavoritesOnlyProvider);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          // Custom header
-          _buildCustomHeader(theme, showFavoritesOnly),
-
-          // Category tabs
-          _buildCategoryTabs(theme, selectedCategory),
-
-          // Items grid
-          Expanded(
-            child: filteredItemsAsync.when(
-              data: (items) => RefreshIndicator(
-                onRefresh: _handleRefresh,
-                child: items.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: [
-                          const SizedBox(height: 80),
-                          _buildEmptyState(context),
-                        ],
-                      )
-                    : _buildItemsGrid(context, items),
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => RefreshIndicator(
-                onRefresh: _handleRefresh,
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    const SizedBox(height: 80),
-                    _buildErrorState(context, error),
-                  ],
+    return Stack(
+      children: [
+        Scaffold(
+          body: Column(
+            children: [
+              _buildCustomHeader(theme, showFavoritesOnly),
+              _buildCategoryTabs(theme, selectedCategory),
+              Expanded(
+                child: filteredItemsAsync.when(
+                  data: (items) => RefreshIndicator(
+                    onRefresh: _handleRefresh,
+                    child: items.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              const SizedBox(height: 80),
+                              _buildEmptyState(context),
+                            ],
+                          )
+                        : _buildItemsGrid(context, items),
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (error, stack) => RefreshIndicator(
+                    onRefresh: _handleRefresh,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 80),
+                        _buildErrorState(context, error),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-      floatingActionButton: filteredItemsAsync.maybeWhen(
-        data: (items) => items.isNotEmpty
-            ? FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleWardrobeUploadScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Item'),
-              )
-            : null,
-        orElse: () => null,
-      ),
+          floatingActionButton: filteredItemsAsync.maybeWhen(
+            data: (items) => items.isNotEmpty
+                ? FloatingActionButton.extended(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const SimpleWardrobeUploadScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Item'),
+                  )
+                : null,
+            orElse: () => null,
+          ),
+        ),
+        if (_showClosetWalkthrough && _closetSteps.isNotEmpty)
+          WalkthroughOverlay(
+            steps: _closetSteps,
+            onFinish: _endClosetWalkthrough,
+            onSkip: _endClosetWalkthrough,
+          ),
+      ],
     );
   }
 
@@ -202,6 +262,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
               // Compact action buttons
               IconButton(
+                key: _searchKey,
                 icon: Icon(_isSearching ? Icons.close : Icons.search, size: 22),
                 onPressed: () {
                   setState(() {
@@ -259,6 +320,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
               borderRadius: BorderRadius.circular(12),
               onTap: _showSwipePlanner,
               child: Container(
+                key: _plannerKey,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -349,6 +411,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     ];
 
     return Container(
+      key: _categoryTabsKey,
       height: 40,
       margin: const EdgeInsets.only(bottom: 8),
       child: ListView.builder(
@@ -443,15 +506,21 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
-        return _buildItemCard(context, items[index]);
+        final isFirst = index == 0;
+        return _buildItemCard(context, items[index], isFirst);
       },
     );
   }
 
-  Widget _buildItemCard(BuildContext context, WardrobeItem item) {
+  Widget _buildItemCard(
+    BuildContext context,
+    WardrobeItem item,
+    bool isFirst,
+  ) {
     final theme = Theme.of(context);
 
     return Card(
+      key: isFirst ? _firstItemKey : null,
       elevation: 2,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -632,7 +701,10 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     }
 
     return Container(
-       padding: const EdgeInsets.symmetric(vertical: AppConstants.smallSpacing, horizontal: AppConstants.largeSpacing),
+      padding: const EdgeInsets.symmetric(
+        vertical: AppConstants.smallSpacing,
+        horizontal: AppConstants.largeSpacing,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
