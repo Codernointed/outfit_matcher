@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
@@ -631,7 +632,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(32),
+       padding: const EdgeInsets.symmetric(vertical: AppConstants.smallSpacing, horizontal: AppConstants.largeSpacing),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -646,8 +647,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
             child: Icon(icon, size: 60, color: theme.colorScheme.primary),
           ),
 
-          const SizedBox(height: 24),
-
+          const SizedBox(height: AppConstants.smallSpacing),
           // Title
           Text(
             title,

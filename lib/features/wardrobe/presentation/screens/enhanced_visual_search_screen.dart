@@ -513,8 +513,8 @@ class _EnhancedVisualSearchScreenState
           ),
           indicatorColor: theme.colorScheme.primary,
           tabs: const [
-            Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
             Tab(icon: Icon(Icons.person_outline), text: 'Try-On'),
+            Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
             Tab(icon: Icon(Icons.view_comfy_outlined), text: 'Flat Lay'),
           ],
         ),
@@ -522,8 +522,8 @@ class _EnhancedVisualSearchScreenState
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildInspirationTab(),
           _buildTryOnTab(),
+          _buildInspirationTab(),
           _buildFlatLayTab(),
         ],
       ),

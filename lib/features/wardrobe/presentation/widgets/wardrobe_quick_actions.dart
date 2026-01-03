@@ -442,18 +442,48 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              AppLogger.info('✅ [QUICK ACTIONS] Delete confirmed');
-              if (Navigator.of(context).canPop()) {
-                Navigator.of(context).pop();
+            onPressed: () async {
+              try {
+                // Close dialog first
+                if (Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop();
+                }
+
+                // Show loading indicator or delete immediately
+                // For quick actions, we'll just delete and notify
+                AppLogger.info(
+                  '🗑️ [QUICK ACTIONS] executing delete for ${widget.item.id}',
+                );
+
+                await _storage.deleteWardrobeItem(widget.item.id);
+
+                AppLogger.info(
+                  '✅ [QUICK ACTIONS] Delete confirmed and executed',
+                );
+
+                if (!mounted) return;
+
+                // Dismiss the quick actions menu itself
+                widget.onDismiss();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Item deleted successfully'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.grey,
+                  ),
+                );
+              } catch (e) {
+                AppLogger.error('❌ Failed to delete item', error: e);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to delete item: $e'),
+                    behavior: SnackBarBehavior.floating,
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
-              // TODO: Implement delete functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Item deleted'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),

@@ -9,9 +9,107 @@ import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/api_rate_limiter.dart';
 
 class GeminiApiService {
-  static final String? _apiKey = dotenv.env['GEMINI_API_KEY'];
-  static const String _endpoint =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  // Load API keys from environment variables (NEVER hardcode keys!)
+  static List<String> get _apiKeys {
+    final keys = <String>[];
+    final key1 = dotenv.env['GEMINI_API_KEY'];
+    final key2 = dotenv.env['GEMINI_API_KEY2'];
+    if (key1 != null && key1.isNotEmpty) keys.add(key1);
+    if (key2 != null && key2.isNotEmpty) keys.add(key2);
+    if (keys.isEmpty) {
+      AppLogger.error('⚠️ [SECURITY] No Gemini API keys found in .env file!');
+    }
+    return keys;
+  }
+
+  static int _currentKeyIndex = 0;
+
+  static String _getApiKey() {
+    final keys = _apiKeys;
+    if (keys.isEmpty) return '';
+    return keys[_currentKeyIndex % keys.length];
+  }
+
+  static void _rotateApiKey() {
+    final keys = _apiKeys;
+    if (keys.length > 1) {
+      _currentKeyIndex = (_currentKeyIndex + 1) % keys.length;
+      AppLogger.info('🔄 Switching to API Key index: $_currentKeyIndex');
+    }
+  }
+
+  static const String _modelAnalysis = 'gemini-3-pro-preview';
+  static const String _modelImageGen = 'gemini-3-pro-image-preview';
+
+  static String get _endpoint =>
+      'https://generativelanguage.googleapis.com/v1beta/models/$_modelAnalysis:generateContent';
+
+  static String get _imageEndpoint =>
+      'https://generativelanguage.googleapis.com/v1beta/models/$_modelImageGen:generateContent';
+
+  static Future<http.Response> _makeRequestWithRetry(
+    String urlBase,
+    Map<String, dynamic> body, {
+    int retries = 2,
+  }) async {
+    for (int i = 0; i <= retries; i++) {
+      final currentKey = _getApiKey();
+      // Mask key for logging
+      final maskedKey = currentKey.length > 10
+          ? '${currentKey.substring(0, 5)}...${currentKey.substring(currentKey.length - 5)}'
+          : 'invalid';
+
+      print(
+        '🔄 [Gemini] Request attempt ${i + 1}/$retries using key: $maskedKey index: $_currentKeyIndex',
+      );
+
+      final url = '$urlBase?key=$currentKey';
+
+      try {
+        final response = await http
+            .post(
+              Uri.parse(url),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode(body),
+            )
+            .timeout(const Duration(seconds: 45));
+
+        print('📨 [Gemini] Response status: ${response.statusCode}');
+
+        if (response.statusCode == 403 ||
+            response.statusCode == 429 ||
+            response.statusCode >= 500) {
+          print('⚠️ [Gemini] Error ${response.statusCode}: ${response.body}');
+          AppLogger.warning(
+            '⚠️ API Error ${response.statusCode} with key index $_currentKeyIndex. Rotating...',
+          );
+          _rotateApiKey();
+          continue;
+        }
+        return response;
+      } catch (e) {
+        print('❌ [Gemini] Exception: $e');
+        AppLogger.error(
+          '❌ Request failed with key index $_currentKeyIndex: $e',
+        );
+        _rotateApiKey();
+        if (i == retries) {
+          print('💀 [Gemini] All retries failed');
+          rethrow;
+        }
+      }
+    }
+    throw Exception('All API keys failed');
+  }
+
+  static String _getMimeType(File file) {
+    final path = file.path.toLowerCase();
+    if (path.endsWith('.png')) return 'image/png';
+    if (path.endsWith('.webp')) return 'image/webp';
+    if (path.endsWith('.heic')) return 'image/heic';
+    if (path.endsWith('.heif')) return 'image/heif';
+    return 'image/jpeg';
+  }
 
   /// Enhanced clothing analysis with detailed metadata
   static Future<ClothingAnalysis?> analyzeClothingItemDetailed(
@@ -147,7 +245,10 @@ class GeminiApiService {
           {
             "parts": [
               {
-                "inlineData": {"mimeType": "image/jpeg", "data": base64Image},
+                "inlineData": {
+                  "mimeType": _getMimeType(imageFile),
+                  "data": base64Image,
+                },
               },
               {"text": prompt},
             ],
@@ -161,16 +262,11 @@ class GeminiApiService {
         },
       };
 
-      final url = '$_endpoint?key=$_apiKey';
-      AppLogger.network(url, 'POST', body: requestBody);
+      AppLogger.network(_endpoint, 'POST', body: requestBody);
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      );
+      final response = await _makeRequestWithRetry(_endpoint, requestBody);
 
-      AppLogger.network(url, 'POST', statusCode: response.statusCode);
+      AppLogger.network(_endpoint, 'POST', statusCode: response.statusCode);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -261,7 +357,10 @@ class GeminiApiService {
           {
             "parts": [
               {
-                "inlineData": {"mimeType": "image/jpeg", "data": base64Image},
+                "inlineData": {
+                  "mimeType": _getMimeType(imageFile),
+                  "data": base64Image,
+                },
               },
               {
                 "text":
@@ -272,17 +371,10 @@ class GeminiApiService {
         ],
       };
 
-      final url = '$_endpoint?key=$_apiKey';
-      AppLogger.network(url, 'POST', body: requestBody);
+      AppLogger.network(_endpoint, 'POST', body: requestBody);
 
       final startTime = DateTime.now();
-      final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(requestBody),
-          )
-          .timeout(const Duration(seconds: 30)); // Add timeout
+      final response = await _makeRequestWithRetry(_endpoint, requestBody);
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
         'Gemini API call',
@@ -290,7 +382,7 @@ class GeminiApiService {
         result: response.statusCode,
       );
 
-      AppLogger.network(url, 'POST', statusCode: response.statusCode);
+      AppLogger.network(_endpoint, 'POST', statusCode: response.statusCode);
 
       if (response.statusCode == 200) {
         final content = jsonDecode(response.body);
@@ -997,26 +1089,29 @@ class GeminiApiService {
           'parts': [
             {'text': prompt},
             {
-              'inlineData': {'mimeType': 'image/jpeg', 'data': base64Image},
+              'inlineData': {
+                'mimeType': _getMimeType(imageFile),
+                'data': base64Image,
+              },
             },
           ],
         },
       ],
     };
 
-    final url =
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$_apiKey';
-    AppLogger.network(url, 'POST', body: requestBody);
+    print('🚀 [Gemini] Calling image preview endpoint: $_imageEndpoint');
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(requestBody),
-    );
+    // Log prompt for debugging
+    if (prompt.length > 100) {
+      print('📝 [Gemini] Prompt start: ${prompt.substring(0, 100)}...');
+    }
 
-    AppLogger.network(url, 'POST', statusCode: response.statusCode);
+    final response = await _makeRequestWithRetry(_imageEndpoint, requestBody);
+
+    AppLogger.network(_imageEndpoint, 'POST', statusCode: response.statusCode);
 
     if (response.statusCode != 200) {
+      print('❌ [Gemini] Image Generation Error Body: ${response.body}');
       AppLogger.error('❌ Mannequin generation API error', error: response.body);
       return null;
     }
@@ -1472,7 +1567,10 @@ Make the descriptions so detailed that an image generation AI could create an ex
           {
             "parts": [
               {
-                "inlineData": {"mimeType": "image/jpeg", "data": base64Image},
+                "inlineData": {
+                  "mimeType": _getMimeType(imageFile),
+                  "data": base64Image,
+                },
               },
               {"text": prompt},
             ],
@@ -1486,16 +1584,11 @@ Make the descriptions so detailed that an image generation AI could create an ex
         },
       };
 
-      final url = '$_endpoint?key=$_apiKey';
-      AppLogger.network(url, 'POST', body: requestBody);
+      AppLogger.network(_endpoint, 'POST', body: requestBody);
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
-      );
+      final response = await _makeRequestWithRetry(_endpoint, requestBody);
 
-      AppLogger.network(url, 'POST', statusCode: response.statusCode);
+      AppLogger.network(_endpoint, 'POST', statusCode: response.statusCode);
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -1685,26 +1778,19 @@ Professional fashion photography style.
             "parts": [
               {"text": simplePrompt},
               {
-                "inlineData": {"mimeType": "image/jpeg", "data": base64Image},
+                "inlineData": {
+                  "mimeType": _getMimeType(imageFile),
+                  "data": base64Image,
+                },
               },
             ],
           },
         ],
       };
 
-      // Use the image generation model endpoint
-      final url =
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$_apiKey';
-      AppLogger.network(url, 'POST', body: requestBody);
-
       final startTime = DateTime.now();
-      final response = await http
-          .post(
-            Uri.parse(url),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(requestBody),
-          )
-          .timeout(const Duration(seconds: 30)); // Add timeout
+      final response = await _makeRequestWithRetry(_imageEndpoint, requestBody);
+
       final duration = DateTime.now().difference(startTime);
 
       AppLogger.performance(
@@ -1712,7 +1798,11 @@ Professional fashion photography style.
         duration,
         result: response.statusCode,
       );
-      AppLogger.network(url, 'POST', statusCode: response.statusCode);
+      AppLogger.network(
+        _imageEndpoint,
+        'POST',
+        statusCode: response.statusCode,
+      );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);

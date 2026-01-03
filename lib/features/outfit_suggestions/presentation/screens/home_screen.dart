@@ -24,10 +24,7 @@ import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
-import 'package:vestiq/core/services/app_settings_service.dart';
-import 'package:vestiq/core/models/user_profile.dart';
-import 'package:vestiq/features/subscriptions/presentation/screens/subscription_overview_screen.dart';
-import 'package:vestiq/features/subscriptions/presentation/widgets/subscription_upgrade_card.dart';
+// Subscription imports removed - premium prompts now shown via LimitReachedModal only
 
 // Provider for the current selected index of the BottomNavigationBar
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
@@ -2172,27 +2169,11 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   }
 
   Widget _buildSubscriptionCTA(BuildContext context) {
-    final settings = getIt<AppSettingsService>();
-    final subscription = settings.subscriptionSnapshot;
-    
-    // Only show to free users
-    if (subscription.tier != SubscriptionTier.free) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      child: SubscriptionUpgradeCard(
-        compact: true,
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const SubscriptionOverviewScreen(),
-            ),
-          );
-        },
-      ),
-    );
+    // REMOVED: Intrusive homepage premium card
+    // Premium upgrade prompts are now shown contextually when users hit their limits
+    // (e.g., upload limit, pairing limit, mannequin generation limit)
+    // This provides a much better UX similar to Tinder's approach
+    return const SizedBox.shrink();
   }
 
   Widget _buildEmptyWardrobe(BuildContext context) {

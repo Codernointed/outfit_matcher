@@ -8,11 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/theme/app_theme.dart';
 
-/// Animated splash screen shown when the app starts
-/// Routes to appropriate screen based on user state
+/// Premium animated splash screen with smooth transitions
 class SplashScreen extends ConsumerStatefulWidget {
-  /// Default constructor
   const SplashScreen({super.key});
 
   @override
@@ -20,53 +19,73 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
+  late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Setup animations
+    // Main animation controller
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1800),
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    // Pulse animation for the logo
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _scaleAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
+      ),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.08).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _shimmerAnimation = Tween<double>(
+      begin: -1.0,
+      end: 2.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
 
     _controller.forward();
+    _pulseController.repeat(reverse: true);
 
-    // Navigate after splash
     _navigateToNextScreen();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
-  /// Determine next screen based on user state
   Future<void> _navigateToNextScreen() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(milliseconds: 2200));
 
     if (!mounted) return;
 
     try {
       final prefs = getIt<SharedPreferences>();
-
-      // Check auth state first
       final authState = ref.read(authStateProvider);
 
       await authState.when(
@@ -74,28 +93,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           AppLogger.info('🔍 Auth check - User: ${user?.uid ?? "null"}');
 
           if (user == null) {
-            // Not signed in - check if they've seen onboarding
             final hasSeenOnboarding =
                 prefs.getBool(AppConstants.onboardingCompletedKey) ?? false;
 
             if (hasSeenOnboarding) {
-              // Returning user → Go to login
               AppLogger.info('🔄 Returning user, not signed in → Login');
               _navigateTo(const LoginScreen());
             } else {
-              // First time user → Show onboarding (no bypass)
               AppLogger.info('✨ First time user → Onboarding');
               _navigateTo(const OnboardingScreen());
             }
           } else {
-            // User is authenticated → Must verify profile exists
             AppLogger.info('✅ User authenticated: ${user.uid}');
 
             final currentUserAsync = ref.read(currentUserProvider);
             await currentUserAsync.when(
               data: (appUser) async {
                 if (appUser == null) {
-                  // Profile doesn't exist - this shouldn't happen, sign out
                   AppLogger.error(
                     '❌ Auth exists but no profile found! Signing out...',
                   );
@@ -106,39 +120,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   return;
                 }
 
-                // Check if profile is complete
                 if (appUser.gender == null || appUser.gender?.isEmpty == true) {
-                  // Profile incomplete → Complete profile
                   AppLogger.info('👤 Profile incomplete → Gender selection');
-                  // Previously navigated directly to gender selection via skipToGender.
-                  // Profile completion now handled by AuthFlow + ProfileCreationScreen after signup.
-                  // So just go to the generic onboarding flow; AuthWrapper will take over afterward.
                   _navigateTo(const OnboardingScreen());
                 } else {
-                  // Profile complete → Go to home
                   AppLogger.info('✅ Profile complete → Home');
                   _navigateTo(HomeScreen());
                 }
               },
               loading: () async {
-                // Still loading profile, give it reasonable time
                 AppLogger.info('⏳ Loading user profile...');
                 await Future.delayed(const Duration(milliseconds: 1500));
                 if (mounted) {
-                  // Retry once more
                   final retry = ref.read(currentUserProvider);
                   retry.whenData((retryUser) {
                     if (retryUser != null) {
                       _navigateTo(HomeScreen());
                     } else {
-                      // Still null, go to login
                       _navigateTo(const LoginScreen());
                     }
                   });
                 }
               },
               error: (error, stackTrace) async {
-                // Error loading profile - sign out for safety
                 AppLogger.error(
                   '❌ Error loading profile, signing out',
                   error: error,
@@ -153,7 +157,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         },
         loading: () async {
-          // Still loading auth state, retry
           AppLogger.info('⏳ Loading auth state...');
           await Future.delayed(const Duration(milliseconds: 500));
           if (mounted) {
@@ -161,7 +164,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           }
         },
         error: (error, stackTrace) async {
-          // Error with auth → Show login
           AppLogger.error(
             '❌ Auth error on splash',
             error: error,
@@ -176,7 +178,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         error: e,
         stackTrace: stackTrace,
       );
-      // Fallback to login on any error
       if (mounted) {
         _navigateTo(const LoginScreen());
       }
@@ -189,104 +190,212 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => screen,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return FadeTransition(opacity: animation, child: child);
+          return FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeInOut,
+            ),
+            child: child,
+          );
         },
-        transitionDuration: const Duration(milliseconds: 500),
+        transitionDuration: const Duration(milliseconds: 600),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    const rosePink = Color(0xFFF4C2C2);
-    const primaryColor = Color(0xFF2D3250);
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [rosePink, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            colors: isDark
+                ? [
+                    const Color(0xFF1A1A1A),
+                    const Color(0xFF0F0F0F),
+                    const Color(0xFF000000),
+                  ]
+                : [
+                    primaryColor.withValues(alpha: 0.1),
+                    AppTheme.secondaryBackgroundColor,
+                    Colors.white,
+                  ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: const [0.0, 0.5, 1.0],
           ),
         ),
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Animated dress icon with confidence
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: primaryColor.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              spreadRadius: 5,
+        child: Stack(
+          children: [
+            // Animated background orbs
+            ...List.generate(
+              3,
+              (index) => _buildFloatingOrb(index, primaryColor),
+            ),
+
+            // Main content
+            Center(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_controller, _pulseController]),
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: _fadeAnimation.value,
+                    child: Transform.scale(
+                      scale: _scaleAnimation.value * _pulseAnimation.value,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Premium logo container
+                          Container(
+                            padding: const EdgeInsets.all(28),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [
+                                  primaryColor.withValues(alpha: 0.9),
+                                  primaryColor.withValues(alpha: 0.6),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryColor.withValues(alpha: 0.3),
+                                  blurRadius: 40,
+                                  spreadRadius: 10,
+                                ),
+                              ],
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 2,
+                              ),
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.checkroom,
-                          size: 80,
-                          color: primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // App name with style
-                      Text(
-                        AppConstants.appName,
-                        style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                          fontFamily: 'Poppins',
-                          letterSpacing: 2,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Tagline
-                      Text(
-                        'Dress with Confidence',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: primaryColor.withValues(alpha: 0.7),
-                          fontFamily: 'Poppins',
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 48),
-
-                      // Loading indicator
-                      SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: CircularProgressIndicator(
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            primaryColor,
+                            child: const Icon(
+                              Icons.checkroom_rounded,
+                              size: 72,
+                              color: Colors.white,
+                            ),
                           ),
-                          strokeWidth: 3,
-                        ),
+                          const SizedBox(height: 40),
+
+                          // App name with shimmer effect
+                          ShaderMask(
+                            shaderCallback: (bounds) {
+                              return LinearGradient(
+                                colors: [
+                                  isDark ? Colors.white : Colors.black87,
+                                  primaryColor,
+                                  isDark ? Colors.white : Colors.black87,
+                                ],
+                                stops: [
+                                  (_shimmerAnimation.value - 0.3).clamp(
+                                    0.0,
+                                    1.0,
+                                  ),
+                                  _shimmerAnimation.value.clamp(0.0, 1.0),
+                                  (_shimmerAnimation.value + 0.3).clamp(
+                                    0.0,
+                                    1.0,
+                                  ),
+                                ],
+                              ).createShader(bounds);
+                            },
+                            child: Text(
+                              AppConstants.appName.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? Colors.white : Colors.black87,
+                                letterSpacing: 8,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Tagline
+                          Text(
+                            'Dress with Confidence',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.85)
+                                  : Colors.black54,
+                              letterSpacing: 2,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                          const SizedBox(height: 60),
+
+                          // Premium loading indicator
+                          _buildPremiumLoader(primaryColor),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingOrb(int index, Color primaryColor) {
+    final positions = [
+      const Alignment(-0.8, -0.6),
+      const Alignment(0.7, -0.3),
+      const Alignment(-0.5, 0.7),
+    ];
+    final sizes = [120.0, 80.0, 100.0];
+    final colors = [
+      primaryColor.withValues(alpha: 0.1),
+      primaryColor.withValues(alpha: 0.05),
+      primaryColor.withValues(alpha: 0.03),
+    ];
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Align(
+          alignment: positions[index],
+          child: Transform.scale(
+            scale: _fadeAnimation.value,
+            child: Container(
+              width: sizes[index],
+              height: sizes[index],
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colors[index],
+                boxShadow: [
+                  BoxShadow(
+                    color: colors[index],
+                    blurRadius: 40,
+                    spreadRadius: 10,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPremiumLoader(Color primaryColor) {
+    return SizedBox(
+      width: 44,
+      height: 44,
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+        strokeWidth: 2.5,
+        backgroundColor: primaryColor.withValues(alpha: 0.1),
       ),
     );
   }
