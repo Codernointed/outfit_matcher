@@ -197,7 +197,8 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                           )
                         : _buildItemsGrid(context, items),
                   ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => RefreshIndicator(
                     onRefresh: _handleRefresh,
                     child: ListView(
@@ -243,154 +244,116 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   // Minimal header implementation for enhanced_closet_screen.dart
   // Replace the _buildCustomHeader method with this
 
+  // Minimal header implementation for enhanced_closet_screen.dart
   Widget _buildCustomHeader(ThemeData theme, bool showFavoritesOnly) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Compact header row
+          // Unified Compact Header Row
           Row(
             children: [
-              // Title
               Text(
                 'My Closet',
-                style: theme.textTheme.titleLarge?.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
               const Spacer(),
 
-              // Compact action buttons
+              // Compact Plan Button
+              SizedBox(
+                height: 32,
+                child: FilledButton.icon(
+                  key: _plannerKey,
+                  onPressed: _showSwipePlanner,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                    elevation: 0,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  icon: const Icon(Icons.auto_awesome, size: 14),
+                  label: const Text(
+                    'Plan',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Search Toggle
               IconButton(
                 key: _searchKey,
-                icon: Icon(_isSearching ? Icons.close : Icons.search, size: 22),
+                icon: Icon(_isSearching ? Icons.close : Icons.search, size: 20),
                 onPressed: () {
                   setState(() {
                     _isSearching = !_isSearching;
-                    if (!_isSearching) {
-                      _searchController.clear();
-                    }
+                    if (!_isSearching) _searchController.clear();
                   });
                 },
+                visualDensity: VisualDensity.compact,
                 style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(8),
                   backgroundColor: _isSearching
-                      ? theme.colorScheme.primaryContainer
-                      : theme.colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.5,
-                        ),
+                      ? theme.colorScheme.secondaryContainer
+                      : null,
                 ),
               ),
-              const SizedBox(width: 4),
+
+              // Favorites Toggle
               IconButton(
                 icon: Icon(
                   showFavoritesOnly ? Icons.favorite : Icons.favorite_border,
-                  size: 22,
+                  size: 20,
                   color: showFavoritesOnly ? Colors.red : null,
                 ),
                 onPressed: () {
                   ref.read(showFavoritesOnlyProvider.notifier).state =
                       !showFavoritesOnly;
                 },
-                style: IconButton.styleFrom(
-                  backgroundColor: showFavoritesOnly
-                      ? Colors.red.withValues(alpha: 0.1)
-                      : theme.colorScheme.surfaceContainerHighest.withValues(
-                          alpha: 0.5,
-                        ),
-                ),
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(padding: const EdgeInsets.all(8)),
               ),
-              const SizedBox(width: 4),
+
+              // More/Settings
               IconButton(
-                icon: const Icon(Icons.tune, size: 22),
+                icon: const Icon(Icons.tune, size: 20),
                 onPressed: _showSettingsSheet,
-                style: IconButton.styleFrom(
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.5),
-                ),
+                visualDensity: VisualDensity.compact,
+                style: IconButton.styleFrom(padding: const EdgeInsets.all(8)),
               ),
             ],
           ),
 
-          const SizedBox(height: 12),
-
-          // Compact Plan an outfit CTA
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: _showSwipePlanner,
-              child: Container(
-                key: _plannerKey,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary,
-                      theme.colorScheme.secondary,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: theme.colorScheme.onPrimary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Plan an Outfit',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Icon(
-                      Icons.arrow_forward,
-                      color: theme.colorScheme.onPrimary,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Search bar (when active)
+          // Search bar (when active) - Expands below
           if (_isSearching) ...[
-            const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.3,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                ),
-              ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 40,
               child: TextField(
                 controller: _searchController,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Search your wardrobe...',
-                  prefixIcon: Icon(
-                    Icons.search,
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  hintText: 'Search items...',
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+                  prefixIcon: const Icon(Icons.search, size: 18),
+                  filled: true,
+                  fillColor: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
                   ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  isDense: true,
                 ),
-                style: theme.textTheme.bodyLarge,
+                style: theme.textTheme.bodyMedium,
               ),
             ),
           ],
@@ -406,74 +369,86 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       {'name': 'Bottoms', 'icon': Icons.content_cut},
       {'name': 'Dresses', 'icon': Icons.woman},
       {'name': 'Shoes', 'icon': Icons.directions_walk},
-      {'name': 'Accessories', 'icon': Icons.watch},
-      {'name': 'Outerwear', 'icon': Icons.ac_unit},
+      {'name': 'Access.', 'icon': Icons.watch}, // Shortened text
+      {'name': 'Outer.', 'icon': Icons.ac_unit}, // Shortened text
     ];
 
     return Container(
       key: _categoryTabsKey,
-      height: 40,
-      margin: const EdgeInsets.only(bottom: 8),
+      height: 36, // Reduced height
+      margin: const EdgeInsets.only(bottom: 4),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
           final categoryName = category['name'] as String;
           final categoryIcon = category['icon'] as IconData;
-          final isSelected = categoryName == selectedCategory;
+
+          // Map display aliases back to actual category names for selection check
+          final realCategoryName = categoryName == 'Access.'
+              ? 'Accessories'
+              : categoryName == 'Outer.'
+              ? 'Outerwear'
+              : categoryName;
+
+          final isSelected = realCategoryName == selectedCategory;
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(18),
                 onTap: () {
-                  ref.read(selectedCategoryProvider.notifier).state =
-                      categoryName;
+                  ref
+                      .read(selectedCategoryProvider.notifier)
+                      .state = (category['name'] == 'Access.'
+                      ? 'Accessories'
+                      : category['name'] == 'Outer.'
+                      ? 'Outerwear'
+                      : categoryName);
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? theme.colorScheme.primaryContainer
-                        : theme.colorScheme.surfaceContainerHighest.withValues(
-                            alpha: 0.3,
-                          ),
-                    borderRadius: BorderRadius.circular(20),
+                        : Colors
+                              .transparent, // Minimal: no background for unselected
+                    borderRadius: BorderRadius.circular(18),
                     border: isSelected
-                        ? Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.3,
+                        ? null
+                        : Border.all(
+                            color: theme.colorScheme.outline.withValues(
+                              alpha: 0.2,
                             ),
-                          )
-                        : null,
+                          ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        categoryIcon,
-                        size: 18,
-                        color: isSelected
-                            ? theme.colorScheme.onPrimaryContainer
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.7,
-                              ),
-                      ),
-                      const SizedBox(width: 6),
+                      if (isSelected) ...[
+                        Icon(
+                          categoryIcon,
+                          size: 16,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 6),
+                      ],
                       Text(
                         categoryName,
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: isSelected
                               ? theme.colorScheme.onPrimaryContainer
-                              : theme.colorScheme.onSurface,
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.7,
+                                ),
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.w500,
@@ -512,11 +487,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     );
   }
 
-  Widget _buildItemCard(
-    BuildContext context,
-    WardrobeItem item,
-    bool isFirst,
-  ) {
+  Widget _buildItemCard(BuildContext context, WardrobeItem item, bool isFirst) {
     final theme = Theme.of(context);
 
     return Card(
