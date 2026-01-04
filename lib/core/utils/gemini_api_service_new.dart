@@ -23,12 +23,6 @@ class GeminiApiService {
 
     if (keys.isEmpty) {
       AppLogger.error('⚠️ [SECURITY] No Gemini API keys found in .env file!');
-      AppLogger.error(
-        'DEBUG: dotenv.env keys: ${dotenv.env.keys.take(5).toList()}',
-      );
-      AppLogger.error(
-        'DEBUG: GEMINI_API_KEY value: ${dotenv.env['GEMINI_API_KEY']}',
-      );
       return '';
     }
 

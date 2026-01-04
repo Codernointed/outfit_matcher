@@ -18,8 +18,20 @@ import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_scr
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
+  // Load environment variables - IMPORTANT: Load order matters!
+  // First, try to load the optional paystack file
+  Map<String, String> paystackEnv = {};
+  try {
+    await dotenv.load(fileName: ".env.paystack");
+    paystackEnv = Map<String, String>.from(dotenv.env);
+    AppLogger.info('🔐 Paystack env loaded first');
+  } catch (e) {
+    AppLogger.warning('⚠️ Paystack env not found, continuing without it');
+  }
+
+  // Now load the main .env file, merging with paystack env
+  await dotenv.load(fileName: ".env", mergeWith: paystackEnv);
+  AppLogger.info('✅ Main .env loaded (${dotenv.env.keys.length} keys total)');
 
   // Debug: Verify API keys loaded
   final geminiKey1 = dotenv.env['GEMINI_API_KEY'];
@@ -37,14 +49,6 @@ Future main() async {
     AppLogger.info('✅ GEMINI_API_KEY2 loaded: $masked');
   } else {
     AppLogger.warning('⚠️ GEMINI_API_KEY2 not found in .env (optional)');
-  }
-
-  // Load sensitive Paystack config if the private file exists
-  try {
-    await dotenv.load(fileName: ".env.paystack", mergeWith: dotenv.env);
-    AppLogger.info('🔐 Paystack env loaded');
-  } catch (e) {
-    AppLogger.warning('⚠️ Paystack env not found, falling back to defaults');
   }
 
   // Initialize Firebase

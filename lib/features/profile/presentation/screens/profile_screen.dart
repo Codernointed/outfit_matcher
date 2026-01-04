@@ -12,6 +12,7 @@ import 'package:vestiq/core/services/storage_service.dart';
 import 'package:vestiq/core/services/walkthrough_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/reset_utils.dart';
+import 'package:vestiq/features/auth/domain/models/app_user.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
 import 'package:vestiq/features/profile/presentation/providers/profile_providers.dart';
@@ -36,8 +37,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _profileService = getIt<ProfileService>();
   PermissionStatus _cameraPermission = PermissionStatus.denied;
   PermissionStatus _micPermission = PermissionStatus.denied;
-  late final WalkthroughService _walkthroughService =
-      WalkthroughService(getIt<SharedPreferences>());
+  late final WalkthroughService _walkthroughService = WalkthroughService(
+    getIt<SharedPreferences>(),
+  );
 
   @override
   void initState() {
@@ -719,99 +721,120 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       if (appUser == null) return const SizedBox.shrink();
 
                       final todayGen = appUser.todayGenerations;
-                      final totalGen = appUser.totalGenerations;
                       final limit = appUser.generationsLimit;
                       final tier = appUser.subscriptionTier;
 
+                      // Generations Usage Card
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              theme.colorScheme.primary.withValues(alpha: 0.1),
-                              theme.colorScheme.secondary.withValues(
-                                alpha: 0.05,
-                              ),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
+                          color: theme.colorScheme.surface,
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: theme.colorScheme.primary.withValues(
-                              alpha: 0.2,
+                            color: theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.5,
                             ),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.auto_awesome,
-                                      color: theme.colorScheme.primary,
-                                      size: 24,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Generations',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
+                            Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.primary
+                                                  .withValues(alpha: 0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: Icon(
+                                              Icons.auto_awesome,
+                                              color: theme.colorScheme.primary,
+                                              size: 20,
+                                            ),
                                           ),
+                                          const SizedBox(width: 12),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Daily Generations',
+                                                style: theme
+                                                    .textTheme
+                                                    .titleSmall
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                              ),
+                                              Text(
+                                                '$todayGen / $limit used',
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      if (tier == SubscriptionTier.free)
+                                        TextButton(
+                                          onPressed: _showSubscriptionScreen,
+                                          style: TextButton.styleFrom(
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            foregroundColor:
+                                                theme.colorScheme.primary,
+                                          ),
+                                          child: const Text('Upgrade'),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  // Progress Bar
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: (limit > 0)
+                                          ? (todayGen / limit).clamp(0.0, 1.0)
+                                          : 0,
+                                      backgroundColor: theme
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        todayGen >= limit
+                                            ? Colors.red
+                                            : theme.colorScheme.primary,
+                                      ),
+                                      minHeight: 6,
                                     ),
-                                  ],
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    tier.name.toUpperCase(),
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildGenerationStat(
-                                  context,
-                                  theme,
-                                  'Today',
-                                  '$todayGen/$limit',
-                                  todayGen >= limit
-                                      ? Colors.red
-                                      : theme.colorScheme.primary,
-                                ),
-                                Container(
-                                  height: 40,
-                                  width: 1,
-                                  color: theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.1,
-                                  ),
-                                ),
-                                _buildGenerationStat(
-                                  context,
-                                  theme,
-                                  'Total',
-                                  totalGen.toString(),
-                                  theme.colorScheme.primary,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -826,7 +849,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               // Stats Row
               statsAsync.when(
                 data: (stats) => StatsRow(
-                  stats: stats,
+                  // Clamp to 0 to prevent -1 (error state) from showing
+                  stats: ProfileStats(
+                    itemsCount: stats.itemsCount < 0 ? 0 : stats.itemsCount,
+                    looksCount: stats.looksCount < 0 ? 0 : stats.looksCount,
+                    totalWears: stats.totalWears < 0 ? 0 : stats.totalWears,
+                  ),
                   onItemsTap: () {
                     Navigator.push(
                       context,
@@ -1064,33 +1092,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               const SizedBox(height: 40),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenerationStat(
-    BuildContext context,
-    ThemeData theme,
-    String label,
-    String value,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
