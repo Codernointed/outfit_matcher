@@ -21,6 +21,24 @@ Future main() async {
   // Load environment variables
   await dotenv.load(fileName: ".env");
 
+  // Debug: Verify API keys loaded
+  final geminiKey1 = dotenv.env['GEMINI_API_KEY'];
+  final geminiKey2 = dotenv.env['GEMINI_API_KEY2'];
+  if (geminiKey1 != null && geminiKey1.isNotEmpty) {
+    final masked =
+        '${geminiKey1.substring(0, 5)}...${geminiKey1.substring(geminiKey1.length - 5)}';
+    AppLogger.info('✅ GEMINI_API_KEY loaded: $masked');
+  } else {
+    AppLogger.error('❌ GEMINI_API_KEY not found in .env!');
+  }
+  if (geminiKey2 != null && geminiKey2.isNotEmpty) {
+    final masked =
+        '${geminiKey2.substring(0, 5)}...${geminiKey2.substring(geminiKey2.length - 5)}';
+    AppLogger.info('✅ GEMINI_API_KEY2 loaded: $masked');
+  } else {
+    AppLogger.warning('⚠️ GEMINI_API_KEY2 not found in .env (optional)');
+  }
+
   // Load sensitive Paystack config if the private file exists
   try {
     await dotenv.load(fileName: ".env.paystack", mergeWith: dotenv.env);

@@ -9,31 +9,44 @@ import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/api_rate_limiter.dart';
 
 class GeminiApiService {
-  // Load API keys from environment variables (NEVER hardcode keys!)
-  static List<String> get _apiKeys {
-    final keys = <String>[];
-    final key1 = dotenv.env['GEMINI_API_KEY'];
-    final key2 = dotenv.env['GEMINI_API_KEY2'];
-    if (key1 != null && key1.isNotEmpty) keys.add(key1);
-    if (key2 != null && key2.isNotEmpty) keys.add(key2);
-    if (keys.isEmpty) {
-      AppLogger.error('⚠️ [SECURITY] No Gemini API keys found in .env file!');
-    }
-    return keys;
-  }
-
   static int _currentKeyIndex = 0;
 
+  // Get API key directly from dotenv at request time (not cached)
   static String _getApiKey() {
-    final keys = _apiKeys;
-    if (keys.isEmpty) return '';
-    return keys[_currentKeyIndex % keys.length];
+    // Direct access to dotenv - read fresh every time
+    final key1 = dotenv.env['GEMINI_API_KEY'];
+    final key2 = dotenv.env['GEMINI_API_KEY2'];
+
+    final keys = <String>[];
+    if (key1 != null && key1.isNotEmpty) keys.add(key1);
+    if (key2 != null && key2.isNotEmpty) keys.add(key2);
+
+    if (keys.isEmpty) {
+      AppLogger.error('⚠️ [SECURITY] No Gemini API keys found in .env file!');
+      AppLogger.error(
+        'DEBUG: dotenv.env keys: ${dotenv.env.keys.take(5).toList()}',
+      );
+      AppLogger.error(
+        'DEBUG: GEMINI_API_KEY value: ${dotenv.env['GEMINI_API_KEY']}',
+      );
+      return '';
+    }
+
+    final selectedKey = keys[_currentKeyIndex % keys.length];
+    return selectedKey;
   }
 
   static void _rotateApiKey() {
-    final keys = _apiKeys;
-    if (keys.length > 1) {
-      _currentKeyIndex = (_currentKeyIndex + 1) % keys.length;
+    // Get fresh count from dotenv
+    final key1 = dotenv.env['GEMINI_API_KEY'];
+    final key2 = dotenv.env['GEMINI_API_KEY2'];
+    final keyCount = [
+      key1,
+      key2,
+    ].where((k) => k != null && k.isNotEmpty).length;
+
+    if (keyCount > 1) {
+      _currentKeyIndex = (_currentKeyIndex + 1) % keyCount;
       AppLogger.info('🔄 Switching to API Key index: $_currentKeyIndex');
     }
   }

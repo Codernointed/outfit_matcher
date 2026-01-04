@@ -92,11 +92,16 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
 
   Widget _buildOverlay(BuildContext context, {required Key key}) {
     final size = MediaQuery.of(context).size;
-    final overlayColor = Colors.black.withValues(alpha: 0.55);
+    final overlayColor = Colors.black.withValues(alpha: 0.75);
 
-    final target = _targetRect ??
-        Rect.fromLTWH(size.width * 0.1, size.height * 0.2,
-            size.width * 0.8, 80);
+    final target =
+        _targetRect ??
+        Rect.fromLTWH(
+          size.width * 0.1,
+          size.height * 0.2,
+          size.width * 0.8,
+          80,
+        );
 
     final tooltip = _buildTooltip(context, target);
 
@@ -166,7 +171,7 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
           left: math.max(0, target.left - 12),
           right: math.max(0, (size.width - target.right) - 12),
           top: math.max(0, target.bottom + 12),
-          bottom: 24,
+          bottom: 80, // More bottom margin to prevent overflow
         );
         break;
       case TooltipPosition.left:
@@ -226,8 +231,10 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
                         ),
                       ),
                     ),
-                    Text('${_index + 1}/${widget.steps.length}',
-                        style: theme.textTheme.labelMedium),
+                    Text(
+                      '${_index + 1}/${widget.steps.length}',
+                      style: theme.textTheme.labelMedium,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -239,27 +246,35 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
                   ),
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  alignment: WrapAlignment.spaceBetween,
-                  runAlignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 12,
-                  runSpacing: 8,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton(
                       onPressed: widget.onSkip,
                       child: const Text('Skip'),
                     ),
-                    FilledButton.icon(
-                      onPressed: _next,
-                      icon: Icon(
-                        _index == widget.steps.length - 1
-                            ? Icons.check_rounded
-                            : Icons.arrow_forward_rounded,
-                        size: 18,
-                      ),
-                      label: Text(
-                        _index == widget.steps.length - 1 ? 'Done' : 'Next',
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: FilledButton(
+                        onPressed: _next,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _index == widget.steps.length - 1
+                                  ? 'Done'
+                                  : 'Next',
+                            ),
+                            const SizedBox(width: 6),
+                            Icon(
+                              _index == widget.steps.length - 1
+                                  ? Icons.check_rounded
+                                  : Icons.arrow_forward_rounded,
+                              size: 18,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -287,15 +302,18 @@ class _SpotlightPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = overlayColor;
-    final background = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final background = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final padded = target.inflate(12);
     final hole = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(padded, const Radius.circular(16)),
-      );
+      ..addRRect(RRect.fromRectAndRadius(padded, const Radius.circular(16)));
 
-    final overlayPath = Path.combine(PathOperation.difference, background, hole);
+    final overlayPath = Path.combine(
+      PathOperation.difference,
+      background,
+      hole,
+    );
     canvas.drawPath(overlayPath, paint);
 
     final pulseValue = (math.sin(pulse.value * 2 * math.pi) + 1) / 2;
@@ -311,6 +329,7 @@ class _SpotlightPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SpotlightPainter oldDelegate) {
-    return oldDelegate.target != target || oldDelegate.overlayColor != overlayColor;
+    return oldDelegate.target != target ||
+        oldDelegate.overlayColor != overlayColor;
   }
 }
