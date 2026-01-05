@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>722272019813-ke59ck1pnv5r4gch23jjc6s6q87f193j.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.722272019813-ke59ck1pnv5r4gch23jjc6s6q87f193j</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDf-_jWEX3GQpRgP2LMBjeqQrIkgJuQ3Hc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>722272019813</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.codernointed.vestiq</string>
+	<key>PROJECT_ID</key>
+	<string>vestiq-app</string>
+	<key>STORAGE_BUCKET</key>
+	<string>vestiq-app.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:722272019813:ios:80060558cd32ce174aed8c</string>
+</dict>
+</plist>
