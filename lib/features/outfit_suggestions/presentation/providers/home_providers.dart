@@ -372,22 +372,40 @@ class TodaysPicksNotifier extends StateNotifier<TodaysPicksState> {
       // Generate outfit pairings using the pairing service with enhanced AI
       final pairingService = getIt<WardrobePairingService>();
 
-      // Select a hero item for today (prefer recently added or favorites)
-      final heroItem = _selectHeroItemForToday(wardrobeItems);
+      // Select a hero item for day (casual/work)
+      final dayHeroItem = _selectHeroItemForOccasion(wardrobeItems, 'casual');
+
+      // Select a hero item for night (party/date)
+      // Try to pick a different item if possible to show variety
+      var nightHeroItem = _selectHeroItemForOccasion(wardrobeItems, 'party');
+
+      // If we picked the same item but have others available, try to force a different one
+      if (nightHeroItem.id == dayHeroItem.id && wardrobeItems.length > 1) {
+        final otherItems = wardrobeItems
+            .where((i) => i.id != dayHeroItem.id)
+            .toList();
+        if (otherItems.isNotEmpty) {
+          nightHeroItem = _selectHeroItemForOccasion(otherItems, 'party');
+        }
+      }
 
       // Generate daytime outfits (casual, work-appropriate)
-      AppLogger.info('☀️ [TODAY PICKS] Generating daytime outfits...');
+      AppLogger.info(
+        '☀️ [TODAY PICKS] Generating daytime outfits with ${dayHeroItem.analysis.primaryColor} ${dayHeroItem.analysis.itemType}...',
+      );
       final todayOutfits = await pairingService.generatePairings(
-        heroItem: heroItem,
+        heroItem: dayHeroItem,
         wardrobeItems: wardrobeItems,
         mode: PairingMode.surpriseMe,
         occasion: 'casual',
       );
 
       // Generate evening outfits (date, party-appropriate)
-      AppLogger.info('🌙 [TODAY PICKS] Generating evening outfits...');
+      AppLogger.info(
+        '🌙 [TODAY PICKS] Generating evening outfits with ${nightHeroItem.analysis.primaryColor} ${nightHeroItem.analysis.itemType}...',
+      );
       final tonightOutfits = await pairingService.generatePairings(
-        heroItem: heroItem,
+        heroItem: nightHeroItem,
         wardrobeItems: wardrobeItems,
         mode: PairingMode.surpriseMe,
         occasion: 'party',
@@ -414,17 +432,28 @@ class TodaysPicksNotifier extends StateNotifier<TodaysPicksState> {
     }
   }
 
-  /// Select the best hero item for today's picks
-  WardrobeItem _selectHeroItemForToday(List<WardrobeItem> items) {
-    // Prioritize: favorites > recently added > most worn
-    final favorites = items.where((item) => item.isFavorite).toList();
+  /// Select the best hero item for a specific occasion
+  WardrobeItem _selectHeroItemForOccasion(
+    List<WardrobeItem> items,
+    String occasion,
+  ) {
+    // 1. Try to find items that match the occasion
+    final suitableItems = items
+        .where((item) => item.matchesOccasion(occasion))
+        .toList();
+
+    // If no specific match, fall back to all items (versatile items)
+    final candidates = suitableItems.isNotEmpty ? suitableItems : items;
+
+    // 2. Prioritize: favorites > recently added
+    final favorites = candidates.where((item) => item.isFavorite).toList();
     if (favorites.isNotEmpty) {
       return favorites.first;
     }
 
-    // Sort by creation date (most recent first)
-    items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return items.first;
+    // 3. Sort by creation date (most recent first)
+    candidates.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return candidates.first;
   }
 
   void setActiveTab(TodayTab tab) {
