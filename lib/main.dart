@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -88,6 +89,19 @@ class VestiqApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(appThemeModeProvider);
 
+    // Configure status bar overlay based on theme
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: themeMode == ThemeMode.dark
+            ? Brightness.light
+            : Brightness.dark,
+        statusBarBrightness: themeMode == ThemeMode.dark
+            ? Brightness.dark
+            : Brightness.light,
+      ),
+    );
+
     return MaterialApp(
       title: AppConstants.appName,
       theme: AppTheme.getLightTheme(),
@@ -138,11 +152,26 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
     }
   }
 
-  void toggleTheme() {
+  Future<void> toggleTheme() async {
     state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    await _saveTheme();
   }
 
-  void setThemeMode(ThemeMode mode) {
+  Future<void> setThemeMode(ThemeMode mode) async {
     state = mode;
+    await _saveTheme();
+  }
+
+  Future<void> _saveTheme() async {
+    try {
+      final getIt = GetIt.I;
+      if (getIt.isRegistered<SharedPreferences>()) {
+        final prefs = getIt<SharedPreferences>();
+        await prefs.setString('theme_preference', state.name);
+        AppLogger.info('✅ Theme saved: ${state.name}');
+      }
+    } catch (e) {
+      AppLogger.error('❌ Failed to save theme', error: e);
+    }
   }
 }
