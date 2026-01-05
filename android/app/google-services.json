@@ -12,7 +12,12 @@
           "package_name": "com.codernointed.vestiq"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "722272019813-id5pi7jkponu4v448ktgeun632ji0b1b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyARXBqNoEhIKC5PZlPpjsV5M2OE8j6Anos"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "722272019813-id5pi7jkponu4v448ktgeun632ji0b1b.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "722272019813-ke59ck1pnv5r4gch23jjc6s6q87f193j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.codernointed.vestiq"
+              }
+            }
+          ]
         }
       }
     }
