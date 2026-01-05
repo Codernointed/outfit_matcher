@@ -21,6 +21,7 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart'
 import 'package:vestiq/features/wardrobe/presentation/sheets/swipe_planner_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_quick_actions_sheet.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart'; // Import Home Providers
 
 // Providers for wardrobe state management
 final wardrobeStorageProvider = Provider<EnhancedWardrobeStorageService>((ref) {
@@ -1026,15 +1027,23 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
         final storage = ref.read(wardrobeStorageProvider);
         await storage.deleteWardrobeItem(item.id);
 
-        // Force complete refresh of all providers
+        // Force complete refresh of ALL providers across the app
+        AppLogger.info('🔄 [DELETE] Refreshing all app states...');
+
+        // 1. Closet Screen Providers
         ref.invalidate(wardrobeStorageProvider);
         ref.invalidate(wardrobeItemsProvider);
         ref.invalidate(filteredWardrobeItemsProvider);
 
+        // 2. Home Screen Providers (Crucial for removing from Today's Picks/Snapshot)
+        ref.invalidate(todaysPicksProvider);
+        ref.invalidate(wardrobeSnapshotProvider);
+        ref.invalidate(recentLooksProvider);
+
         // Force immediate rebuild
         setState(() {});
 
-        AppLogger.info('✅ Item deleted and UI refreshed');
+        AppLogger.info('✅ Item deleted and UI refreshed globally');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
