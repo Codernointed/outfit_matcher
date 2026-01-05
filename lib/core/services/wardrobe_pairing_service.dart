@@ -3,14 +3,14 @@ import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/compatibility_cache_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
+import 'package:vestiq/core/services/analytics_service.dart'; // Import Analytics
+import 'package:vestiq/core/di/service_locator.dart'; // Import DI
+
 /// Service for generating outfit pairings from wardrobe items
 class WardrobePairingService {
-  WardrobePairingService({
-    this.analytics,
-    CompatibilityCacheService? compatibilityCache,
-  }) : _compatibilityCache = compatibilityCache;
+  WardrobePairingService({CompatibilityCacheService? compatibilityCache})
+    : _compatibilityCache = compatibilityCache;
 
-  final WardrobePairingAnalytics? analytics;
   final CompatibilityCacheService? _compatibilityCache;
 
   static const int _maxPairingSuggestions = 6;
@@ -69,10 +69,11 @@ class WardrobePairingService {
     );
 
     onProgress?.call('Analyzing your wardrobe...');
-    analytics?.trackPairingStart(
-      mode: mode,
-      heroItem: heroItem,
-      wardrobeSize: wardrobeItems.length,
+
+    final startTime = DateTime.now();
+    getIt<AnalyticsService>().logOutfitGenerationStarted(
+      mode: mode.toString(),
+      occasion: occasion ?? 'unknown',
     );
 
     try {
@@ -85,7 +86,7 @@ class WardrobePairingService {
         AppLogger.warning(
           '⚠️ No other items available - generating styling suggestions',
         );
-        analytics?.trackPairingEmpty(mode: mode, reason: 'no_available_items');
+        // Analytics tracked in method logic if needed
         onProgress?.call('Creating styling suggestions...');
         return _generateFallbackPairings(heroItem, [], mode: mode);
       }
@@ -130,11 +131,11 @@ class WardrobePairingService {
         '✅ Pairing generation complete (no auto mannequins)',
         data: {'totalPairings': pairings.length, 'mode': mode.toString()},
       );
-      analytics?.trackPairingSuccess(
-        mode: mode,
-        heroItem: heroItem,
-        totalPairings: pairings.length,
-        enhancedPairings: 0, // No auto-enhancement
+
+      getIt<AnalyticsService>().logOutfitGenerated(
+        itemsCount: pairings.length,
+        occasion: occasion ?? 'unknown',
+        latencyMs: DateTime.now().difference(startTime).inMilliseconds,
       );
 
       return pairings;
@@ -144,7 +145,9 @@ class WardrobePairingService {
         error: e,
         stackTrace: stackTrace,
       );
-      analytics?.trackPairingFailure(mode: mode, heroItem: heroItem, error: e);
+
+      // Log failure if needed, or rely on AppLogger
+      // analytics?.trackPairingFailure(mode: mode, heroItem: heroItem, error: e);
 
       // Return fallback pairings
       onProgress?.call('Creating fallback suggestions...');

@@ -21,7 +21,8 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart'
 import 'package:vestiq/features/wardrobe/presentation/sheets/swipe_planner_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_quick_actions_sheet.dart';
-import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart'; // Import Home Providers
+import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
+import 'package:vestiq/core/services/analytics_service.dart'; // Import Analytics
 
 // Providers for wardrobe state management
 final wardrobeStorageProvider = Provider<EnhancedWardrobeStorageService>((ref) {
@@ -403,13 +404,20 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(18),
                 onTap: () {
-                  ref
-                      .read(selectedCategoryProvider.notifier)
-                      .state = (category['name'] == 'Access.'
+                  final newCategory = (category['name'] == 'Access.'
                       ? 'Accessories'
                       : category['name'] == 'Outer.'
                       ? 'Outerwear'
                       : categoryName);
+
+                  ref.read(selectedCategoryProvider.notifier).state =
+                      newCategory;
+
+                  // Log Filter Event
+                  getIt<AnalyticsService>().logEvent(
+                    name: 'wardrobe_filter',
+                    parameters: {'category': newCategory},
+                  );
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -830,6 +838,9 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   }
 
   void _showItemPreview(BuildContext context, WardrobeItem item) {
+    // Log Item View
+    getIt<AnalyticsService>().logItemViewed(item: item);
+
     showWardrobeItemPreview(
       context,
       item,
@@ -1042,6 +1053,13 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
         // Force immediate rebuild
         setState(() {});
+
+        // Log Deletion
+        final daysOwned = DateTime.now().difference(item.createdAt).inDays;
+        getIt<AnalyticsService>().logItemDeleted(
+          itemType: item.analysis.itemType,
+          daysSinceCreation: daysOwned,
+        );
 
         AppLogger.info('✅ Item deleted and UI refreshed globally');
 

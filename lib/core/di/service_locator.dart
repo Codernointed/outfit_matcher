@@ -14,6 +14,7 @@ import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/services/voice_search_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/services/analytics_service.dart';
 import 'package:vestiq/core/subscriptions/paystack_payment_service.dart';
 import 'package:vestiq/core/subscriptions/subscription_config.dart';
 import 'package:vestiq/core/subscriptions/subscription_api_client.dart';
@@ -34,6 +35,9 @@ Future<void> setupServiceLocator() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
   getIt.registerLazySingleton<http.Client>(() => http.Client());
+
+  // Analytics
+  getIt.registerLazySingleton<AnalyticsService>(() => AnalyticsService());
 
   // Repositories
 

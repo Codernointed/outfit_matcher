@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart'; // Import Analytics
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
@@ -93,6 +94,9 @@ class VestiqApp extends ConsumerWidget {
       darkTheme: AppTheme.getDarkTheme(),
       themeMode: themeMode,
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+      ],
       home: const AuthWrapper(),
       // Don't include routes with '/' key when home is specified
       routes: {

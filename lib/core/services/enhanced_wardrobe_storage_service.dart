@@ -11,6 +11,7 @@ import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/features/wardrobe/data/firestore_wardrobe_service.dart';
 import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:vestiq/core/services/analytics_service.dart'; // Analytics import
 
 /// Enhanced storage service for wardrobe items and looks with caching and migrations
 /// NOW WITH FIRESTORE SYNC!
@@ -276,6 +277,10 @@ class EnhancedWardrobeStorageService {
 
       // ALWAYS save to local storage (works as cache if Firestore succeeded, or primary storage if it failed)
       final items = await _getWardrobeItemsFromLocal();
+
+      // Analytics: Check if item is new before removing it (for update logic)
+      final isNewItem = !items.any((i) => i.id == item.id);
+
       items.removeWhere((i) => i.id == item.id); // Remove if exists
       items.add(item);
 
@@ -293,6 +298,15 @@ class EnhancedWardrobeStorageService {
           'savedLocally': true,
         },
       );
+
+      // Log Insight Event (only for new items)
+      if (isNewItem) {
+        getIt<AnalyticsService>().logItemAdded(
+          item: item,
+          source: 'unknown', // Can be refined if we pass source param
+          processingTimeMs: 0, // Placeholder
+        );
+      }
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ CRITICAL: Failed to save wardrobe item even locally',

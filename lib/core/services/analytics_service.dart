@@ -1,257 +1,180 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
 
+/// Centralized service for tracking user activity and business intelligence.
+/// Designed for high performance (all calls are async/unawaited).
 class AnalyticsService {
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+
+  // Singleton pattern
   static final AnalyticsService _instance = AnalyticsService._internal();
   factory AnalyticsService() => _instance;
   AnalyticsService._internal();
 
-  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-  FirebaseAnalyticsObserver get observer =>
-      FirebaseAnalyticsObserver(analytics: _analytics);
-
-  // Screen tracking
-  Future<void> logScreenView({
-    required String screenName,
-    String? screenClass,
-  }) async {
-    try {
-      await _analytics.logScreenView(
-        screenName: screenName,
-        screenClass: screenClass ?? screenName,
-      );
-      debugPrint('📊 Analytics: Screen view - $screenName');
-    } catch (e) {
-      debugPrint('❌ Analytics error (screen view): $e');
-    }
-  }
-
-  // User authentication events
-  Future<void> logSignUp({required String method}) async {
-    try {
-      await _analytics.logSignUp(signUpMethod: method);
-      debugPrint('📊 Analytics: Sign up - $method');
-    } catch (e) {
-      debugPrint('❌ Analytics error (sign up): $e');
-    }
-  }
-
-  Future<void> logLogin({required String method}) async {
-    try {
-      await _analytics.logLogin(loginMethod: method);
-      debugPrint('📊 Analytics: Login - $method');
-    } catch (e) {
-      debugPrint('❌ Analytics error (login): $e');
-    }
-  }
-
-  Future<void> logSignOut() async {
-    try {
-      await _analytics.logEvent(name: 'sign_out');
-      debugPrint('📊 Analytics: Sign out');
-    } catch (e) {
-      debugPrint('❌ Analytics error (sign out): $e');
-    }
-  }
-
-  // User properties
-  Future<void> setUserId(String userId) async {
-    try {
-      await _analytics.setUserId(id: userId);
-      debugPrint('📊 Analytics: Set user ID - $userId');
-    } catch (e) {
-      debugPrint('❌ Analytics error (set user ID): $e');
-    }
-  }
-
-  Future<void> setUserProperty({
+  /// Log a custom event with standardized parameters
+  Future<void> logEvent({
     required String name,
-    required String value,
-  }) async {
-    try {
-      await _analytics.setUserProperty(name: name, value: value);
-      debugPrint('📊 Analytics: Set user property - $name: $value');
-    } catch (e) {
-      debugPrint('❌ Analytics error (set user property): $e');
-    }
-  }
-
-  // Feature usage
-  Future<void> logFeatureUsage({
-    required String featureName,
     Map<String, Object>? parameters,
   }) async {
     try {
-      await _analytics.logEvent(
-        name: 'feature_usage',
-        parameters: {'feature_name': featureName, ...?parameters},
-      );
-      debugPrint('📊 Analytics: Feature usage - $featureName');
+      if (kDebugMode) {
+        AppLogger.debug('📊 [ANALYTICS] Logging event: $name');
+      }
+
+      // Fire and forget - don't await to block UI thread
+      _analytics.logEvent(name: name, parameters: parameters).ignore();
     } catch (e) {
-      debugPrint('❌ Analytics error (feature usage): $e');
+      // Never crash the app due to analytics failure
+      AppLogger.warning('⚠️ Analytics log failed: $e');
     }
   }
 
-  // Outfit/Generation events
-  Future<void> logOutfitGeneration({
-    required String generationType,
-    int? itemCount,
+  // ===========================================================================
+  // 1. AUTH & ONBOARDING
+  // ===========================================================================
+
+  Future<void> logLogin({required String method}) {
+    return logEvent(name: 'login', parameters: {'method': method});
+  }
+
+  Future<void> logSignUp({required String method}) {
+    return logEvent(name: 'sign_up', parameters: {'method': method});
+  }
+
+  Future<void> logSignOut() {
+    return logEvent(name: 'sign_out');
+  }
+
+  Future<void> logAccountDeleted() {
+    return logEvent(name: 'account_deleted');
+  }
+
+  Future<void> updateUserProperties({
+    required int itemsCount,
+    required bool isPremium,
   }) async {
     try {
-      await _analytics.logEvent(
-        name: 'outfit_generation',
-        parameters: {
-          'generation_type': generationType,
-          if (itemCount != null) 'item_count': itemCount,
-        },
-      );
-      debugPrint('📊 Analytics: Outfit generation - $generationType');
-    } catch (e) {
-      debugPrint('❌ Analytics error (outfit generation): $e');
-    }
+      // Set user properties for audience segmentation
+      _analytics
+          .setUserProperty(
+            name: 'items_in_closet',
+            value: itemsCount.toString(),
+          )
+          .ignore();
+      _analytics
+          .setUserProperty(name: 'is_premium', value: isPremium.toString())
+          .ignore();
+    } catch (_) {}
   }
 
-  Future<void> logOutfitSaved({required String outfitType}) async {
-    try {
-      await _analytics.logEvent(
-        name: 'outfit_saved',
-        parameters: {'outfit_type': outfitType},
-      );
-      debugPrint('📊 Analytics: Outfit saved - $outfitType');
-    } catch (e) {
-      debugPrint('❌ Analytics error (outfit saved): $e');
-    }
-  }
+  // ===========================================================================
+  // 2. WARDROBE ENGAGEMENT (High Value Signals)
+  // ===========================================================================
 
-  // Wardrobe events
   Future<void> logItemAdded({
-    required String category,
-    required String source,
-  }) async {
-    try {
-      await _analytics.logEvent(
-        name: 'wardrobe_item_added',
-        parameters: {
-          'category': category,
-          'source': source, // camera, gallery, etc.
-        },
-      );
-      debugPrint('📊 Analytics: Item added - $category from $source');
-    } catch (e) {
-      debugPrint('❌ Analytics error (item added): $e');
-    }
+    required WardrobeItem item,
+    required String source, // 'camera', 'gallery'
+    required int processingTimeMs,
+  }) {
+    final analysis = item.analysis;
+    return logEvent(
+      name: 'item_added',
+      parameters: {
+        'source': source,
+        'item_type': analysis.itemType,
+        'color': analysis.primaryColor,
+        // Rich Metadata for Personalization
+        'fit': analysis.fit ?? 'unknown',
+        'style': analysis.style,
+        'material': analysis.material ?? 'unknown',
+        'pattern': analysis.patternType,
+        // Performance metric
+        'processing_time_ms': processingTimeMs,
+      },
+    );
   }
 
-  Future<void> logItemRemoved({required String category}) async {
-    try {
-      await _analytics.logEvent(
-        name: 'wardrobe_item_removed',
-        parameters: {'category': category},
-      );
-      debugPrint('📊 Analytics: Item removed - $category');
-    } catch (e) {
-      debugPrint('❌ Analytics error (item removed): $e');
-    }
+  Future<void> logItemDeleted({
+    required String itemType,
+    required int daysSinceCreation,
+  }) {
+    return logEvent(
+      name: 'item_deleted',
+      parameters: {'item_type': itemType, 'lifespan_days': daysSinceCreation},
+    );
   }
 
-  // Profile events
-  Future<void> logProfileUpdated({required List<String> fieldsUpdated}) async {
-    try {
-      await _analytics.logEvent(
-        name: 'profile_updated',
-        parameters: {'fields_updated': fieldsUpdated.join(',')},
-      );
-      debugPrint('📊 Analytics: Profile updated - ${fieldsUpdated.join(', ')}');
-    } catch (e) {
-      debugPrint('❌ Analytics error (profile updated): $e');
-    }
+  Future<void> logItemViewed({required WardrobeItem item}) {
+    return logEvent(
+      name: 'item_viewed',
+      parameters: {
+        'item_type': item.analysis.itemType,
+        'color': item.analysis.primaryColor,
+        'style': item.analysis.style,
+        'fit': item.analysis.fit ?? 'unknown',
+      },
+    );
   }
 
-  Future<void> logAccountDeleted() async {
-    try {
-      await _analytics.logEvent(name: 'account_deleted');
-      debugPrint('📊 Analytics: Account deleted');
-    } catch (e) {
-      debugPrint('❌ Analytics error (account deleted): $e');
-    }
+  // ===========================================================================
+  // 3. OUTFIT PLANNING (Core Value)
+  // ===========================================================================
+
+  Future<void> logOutfitGenerationStarted({
+    required String mode, // 'surprise_me', 'pair_this'
+    required String occasion,
+  }) {
+    return logEvent(
+      name: 'outfit_generation_started',
+      parameters: {'mode': mode, 'occasion': occasion},
+    );
   }
 
-  // Storage/cache events
-  Future<void> logCacheCleared({required double sizeMB}) async {
-    try {
-      await _analytics.logEvent(
-        name: 'cache_cleared',
-        parameters: {'size_mb': sizeMB},
-      );
-      debugPrint('📊 Analytics: Cache cleared - ${sizeMB}MB');
-    } catch (e) {
-      debugPrint('❌ Analytics error (cache cleared): $e');
-    }
+  Future<void> logOutfitGenerated({
+    required int itemsCount,
+    required String occasion,
+    required int latencyMs,
+  }) {
+    return logEvent(
+      name: 'outfit_generated',
+      parameters: {
+        'items_count': itemsCount,
+        'occasion': occasion,
+        'latency_ms': latencyMs,
+      },
+    );
   }
 
-  // Subscription events
-  Future<void> logSubscriptionUpgrade({
-    required String fromTier,
-    required String toTier,
-  }) async {
-    try {
-      await _analytics.logEvent(
-        name: 'subscription_upgrade',
-        parameters: {'from_tier': fromTier, 'to_tier': toTier},
-      );
-      debugPrint('📊 Analytics: Subscription upgrade - $fromTier to $toTier');
-    } catch (e) {
-      debugPrint('❌ Analytics error (subscription upgrade): $e');
-    }
+  Future<void> logOutfitSaved({
+    required String occasion,
+    required int itemsCount,
+  }) {
+    return logEvent(
+      name: 'outfit_saved',
+      parameters: {'occasion': occasion, 'items_count': itemsCount},
+    );
   }
 
-  // Social sharing
-  Future<void> logShare({
-    required String contentType,
-    required String method,
-    String itemId = '',
-  }) async {
-    try {
-      await _analytics.logShare(
-        contentType: contentType,
-        itemId: itemId,
-        method: method,
-      );
-      debugPrint('📊 Analytics: Share - $contentType via $method');
-    } catch (e) {
-      debugPrint('❌ Analytics error (share): $e');
-    }
+  // ===========================================================================
+  // 4. UI INTERACTIONS & SETTINGS
+  // ===========================================================================
+
+  Future<void> logFeatureUsed({required String featureName}) {
+    return logEvent(name: 'feature_used', parameters: {'feature': featureName});
   }
 
-  // Tutorial/onboarding
-  Future<void> logTutorialBegin() async {
-    try {
-      await _analytics.logTutorialBegin();
-      debugPrint('📊 Analytics: Tutorial begin');
-    } catch (e) {
-      debugPrint('❌ Analytics error (tutorial begin): $e');
-    }
+  Future<void> logCacheCleared({required double sizeMB}) {
+    return logEvent(name: 'cache_cleared', parameters: {'size_mb': sizeMB});
   }
 
-  Future<void> logTutorialComplete() async {
-    try {
-      await _analytics.logTutorialComplete();
-      debugPrint('📊 Analytics: Tutorial complete');
-    } catch (e) {
-      debugPrint('❌ Analytics error (tutorial complete): $e');
-    }
-  }
-
-  // Custom events
-  Future<void> logCustomEvent({
-    required String eventName,
-    Map<String, Object>? parameters,
-  }) async {
-    try {
-      await _analytics.logEvent(name: eventName, parameters: parameters);
-      debugPrint('📊 Analytics: Custom event - $eventName');
-    } catch (e) {
-      debugPrint('❌ Analytics error (custom event): $e');
-    }
+  Future<void> logProfileUpdated({List<String>? fieldsUpdated}) {
+    return logEvent(
+      name: 'profile_updated',
+      parameters: {
+        if (fieldsUpdated != null) 'fields': fieldsUpdated.join(','),
+      },
+    );
   }
 }

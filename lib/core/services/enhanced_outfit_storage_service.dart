@@ -4,6 +4,8 @@ import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/features/outfit_suggestions/data/firestore_outfit_service.dart';
 import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/services/analytics_service.dart';
 
 /// Enhanced outfit storage service with Firestore sync
 /// Provides dual-layer storage: Firestore (cloud) + SharedPreferences (local cache)
@@ -68,6 +70,12 @@ class EnhancedOutfitStorageService {
       await _localService.save(outfit);
       debugPrint(
         '✅ Saved outfit locally: ${outfit.id} (Firestore: $firestoreSaved)',
+      );
+
+      // Track the save event
+      getIt<AnalyticsService>().logOutfitSaved(
+        occasion: outfit.occasion,
+        itemsCount: outfit.items.length,
       );
 
       return outfit;

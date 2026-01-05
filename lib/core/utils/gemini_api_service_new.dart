@@ -7,6 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/api_rate_limiter.dart';
+import 'package:vestiq/core/di/service_locator.dart'; // Import DI
+import 'package:vestiq/core/services/analytics_service.dart'; // Import Analytics
 
 class GeminiApiService {
   static int _currentKeyIndex = 0;
@@ -90,6 +92,18 @@ class GeminiApiService {
           AppLogger.warning(
             '⚠️ API Error ${response.statusCode} with key index $_currentKeyIndex. Rotating...',
           );
+
+          try {
+            getIt<AnalyticsService>().logEvent(
+              name: 'api_error',
+              parameters: {
+                'status_code': response.statusCode,
+                'endpoint': 'gemini_generate',
+                'key_index': _currentKeyIndex,
+              },
+            );
+          } catch (_) {}
+
           _rotateApiKey();
           continue;
         }
