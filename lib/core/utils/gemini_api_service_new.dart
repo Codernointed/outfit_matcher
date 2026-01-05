@@ -68,7 +68,7 @@ class GeminiApiService {
           ? '${currentKey.substring(0, 5)}...${currentKey.substring(currentKey.length - 5)}'
           : 'invalid';
 
-      print(
+      AppLogger.info(
         '🔄 [Gemini] Request attempt ${i + 1}/$retries using key: $maskedKey index: $_currentKeyIndex',
       );
 
@@ -83,12 +83,14 @@ class GeminiApiService {
             )
             .timeout(const Duration(seconds: 45));
 
-        print('📨 [Gemini] Response status: ${response.statusCode}');
+        AppLogger.info('📨 [Gemini] Response status: ${response.statusCode}');
 
         if (response.statusCode == 403 ||
             response.statusCode == 429 ||
             response.statusCode >= 500) {
-          print('⚠️ [Gemini] Error ${response.statusCode}: ${response.body}');
+          AppLogger.info(
+            '⚠️ [Gemini] Error ${response.statusCode}: ${response.body}',
+          );
           AppLogger.warning(
             '⚠️ API Error ${response.statusCode} with key index $_currentKeyIndex. Rotating...',
           );
@@ -109,13 +111,13 @@ class GeminiApiService {
         }
         return response;
       } catch (e) {
-        print('❌ [Gemini] Exception: $e');
+        AppLogger.info('❌ [Gemini] Exception: $e');
         AppLogger.error(
           '❌ Request failed with key index $_currentKeyIndex: $e',
         );
         _rotateApiKey();
         if (i == retries) {
-          print('💀 [Gemini] All retries failed');
+          AppLogger.info('💀 [Gemini] All retries failed');
           rethrow;
         }
       }
@@ -1120,11 +1122,15 @@ class GeminiApiService {
       ],
     };
 
-    print('🚀 [Gemini] Calling image preview endpoint: $_imageEndpoint');
+    AppLogger.info(
+      '🚀 [Gemini] Calling image preview endpoint: $_imageEndpoint',
+    );
 
     // Log prompt for debugging
     if (prompt.length > 100) {
-      print('📝 [Gemini] Prompt start: ${prompt.substring(0, 100)}...');
+      AppLogger.info(
+        '📝 [Gemini] Prompt start: ${prompt.substring(0, 100)}...',
+      );
     }
 
     final response = await _makeRequestWithRetry(_imageEndpoint, requestBody);
@@ -1132,7 +1138,9 @@ class GeminiApiService {
     AppLogger.network(_imageEndpoint, 'POST', statusCode: response.statusCode);
 
     if (response.statusCode != 200) {
-      print('❌ [Gemini] Image Generation Error Body: ${response.body}');
+      AppLogger.info(
+        '❌ [Gemini] Image Generation Error Body: ${response.body}',
+      );
       AppLogger.error('❌ Mannequin generation API error', error: response.body);
       return null;
     }

@@ -150,6 +150,7 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
 
     final size = MediaQuery.of(context).size;
 
+    // ignore: unused_local_variable
     Offset anchor;
     Alignment alignment;
     EdgeInsets margin = const EdgeInsets.all(16);

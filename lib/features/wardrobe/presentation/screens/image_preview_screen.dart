@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/visual_search_screen.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 
@@ -190,10 +191,10 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen>
             );
             if (result != null) {
               _analysisResults = result;
-              debugPrint('Analysis results: $_analysisResults');
+              AppLogger.info('Analysis results: $_analysisResults');
             }
           } catch (e) {
-            debugPrint('Error analyzing image: $e');
+            AppLogger.info('Error analyzing image: $e');
             if (!mounted) return;
             _showError('Failed to analyze image. Please try again.');
             return;
@@ -250,6 +251,7 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen>
   void _showError(String message) {
     if (!mounted) return;
 
+    final navigator = Navigator.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -262,7 +264,9 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen>
           ),
         ],
       ),
-    ).then((_) => Navigator.pop(context));
+    ).then((_) {
+      if (mounted) navigator.pop();
+    });
   }
 
   @override

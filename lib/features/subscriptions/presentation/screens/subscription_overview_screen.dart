@@ -73,8 +73,8 @@ class _SubscriptionOverviewScreenState
     final buttonLabel = isPremium
         ? 'You\'re already Premium'
         : state.isLoading
-            ? 'Processing...'
-            : 'Upgrade to Premium';
+        ? 'Processing...'
+        : 'Upgrade to Premium';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -162,7 +162,9 @@ class _SubscriptionOverviewScreenState
       return;
     }
 
-    await ref.read(subscriptionControllerProvider.notifier).startCheckout(
+    await ref
+        .read(subscriptionControllerProvider.notifier)
+        .startCheckout(
           context: context,
           userId: user.uid,
           email: user.email,
@@ -210,9 +212,9 @@ class _SubscriptionOverviewScreenState
         next.errorMessage != null &&
         next.errorMessage!.isNotEmpty &&
         previous?.errorMessage != next.errorMessage) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(next.errorMessage!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(next.errorMessage!)));
       AppLogger.warning('Subscription flow error', error: next.errorMessage);
     }
   }
@@ -239,8 +241,8 @@ class _CurrentPlanCard extends StatelessWidget {
                   theme.colorScheme.primary.withValues(alpha: 0.75),
                 ]
               : [
-                  theme.colorScheme.surfaceVariant,
-                  theme.colorScheme.surfaceVariant,
+                  theme.colorScheme.surfaceContainerHighest,
+                  theme.colorScheme.surfaceContainerHighest,
                 ],
         ),
         boxShadow: isPremium
@@ -259,7 +261,10 @@ class _CurrentPlanCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isPremium
                       ? theme.colorScheme.onPrimary.withValues(alpha: 0.2)
@@ -339,9 +344,9 @@ class _BenefitList extends StatelessWidget {
       children: [
         Text(
           isPremium ? 'Premium unlocked' : 'Premium benefits',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         ...benefits.map((benefit) => _BenefitTile(benefit: benefit)),
@@ -350,30 +355,30 @@ class _BenefitList extends StatelessWidget {
   }
 
   List<_Benefit> get _premiumBenefits => const [
-        _Benefit(
-          icon: Icons.flash_on,
-          title: 'Double wardrobe uploads',
-          description:
-              'Upload up to ${AppConstants.premiumDailyUploadLimit} looks daily versus ${AppConstants.freeDailyUploadLimit} on Free.',
-        ),
-        _Benefit(
-          icon: Icons.auto_awesome,
-          title: 'Unlimited pairings & inspiration',
-          description:
-              'AI styling, pairings, and inspiration search no longer pause when creativity strikes.',
-        ),
-        _Benefit(
-          icon: Icons.brush,
-          title: 'Couture image polishing',
-          description:
-              '${AppConstants.premiumMonthlyPolishingLimit} premium-grade polish sessions every month.',
-        ),
-        _Benefit(
-          icon: Icons.rocket_launch,
-          title: 'Early feature drops',
-          description: 'Premium users are first to test new AI wardrobe powers.',
-        ),
-      ];
+    _Benefit(
+      icon: Icons.flash_on,
+      title: 'Double wardrobe uploads',
+      description:
+          'Upload up to ${AppConstants.premiumDailyUploadLimit} looks daily versus ${AppConstants.freeDailyUploadLimit} on Free.',
+    ),
+    _Benefit(
+      icon: Icons.auto_awesome,
+      title: 'Unlimited pairings & inspiration',
+      description:
+          'AI styling, pairings, and inspiration search no longer pause when creativity strikes.',
+    ),
+    _Benefit(
+      icon: Icons.brush,
+      title: 'Couture image polishing',
+      description:
+          '${AppConstants.premiumMonthlyPolishingLimit} premium-grade polish sessions every month.',
+    ),
+    _Benefit(
+      icon: Icons.rocket_launch,
+      title: 'Early feature drops',
+      description: 'Premium users are first to test new AI wardrobe powers.',
+    ),
+  ];
 }
 
 class _BenefitTile extends StatelessWidget {

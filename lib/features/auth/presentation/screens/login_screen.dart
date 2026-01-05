@@ -162,7 +162,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: AppConstants.defaultSpacing),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 28,
+              vertical: AppConstants.defaultSpacing,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -472,7 +475,8 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
     final primaryColor = theme.colorScheme.primary;
 
     return AlertDialog(
-      backgroundColor: theme.dialogBackgroundColor,
+      backgroundColor:
+          theme.dialogTheme.backgroundColor ?? theme.colorScheme.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
         'Reset Password',

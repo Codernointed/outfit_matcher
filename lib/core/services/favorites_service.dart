@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service to manage user favorites (wardrobe items and outfits)
 /// Stores favorites in Firestore for cloud sync across devices
@@ -34,7 +35,7 @@ class FavoritesService {
 
       return snapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
-      debugPrint('❌ Error fetching favorite item IDs: $e');
+      AppLogger.info('❌ Error fetching favorite item IDs: $e');
       return [];
     }
   }
@@ -51,7 +52,7 @@ class FavoritesService {
 
       return doc.exists;
     } catch (e) {
-      debugPrint('❌ Error checking favorite status: $e');
+      AppLogger.info('❌ Error checking favorite status: $e');
       return false;
     }
   }
@@ -66,12 +67,12 @@ class FavoritesService {
           .doc(itemId)
           .set({'addedAt': FieldValue.serverTimestamp()});
 
-      debugPrint('✅ Added item $itemId to favorites');
+      AppLogger.info('✅ Added item $itemId to favorites');
 
       // Update user's favorite count
       await _updateFavoriteItemCount(uid);
     } catch (e) {
-      debugPrint('❌ Error adding favorite item: $e');
+      AppLogger.info('❌ Error adding favorite item: $e');
       rethrow;
     }
   }
@@ -86,12 +87,12 @@ class FavoritesService {
           .doc(itemId)
           .delete();
 
-      debugPrint('✅ Removed item $itemId from favorites');
+      AppLogger.info('✅ Removed item $itemId from favorites');
 
       // Update user's favorite count
       await _updateFavoriteItemCount(uid);
     } catch (e) {
-      debugPrint('❌ Error removing favorite item: $e');
+      AppLogger.info('❌ Error removing favorite item: $e');
       rethrow;
     }
   }
@@ -117,7 +118,7 @@ class FavoritesService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      debugPrint('⚠️ Error updating favorite count: $e');
+      AppLogger.info('⚠️ Error updating favorite count: $e');
     }
   }
 
@@ -145,7 +146,7 @@ class FavoritesService {
 
       return snapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
-      debugPrint('❌ Error fetching favorite outfit IDs: $e');
+      AppLogger.info('❌ Error fetching favorite outfit IDs: $e');
       return [];
     }
   }
@@ -162,7 +163,7 @@ class FavoritesService {
 
       return doc.exists;
     } catch (e) {
-      debugPrint('❌ Error checking outfit favorite status: $e');
+      AppLogger.info('❌ Error checking outfit favorite status: $e');
       return false;
     }
   }
@@ -177,9 +178,9 @@ class FavoritesService {
           .doc(outfitId)
           .set({'addedAt': FieldValue.serverTimestamp()});
 
-      debugPrint('✅ Added outfit $outfitId to favorites');
+      AppLogger.info('✅ Added outfit $outfitId to favorites');
     } catch (e) {
-      debugPrint('❌ Error adding favorite outfit: $e');
+      AppLogger.info('❌ Error adding favorite outfit: $e');
       rethrow;
     }
   }
@@ -194,9 +195,9 @@ class FavoritesService {
           .doc(outfitId)
           .delete();
 
-      debugPrint('✅ Removed outfit $outfitId from favorites');
+      AppLogger.info('✅ Removed outfit $outfitId from favorites');
     } catch (e) {
-      debugPrint('❌ Error removing favorite outfit: $e');
+      AppLogger.info('❌ Error removing favorite outfit: $e');
       rethrow;
     }
   }
@@ -256,9 +257,9 @@ class FavoritesService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ Cleared all favorites for user $uid');
+      AppLogger.info('✅ Cleared all favorites for user $uid');
     } catch (e) {
-      debugPrint('❌ Error clearing favorites: $e');
+      AppLogger.info('❌ Error clearing favorites: $e');
       rethrow;
     }
   }

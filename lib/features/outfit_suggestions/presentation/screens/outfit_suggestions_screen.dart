@@ -367,6 +367,7 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
 
       AppLogger.info('❤️ Added outfit to favorites and saved');
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Saved "${outfit['name']}" to your looks! ✨'),
@@ -479,7 +480,7 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
     if (color == Colors.white) return 'white';
     if (color == Colors.brown) return 'brown';
     if (color == Colors.grey[300]) return 'grey';
-    if (color.value == const Color(0xFFE3D0B9).value) return 'beige';
+    if (color.toARGB32() == const Color(0xFFE3D0B9).toARGB32()) return 'beige';
     return 'unknown';
   }
 

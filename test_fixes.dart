@@ -18,30 +18,30 @@
 //   // Initialize dependency injection
 //   await setupServiceLocator();
 
-//   print('🧪 Testing wardrobe persistence and mannequin generation fixes...\n');
+//   AppLogger.info('🧪 Testing wardrobe persistence and mannequin generation fixes...\n');
 
 //   final storage = getIt<EnhancedWardrobeStorageService>();
 //   final pairingService = getIt<WardrobePairingService>();
 
 //   // Test 1: Wardrobe persistence
-//   print('📦 Test 1: Wardrobe persistence');
+//   AppLogger.info('📦 Test 1: Wardrobe persistence');
 //   try {
 //     // Check if data loads correctly
 //     await storage.ensureDataLoaded();
 //     final items = await storage.getWardrobeItems();
-//     print('✅ Loaded ${items.length} wardrobe items');
+//     AppLogger.info('✅ Loaded ${items.length} wardrobe items');
 
 //     if (items.isEmpty) {
-//       print('⚠️  No wardrobe items found - this might be expected if testing from scratch');
+//       AppLogger.info('⚠️  No wardrobe items found - this might be expected if testing from scratch');
 //     } else {
-//       print('✅ Wardrobe items persist correctly after initialization');
+//       AppLogger.info('✅ Wardrobe items persist correctly after initialization');
 //     }
 //   } catch (e) {
-//     print('❌ Wardrobe persistence test failed: $e');
+//     AppLogger.info('❌ Wardrobe persistence test failed: $e');
 //   }
 
 //   // Test 2: Pair This Item mode (no auto mannequins)
-//   print('\n🤝 Test 2: Pair This Item mode (no auto mannequins)');
+//   AppLogger.info('\n🤝 Test 2: Pair This Item mode (no auto mannequins)');
 //   try {
 //     // Create a mock hero item for testing
 //     final heroItem = WardrobeItem(
@@ -66,22 +66,22 @@
 //       mode: PairingMode.pairThisItem,
 //     );
 
-//     print('✅ Generated ${pairings.length} pairings for Pair This Item mode');
-//     print('✅ No mannequins generated automatically (as expected)');
+//     AppLogger.info('✅ Generated ${pairings.length} pairings for Pair This Item mode');
+//     AppLogger.info('✅ No mannequins generated automatically (as expected)');
 
 //     // Check that no mannequins were generated
 //     final hasMannequins = pairings.any((p) => p.mannequinImageUrl != null);
 //     if (hasMannequins) {
-//       print('⚠️  Warning: Some pairings have mannequins (unexpected)');
+//       AppLogger.info('⚠️  Warning: Some pairings have mannequins (unexpected)');
 //     } else {
-//       print('✅ Confirmed: No mannequins generated in Pair This Item mode');
+//       AppLogger.info('✅ Confirmed: No mannequins generated in Pair This Item mode');
 //     }
 //   } catch (e) {
-//     print('❌ Pair This Item mode test failed: $e');
+//     AppLogger.info('❌ Pair This Item mode test failed: $e');
 //   }
 
 //   // Test 3: Surprise Me mode (auto mannequins)
-//   print('\n🎲 Test 3: Surprise Me mode (auto mannequins)');
+//   AppLogger.info('\n🎲 Test 3: Surprise Me mode (auto mannequins)');
 //   try {
 //     // Create a mock hero item for testing
 //     final heroItem = WardrobeItem(
@@ -106,25 +106,25 @@
 //       mode: PairingMode.surpriseMe,
 //     );
 
-//     print('✅ Generated ${pairings.length} pairings for Surprise Me mode');
+//     AppLogger.info('✅ Generated ${pairings.length} pairings for Surprise Me mode');
 
 //     // Check that some mannequins were generated (for top 3 pairings)
 //     final enhancedPairings = pairings.where((p) => p.mannequinImageUrl != null).length;
-//     print('✅ Generated mannequins for $enhancedPairings pairings (expected 3)');
+//     AppLogger.info('✅ Generated mannequins for $enhancedPairings pairings (expected 3)');
 
 //     if (enhancedPairings >= 3) {
-//       print('✅ Confirmed: Mannequins generated in Surprise Me mode');
+//       AppLogger.info('✅ Confirmed: Mannequins generated in Surprise Me mode');
 //     } else {
-//       print('⚠️  Warning: Fewer mannequins than expected');
+//       AppLogger.info('⚠️  Warning: Fewer mannequins than expected');
 //     }
 //   } catch (e) {
-//     print('❌ Surprise Me mode test failed: $e');
+//     AppLogger.info('❌ Surprise Me mode test failed: $e');
 //   }
 
-//   print('\n🏁 All tests completed!');
-//   print('\n📋 Summary of fixes applied:');
-//   print('1. ✅ Disabled auto mannequin generation for Pair This Item mode');
-//   print('2. ✅ Enhanced wardrobe persistence with ensureDataLoaded() method');
-//   print('3. ✅ Added cache invalidation on storage initialization');
-//   print('\n🎯 Ready for production use!');
+//   AppLogger.info('\n🏁 All tests completed!');
+//   AppLogger.info('\n📋 Summary of fixes applied:');
+//   AppLogger.info('1. ✅ Disabled auto mannequin generation for Pair This Item mode');
+//   AppLogger.info('2. ✅ Enhanced wardrobe persistence with ensureDataLoaded() method');
+//   AppLogger.info('3. ✅ Added cache invalidation on storage initialization');
+//   AppLogger.info('\n🎯 Ready for production use!');
 // }

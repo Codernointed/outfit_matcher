@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/core/models/swipe_closet_request.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/providers/swipe_planner_providers.dart'
-    as swipePlannerProviders;
+    as swipe_planner_providers;
 
 /// Sheet for planning a swipe closet session with occasion and preferences
 class SwipePlannerSheet extends ConsumerStatefulWidget {
@@ -102,7 +102,7 @@ class _SwipePlannerSheetState extends ConsumerState<SwipePlannerSheet> {
     );
 
     // Store the request and close the sheet
-    ref.read(swipePlannerProviders.swipeRequestProvider.notifier).state =
+    ref.read(swipe_planner_providers.swipeRequestProvider.notifier).state =
         request;
     Navigator.pop(context, request);
   }

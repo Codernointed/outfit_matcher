@@ -357,6 +357,7 @@ class _SimpleWardrobeUploadScreenState
     final List<XFile> capturedImages = [];
 
     for (int i = 0; i < _maxPerBatch; i++) {
+      if (!mounted) break;
       final result = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(

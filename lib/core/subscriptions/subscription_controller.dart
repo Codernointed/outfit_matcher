@@ -52,7 +52,9 @@ class SubscriptionCheckoutState {
   }) {
     return SubscriptionCheckoutState(
       step: step ?? this.step,
-      initialization: clearInitialization ? null : (initialization ?? this.initialization),
+      initialization: clearInitialization
+          ? null
+          : (initialization ?? this.initialization),
       subscription: subscription ?? this.subscription,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       cancelledByUser: cancelledByUser ?? this.cancelledByUser,
@@ -61,7 +63,7 @@ class SubscriptionCheckoutState {
   }
 
   factory SubscriptionCheckoutState.initial() =>
-    SubscriptionCheckoutState(step: SubscriptionFlowStep.idle);
+      SubscriptionCheckoutState(step: SubscriptionFlowStep.idle);
 }
 
 class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
@@ -69,10 +71,10 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
     required SubscriptionApiClient apiClient,
     required PaystackPaymentService paymentService,
     required AppSettingsService settingsService,
-  })  : _apiClient = apiClient,
-        _paymentService = paymentService,
-        _settingsService = settingsService,
-        super(SubscriptionCheckoutState.initial());
+  }) : _apiClient = apiClient,
+       _paymentService = paymentService,
+       _settingsService = settingsService,
+       super(SubscriptionCheckoutState.initial());
 
   final SubscriptionApiClient _apiClient;
   final PaystackPaymentService _paymentService;
@@ -98,7 +100,9 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
       );
 
       if (!initResult.isValid) {
-        throw const SubscriptionApiException('Invalid checkout payload returned');
+        throw const SubscriptionApiException(
+          'Invalid checkout payload returned',
+        );
       }
 
       state = state.copyWith(
@@ -106,6 +110,7 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
         initialization: initResult,
       );
 
+      if (!context.mounted) return null;
       final result = await _paymentService.checkout(
         context: context,
         initialization: initResult,
@@ -123,7 +128,9 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
 
       state = state.copyWith(step: SubscriptionFlowStep.verifying);
 
-      final verified = await _apiClient.verifyCheckout(reference: result.reference);
+      final verified = await _apiClient.verifyCheckout(
+        reference: result.reference,
+      );
       await _persistSubscription(verified);
 
       state = state.copyWith(
@@ -134,7 +141,11 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
 
       return verified;
     } catch (error, stackTrace) {
-      AppLogger.error('❌ Subscription checkout failed', error: error, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Subscription checkout failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = state.copyWith(
         step: SubscriptionFlowStep.error,
         errorMessage: error.toString(),
@@ -144,16 +155,20 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
     }
   }
 
-  Future<UserSubscription?> refreshEntitlement({
-    required String userId,
-  }) async {
+  Future<UserSubscription?> refreshEntitlement({required String userId}) async {
     try {
-      final subscription = await _apiClient.fetchEntitlementSnapshot(userId: userId);
+      final subscription = await _apiClient.fetchEntitlementSnapshot(
+        userId: userId,
+      );
       await _persistSubscription(subscription);
       state = state.copyWith(subscription: subscription, clearError: true);
       return subscription;
     } catch (error, stackTrace) {
-      AppLogger.error('❌ Entitlement refresh failed', error: error, stackTrace: stackTrace);
+      AppLogger.error(
+        '❌ Entitlement refresh failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       state = state.copyWith(
         step: SubscriptionFlowStep.error,
         errorMessage: error.toString(),
@@ -176,12 +191,12 @@ class SubscriptionController extends StateNotifier<SubscriptionCheckoutState> {
 }
 
 final subscriptionControllerProvider =
-    StateNotifierProvider<SubscriptionController, SubscriptionCheckoutState>(
-  (ref) {
-    return SubscriptionController(
-      apiClient: getIt<SubscriptionApiClient>(),
-      paymentService: getIt<PaystackPaymentService>(),
-      settingsService: getIt<AppSettingsService>(),
-    );
-  },
-);
+    StateNotifierProvider<SubscriptionController, SubscriptionCheckoutState>((
+      ref,
+    ) {
+      return SubscriptionController(
+        apiClient: getIt<SubscriptionApiClient>(),
+        paymentService: getIt<PaystackPaymentService>(),
+        settingsService: getIt<AppSettingsService>(),
+      );
+    });

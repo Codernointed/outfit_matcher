@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for managing saved outfits in Firestore
 class FirestoreOutfitService {
@@ -22,9 +23,9 @@ class FirestoreOutfitService {
         userId,
       ).doc(outfit.id).set(outfit.toJson());
 
-      debugPrint('✅ Saved outfit to Firestore: ${outfit.id}');
+      AppLogger.info('✅ Saved outfit to Firestore: ${outfit.id}');
     } catch (e) {
-      debugPrint('❌ Error saving outfit to Firestore: $e');
+      AppLogger.info('❌ Error saving outfit to Firestore: $e');
       rethrow;
     }
   }
@@ -40,9 +41,9 @@ class FirestoreOutfitService {
       }
 
       await batch.commit();
-      debugPrint('✅ Bulk saved ${outfits.length} outfits to Firestore');
+      AppLogger.info('✅ Bulk saved ${outfits.length} outfits to Firestore');
     } catch (e) {
-      debugPrint('❌ Error bulk saving outfits: $e');
+      AppLogger.info('❌ Error bulk saving outfits: $e');
       rethrow;
     }
   }
@@ -61,7 +62,7 @@ class FirestoreOutfitService {
         return SavedOutfit.fromJson(data);
       }).toList();
     } catch (e) {
-      debugPrint('❌ Error fetching outfits from Firestore: $e');
+      AppLogger.info('❌ Error fetching outfits from Firestore: $e');
       return [];
     }
   }
@@ -77,7 +78,7 @@ class FirestoreOutfitService {
 
       return SavedOutfit.fromJson(doc.data()!);
     } catch (e) {
-      debugPrint('❌ Error fetching outfit: $e');
+      AppLogger.info('❌ Error fetching outfit: $e');
       return null;
     }
   }
@@ -106,9 +107,9 @@ class FirestoreOutfitService {
         userId,
       ).doc(outfit.id).update(outfit.toJson());
 
-      debugPrint('✅ Updated outfit: ${outfit.id}');
+      AppLogger.info('✅ Updated outfit: ${outfit.id}');
     } catch (e) {
-      debugPrint('❌ Error updating outfit: $e');
+      AppLogger.info('❌ Error updating outfit: $e');
       rethrow;
     }
   }
@@ -119,9 +120,9 @@ class FirestoreOutfitService {
   Future<void> deleteOutfit(String userId, String outfitId) async {
     try {
       await _getUserOutfitsCollection(userId).doc(outfitId).delete();
-      debugPrint('✅ Deleted outfit from Firestore: $outfitId');
+      AppLogger.info('✅ Deleted outfit from Firestore: $outfitId');
     } catch (e) {
-      debugPrint('❌ Error deleting outfit: $e');
+      AppLogger.info('❌ Error deleting outfit: $e');
       rethrow;
     }
   }
@@ -137,9 +138,9 @@ class FirestoreOutfitService {
       }
 
       await batch.commit();
-      debugPrint('✅ Deleted all outfits for user $userId');
+      AppLogger.info('✅ Deleted all outfits for user $userId');
     } catch (e) {
-      debugPrint('❌ Error deleting all outfits: $e');
+      AppLogger.info('❌ Error deleting all outfits: $e');
       rethrow;
     }
   }
@@ -152,7 +153,7 @@ class FirestoreOutfitService {
       final snapshot = await _getUserOutfitsCollection(userId).count().get();
       return snapshot.count ?? 0;
     } catch (e) {
-      debugPrint('❌ Error getting outfit count: $e');
+      AppLogger.info('❌ Error getting outfit count: $e');
       return 0;
     }
   }
@@ -173,7 +174,7 @@ class FirestoreOutfitService {
         return SavedOutfit.fromJson(data);
       }).toList();
     } catch (e) {
-      debugPrint('❌ Error fetching outfits by occasion: $e');
+      AppLogger.info('❌ Error fetching outfits by occasion: $e');
       return [];
     }
   }

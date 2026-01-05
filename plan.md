@@ -65,7 +65,7 @@ Theme: Material Design 3 (Poppins + Roboto fonts)
 ❌ **Single item limitation** - Many features only work with 2+ wardrobe items
 
 ### **3. Production Code Quality Issues**
-❌ **Debug code in production** - `print()` statements, `debugPrint()` everywhere
+❌ **Debug code in production** - `AppLogger.info()` statements, `AppLogger.info()` everywhere
 ❌ **TODOs scattered throughout** - Found 30+ TODO comments for core features
 ❌ **Incomplete error handling** - Many services lack try-catch blocks
 ❌ **No loading states** - Users don't know when operations are processing
@@ -212,7 +212,7 @@ Use this playbook as the blueprint for every “edit/upgrade” PR. Reference th
 
 #### **Priority 1C: Production Quality**
 ```
-✓ Replace print() with AppLogger
+✓ Replace AppLogger.info() with AppLogger
 ✓ Add error boundaries everywhere
 ✓ Implement proper loading states
 ✓ Add retry mechanisms for API calls
@@ -323,8 +323,8 @@ Use this playbook as the blueprint for every “edit/upgrade” PR. Reference th
 ### **Day 3-4: Fix Core Issues**
 ```dart
 // Remove debug code
-- Replace all print() with AppLogger
-- Remove debugPrint() statements
+- Replace all AppLogger.info() with AppLogger
+- Remove AppLogger.info() statements
 - Clean up TODO comments
 
 // Fix broken features
@@ -781,8 +781,8 @@ Found unused methods that should be removed or re-enabled:
 
 ---
 
-### **3. debugPrint() Statements - Production Code** ⚠️
-Found **100+** `debugPrint()` calls in production code:
+### **3. AppLogger.info() Statements - Production Code** ⚠️
+Found **100+** `AppLogger.info()` calls in production code:
 - `analytics_service.dart` - 28 debug statements
 - `storage_service.dart` - 8 debug statements
 - `favorites_service.dart` - 14 debug statements
@@ -793,8 +793,8 @@ Found **100+** `debugPrint()` calls in production code:
 **Should Be**: Use `AppLogger` (already implemented) for conditional logging  
 
 **Action Items**:
-1. ✅ Replace all `debugPrint()` with `AppLogger.debug()`
-2. ✅ `debugPrint()` only runs in debug mode (good)
+1. ✅ Replace all `AppLogger.info()` with `AppLogger.debug()`
+2. ✅ `AppLogger.info()` only runs in debug mode (good)
 3. ⚠️ But clutters production logs - should use log levels
 
 **Impact**: Cleaner logs, better production debugging
@@ -879,7 +879,7 @@ final style = item.analysis.style ?? '';      // style can't be null
 4. Clean up null-safety warnings
 
 **Can Do Later**:
-- Replace all `debugPrint()` with `AppLogger` (nice to have)
+- Replace all `AppLogger.info()` with `AppLogger` (nice to have)
 - Extract hardcoded strings to constants (code quality)
 - Remove unused pairing service methods (if truly unused)
 

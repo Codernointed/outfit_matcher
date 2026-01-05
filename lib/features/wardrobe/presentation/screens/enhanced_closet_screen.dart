@@ -1157,7 +1157,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                         onChanged: (value) async {
                           setSheetState(() => premiumEnabled = value);
                           await settings.setPremiumPolishing(value);
-                          if (!mounted) return;
+                          if (!context.mounted) return;
                           setState(() {});
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

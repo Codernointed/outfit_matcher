@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/image_preview_screen.dart';
 // For saving image path
 // For Directory
@@ -53,7 +54,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         })
         .catchError((Object e) {
           if (e is CameraException) {
-            debugPrint(
+            AppLogger.info(
               'Error initializing camera: ${e.code}\n${e.description}',
             );
             // Handle camera initialization errors (e.g., show a message)
@@ -80,7 +81,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         _currentFlashMode = newFlashMode;
       });
     } catch (e) {
-      debugPrint('Error toggling flash: $e');
+      AppLogger.info('Error toggling flash: $e');
     }
   }
 
@@ -119,14 +120,14 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         ),
       );
     } on CameraException catch (e) {
-      debugPrint('Camera error: ${e.description}');
+      AppLogger.info('Camera error: ${e.description}');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Camera error: ${e.code}')));
       }
     } catch (e) {
-      debugPrint('Error taking picture: $e');
+      AppLogger.info('Error taking picture: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,

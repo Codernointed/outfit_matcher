@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
+import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/outfit_suggestions/data/firestore_outfit_service.dart';
 import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -40,14 +41,14 @@ class EnhancedOutfitStorageService {
           // Save to Firestore
           await _firestoreService.saveOutfit(user.uid, outfit);
           firestoreSaved = true;
-          debugPrint('☁️ Saved outfit to Firestore: ${outfit.id}');
+          AppLogger.info('☁️ Saved outfit to Firestore: ${outfit.id}');
 
           // Update user's saved outfit count
           try {
             final count = await _firestoreService.getOutfitCount(user.uid);
             await _userProfileService.updateSavedOutfitCount(user.uid, count);
           } catch (profileError) {
-            debugPrint('⚠️ Failed to update profile count: $profileError');
+            AppLogger.info('⚠️ Failed to update profile count: $profileError');
           }
 
           // Attempt migration if not done yet
@@ -55,11 +56,11 @@ class EnhancedOutfitStorageService {
             try {
               await _attemptFirestoreMigration(user.uid);
             } catch (migrationError) {
-              debugPrint('⚠️ Migration failed: $migrationError');
+              AppLogger.info('⚠️ Migration failed: $migrationError');
             }
           }
         } catch (firestoreError) {
-          debugPrint(
+          AppLogger.info(
             '⚠️ Firestore save failed, saving locally: $firestoreError',
           );
           // Continue to local save - don't rethrow
@@ -68,7 +69,7 @@ class EnhancedOutfitStorageService {
 
       // ALWAYS save to local cache (works even if Firestore fails)
       await _localService.save(outfit);
-      debugPrint(
+      AppLogger.info(
         '✅ Saved outfit locally: ${outfit.id} (Firestore: $firestoreSaved)',
       );
 
@@ -80,7 +81,7 @@ class EnhancedOutfitStorageService {
 
       return outfit;
     } catch (e) {
-      debugPrint('❌ CRITICAL: Failed to save outfit even locally: $e');
+      AppLogger.info('❌ CRITICAL: Failed to save outfit even locally: $e');
       rethrow;
     }
   }
@@ -104,7 +105,7 @@ class EnhancedOutfitStorageService {
             await _localService.save(outfit);
           }
 
-          debugPrint(
+          AppLogger.info(
             '✅ Loaded ${firestoreOutfits.length} outfits from Firestore',
           );
           return firestoreOutfits;
@@ -116,12 +117,12 @@ class EnhancedOutfitStorageService {
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Error fetching from Firestore, using local: $e');
+      AppLogger.info('⚠️ Error fetching from Firestore, using local: $e');
     }
 
     // Fallback to local storage
     final localOutfits = await _localService.fetchAll();
-    debugPrint('📦 Loaded ${localOutfits.length} outfits from local cache');
+    AppLogger.info('📦 Loaded ${localOutfits.length} outfits from local cache');
     return localOutfits;
   }
 
@@ -137,7 +138,7 @@ class EnhancedOutfitStorageService {
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Error fetching outfit from Firestore: $e');
+      AppLogger.info('⚠️ Error fetching outfit from Firestore: $e');
     }
 
     // Fallback to local
@@ -173,7 +174,7 @@ class EnhancedOutfitStorageService {
       if (user != null) {
         // Delete from Firestore
         await _firestoreService.deleteOutfit(user.uid, outfitId);
-        debugPrint('✅ Deleted outfit from Firestore: $outfitId');
+        AppLogger.info('✅ Deleted outfit from Firestore: $outfitId');
 
         // Update user's saved outfit count
         final count = await _firestoreService.getOutfitCount(user.uid);
@@ -182,9 +183,9 @@ class EnhancedOutfitStorageService {
 
       // Delete from local
       await _localService.delete(outfitId);
-      debugPrint('✅ Deleted outfit from local cache: $outfitId');
+      AppLogger.info('✅ Deleted outfit from local cache: $outfitId');
     } catch (e) {
-      debugPrint('❌ Error deleting outfit: $e');
+      AppLogger.info('❌ Error deleting outfit: $e');
 
       // Try local delete anyway
       await _localService.delete(outfitId);
@@ -196,13 +197,13 @@ class EnhancedOutfitStorageService {
   /// Migrate local outfits to Firestore (one-time)
   Future<void> _attemptFirestoreMigration(String userId) async {
     try {
-      debugPrint('🔄 Attempting to migrate local outfits to Firestore...');
+      AppLogger.info('🔄 Attempting to migrate local outfits to Firestore...');
 
       // Get local outfits
       final localOutfits = await _localService.fetchAll();
 
       if (localOutfits.isEmpty) {
-        debugPrint('ℹ️ No local outfits to migrate');
+        AppLogger.info('ℹ️ No local outfits to migrate');
         _hasMigratedToFirestore = true;
         return;
       }
@@ -211,14 +212,14 @@ class EnhancedOutfitStorageService {
       final firestoreOutfits = await _firestoreService.getAllOutfits(userId);
 
       if (firestoreOutfits.isNotEmpty) {
-        debugPrint('ℹ️ Firestore already has outfits, skipping migration');
+        AppLogger.info('ℹ️ Firestore already has outfits, skipping migration');
         _hasMigratedToFirestore = true;
         return;
       }
 
       // Bulk upload to Firestore
       await _firestoreService.bulkSaveOutfits(userId, localOutfits);
-      debugPrint('✅ Migrated ${localOutfits.length} outfits to Firestore');
+      AppLogger.info('✅ Migrated ${localOutfits.length} outfits to Firestore');
 
       // Update user's outfit count
       await _userProfileService.updateSavedOutfitCount(
@@ -228,7 +229,7 @@ class EnhancedOutfitStorageService {
 
       _hasMigratedToFirestore = true;
     } catch (e) {
-      debugPrint('❌ Error migrating outfits to Firestore: $e');
+      AppLogger.info('❌ Error migrating outfits to Firestore: $e');
     }
   }
 
@@ -260,7 +261,9 @@ class EnhancedOutfitStorageService {
       try {
         return await _firestoreService.getOutfitsByOccasion(user.uid, occasion);
       } catch (e) {
-        debugPrint('⚠️ Error fetching outfits by occasion from Firestore: $e');
+        AppLogger.info(
+          '⚠️ Error fetching outfits by occasion from Firestore: $e',
+        );
       }
     }
 

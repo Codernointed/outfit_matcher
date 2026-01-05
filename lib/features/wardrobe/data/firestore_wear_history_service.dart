@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:vestiq/core/models/wear_history_event.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for managing wear history events in Firestore
 class FirestoreWearHistoryService {
@@ -19,9 +20,9 @@ class FirestoreWearHistoryService {
           .doc(event.id)
           .set(event.toFirestore());
 
-      debugPrint('✅ Recorded wear event: ${event.id}');
+      AppLogger.info('✅ Recorded wear event: ${event.id}');
     } catch (e) {
-      debugPrint('❌ Error recording wear event: $e');
+      AppLogger.info('❌ Error recording wear event: $e');
       rethrow;
     }
   }
@@ -41,7 +42,7 @@ class FirestoreWearHistoryService {
           .map((doc) => WearHistoryEvent.fromFirestore(doc))
           .toList();
     } catch (e) {
-      debugPrint('❌ Error fetching wear history: $e');
+      AppLogger.info('❌ Error fetching wear history: $e');
       return [];
     }
   }
@@ -63,7 +64,7 @@ class FirestoreWearHistoryService {
           .map((doc) => WearHistoryEvent.fromFirestore(doc))
           .toList();
     } catch (e) {
-      debugPrint('❌ Error fetching item wear history: $e');
+      AppLogger.info('❌ Error fetching item wear history: $e');
       return [];
     }
   }
@@ -85,7 +86,7 @@ class FirestoreWearHistoryService {
           .map((doc) => WearHistoryEvent.fromFirestore(doc))
           .toList();
     } catch (e) {
-      debugPrint('❌ Error fetching outfit wear history: $e');
+      AppLogger.info('❌ Error fetching outfit wear history: $e');
       return [];
     }
   }
@@ -112,7 +113,7 @@ class FirestoreWearHistoryService {
           .map((doc) => WearHistoryEvent.fromFirestore(doc))
           .toList();
     } catch (e) {
-      debugPrint('❌ Error fetching wear history by date: $e');
+      AppLogger.info('❌ Error fetching wear history by date: $e');
       return [];
     }
   }
@@ -189,9 +190,9 @@ class FirestoreWearHistoryService {
   Future<void> deleteWearEvent(String eventId) async {
     try {
       await _firestore.collection(_collectionName).doc(eventId).delete();
-      debugPrint('✅ Deleted wear event: $eventId');
+      AppLogger.info('✅ Deleted wear event: $eventId');
     } catch (e) {
-      debugPrint('❌ Error deleting wear event: $e');
+      AppLogger.info('❌ Error deleting wear event: $e');
       rethrow;
     }
   }
@@ -203,9 +204,9 @@ class FirestoreWearHistoryService {
       for (final event in events) {
         await deleteWearEvent(event.id);
       }
-      debugPrint('✅ Deleted ${events.length} wear events for item $itemId');
+      AppLogger.info('✅ Deleted ${events.length} wear events for item $itemId');
     } catch (e) {
-      debugPrint('❌ Error deleting item wear history: $e');
+      AppLogger.info('❌ Error deleting item wear history: $e');
       rethrow;
     }
   }

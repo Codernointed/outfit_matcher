@@ -504,6 +504,8 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
     );
 
     // Close the preview sheet first
+    if (!context.mounted) return;
+    final parentNavigator = Navigator.of(context, rootNavigator: true);
     Navigator.pop(context);
 
     // Wait for the sheet to close completely
@@ -511,7 +513,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
 
     // Navigate using the parent context (the one that opened the sheet)
     // This should be the closet screen context
-    final parentContext = Navigator.of(context, rootNavigator: true).context;
+    final parentContext = parentNavigator.context;
 
     if (parentContext.mounted) {
       Navigator.push(

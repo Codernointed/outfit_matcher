@@ -167,7 +167,7 @@ class _PlanValueChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: highlight
             ? theme.colorScheme.primary.withValues(alpha: 0.12)
-            : theme.colorScheme.surfaceVariant.withValues(alpha: 0.6),
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

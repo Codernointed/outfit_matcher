@@ -111,9 +111,9 @@ Applied the same pattern:
 // Try Firestore
 try {
   await _firestoreService.saveOutfit(user.uid, outfit);
-  debugPrint('☁️ Saved outfit to Firestore');
+  AppLogger.info('☁️ Saved outfit to Firestore');
 } catch (firestoreError) {
-  debugPrint('⚠️ Firestore failed, saving locally');
+  AppLogger.info('⚠️ Firestore failed, saving locally');
   // Don't rethrow - continue to local save
 }
 

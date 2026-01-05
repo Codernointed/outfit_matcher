@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 class StorageInfo {
   final double cacheSize; // MB
@@ -52,7 +53,7 @@ class StorageService {
         breakdown: breakdown,
       );
     } catch (e) {
-      debugPrint('❌ Error calculating storage: $e');
+      AppLogger.info('❌ Error calculating storage: $e');
       return StorageInfo(
         cacheSize: 0,
         documentsSize: 0,
@@ -74,10 +75,10 @@ class StorageService {
         await cacheDir.create(recursive: true);
       }
 
-      debugPrint('✅ Cache cleared: ${sizeBefore.toStringAsFixed(2)} MB');
+      AppLogger.info('✅ Cache cleared: ${sizeBefore.toStringAsFixed(2)} MB');
       return sizeBefore;
     } catch (e) {
-      debugPrint('❌ Error clearing cache: $e');
+      AppLogger.info('❌ Error clearing cache: $e');
       return 0;
     }
   }
@@ -97,7 +98,7 @@ class StorageService {
             totalSize += await entity.length();
           } catch (e) {
             // Skip files that can't be accessed
-            debugPrint('⚠️ Could not access file: ${entity.path}');
+            AppLogger.info('⚠️ Could not access file: ${entity.path}');
           }
         }
       }
@@ -105,7 +106,7 @@ class StorageService {
       // Convert bytes to MB
       return totalSize / (1024 * 1024);
     } catch (e) {
-      debugPrint('❌ Error calculating directory size: $e');
+      AppLogger.info('❌ Error calculating directory size: $e');
       return 0;
     }
   }
@@ -120,7 +121,7 @@ class StorageService {
       if (!subdir.existsSync()) return 0;
       return await _calculateDirectorySize(subdir);
     } catch (e) {
-      debugPrint('❌ Error calculating subdirectory size: $e');
+      AppLogger.info('❌ Error calculating subdirectory size: $e');
       return 0;
     }
   }
@@ -140,7 +141,7 @@ class StorageService {
           await entity.delete();
         }
       } catch (e) {
-        debugPrint('⚠️ Could not delete: ${entity.path}');
+        AppLogger.info('⚠️ Could not delete: ${entity.path}');
       }
     }
   }

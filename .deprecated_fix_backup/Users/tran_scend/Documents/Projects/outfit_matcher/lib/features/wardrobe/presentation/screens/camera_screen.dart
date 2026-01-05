@@ -53,7 +53,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         })
         .catchError((Object e) {
           if (e is CameraException) {
-            print('Error initializing camera: ${e.code}\n${e.description}');
+            AppLogger.info(
+              'Error initializing camera: ${e.code}\n${e.description}',
+            );
             // Handle camera initialization errors (e.g., show a message)
           }
         });
@@ -78,7 +80,7 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         _currentFlashMode = newFlashMode;
       });
     } catch (e) {
-      print('Error toggling flash: $e');
+      AppLogger.info('Error toggling flash: $e');
     }
   }
 
@@ -117,14 +119,14 @@ class _CameraScreenState extends ConsumerState<CameraScreen> {
         ),
       );
     } on CameraException catch (e) {
-      debugPrint('Camera error: ${e.description}');
+      AppLogger.info('Camera error: ${e.description}');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Camera error: ${e.code}')));
       }
     } catch (e) {
-      debugPrint('Error taking picture: $e');
+      AppLogger.info('Error taking picture: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,

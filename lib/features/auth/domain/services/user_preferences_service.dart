@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:vestiq/core/models/user_preferences.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for tracking and learning user style preferences
 /// This powers intelligent outfit generation that gets smarter over time
@@ -31,7 +32,7 @@ class UserPreferencesService {
 
       return UserPreferences.fromFirestore(doc);
     } catch (e) {
-      debugPrint('❌ Error fetching user preferences: $e');
+      AppLogger.info('❌ Error fetching user preferences: $e');
       return UserPreferences.empty(userId);
     }
   }
@@ -44,7 +45,7 @@ class UserPreferencesService {
           .doc(prefs.userId)
           .set(prefs.toFirestore(), SetOptions(merge: true));
     } catch (e) {
-      debugPrint('❌ Error saving preferences: $e');
+      AppLogger.info('❌ Error saving preferences: $e');
     }
   }
 
@@ -60,7 +61,7 @@ class UserPreferencesService {
       );
       await _savePreferences(updated);
     } catch (e) {
-      debugPrint('❌ Error tracking generation: $e');
+      AppLogger.info('❌ Error tracking generation: $e');
     }
   }
 
@@ -129,9 +130,9 @@ class UserPreferencesService {
       );
 
       await _savePreferences(updated);
-      debugPrint('✅ Learned from outfit save: ${outfit.id}');
+      AppLogger.info('✅ Learned from outfit save: ${outfit.id}');
     } catch (e) {
-      debugPrint('❌ Error tracking outfit save: $e');
+      AppLogger.info('❌ Error tracking outfit save: $e');
     }
   }
 
@@ -145,7 +146,7 @@ class UserPreferencesService {
       );
       await _savePreferences(updated);
     } catch (e) {
-      debugPrint('❌ Error tracking view: $e');
+      AppLogger.info('❌ Error tracking view: $e');
     }
   }
 
@@ -181,9 +182,9 @@ class UserPreferencesService {
       );
 
       await _savePreferences(updated);
-      debugPrint('✅ Learned from outfit rejection');
+      AppLogger.info('✅ Learned from outfit rejection');
     } catch (e) {
-      debugPrint('❌ Error tracking rejection: $e');
+      AppLogger.info('❌ Error tracking rejection: $e');
     }
   }
 
@@ -228,9 +229,9 @@ class UserPreferencesService {
       );
 
       await _savePreferences(updated);
-      debugPrint('✅ Learned from item wear: ${item.id}');
+      AppLogger.info('✅ Learned from item wear: ${item.id}');
     } catch (e) {
-      debugPrint('❌ Error tracking wear: $e');
+      AppLogger.info('❌ Error tracking wear: $e');
     }
   }
 

@@ -638,6 +638,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
 
       await _outfitStorage.save(outfit);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('✨ Outfit saved to your looks!')),
       );
@@ -651,6 +652,7 @@ class _SwipeClosetScreenState extends ConsumerState<SwipeClosetScreen> {
           const swipe_planner_providers.SwipeClosetSelections();
     } catch (e) {
       AppLogger.error('❌ Failed to save outfit', error: e);
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Failed to save outfit')));

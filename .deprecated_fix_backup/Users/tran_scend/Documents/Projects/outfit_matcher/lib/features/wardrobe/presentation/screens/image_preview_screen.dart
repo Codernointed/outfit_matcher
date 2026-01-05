@@ -190,10 +190,10 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen>
             );
             if (result != null) {
               _analysisResults = result;
-              debugPrint('Analysis results: $_analysisResults');
+              AppLogger.info('Analysis results: $_analysisResults');
             }
           } catch (e) {
-            debugPrint('Error analyzing image: $e');
+            AppLogger.info('Error analyzing image: $e');
             if (!mounted) return;
             _showError('Failed to analyze image. Please try again.');
             return;

@@ -461,7 +461,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                   '✅ [QUICK ACTIONS] Delete confirmed and executed',
                 );
 
-                if (!mounted) return;
+                if (!context.mounted) return;
 
                 // Dismiss the quick actions menu itself
                 widget.onDismiss();
@@ -475,7 +475,7 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
                 );
               } catch (e) {
                 AppLogger.error('❌ Failed to delete item', error: e);
-                if (!mounted) return;
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Failed to delete item: $e'),

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for saving images to device gallery
 class GalleryService {
@@ -23,7 +24,7 @@ class GalleryService {
 
       return await _saveImageToGallery(imageBytes, fileName);
     } catch (e) {
-      debugPrint('❌ Error saving base64 image to gallery: $e');
+      AppLogger.info('❌ Error saving base64 image to gallery: $e');
       return false;
     }
   }
@@ -46,7 +47,7 @@ class GalleryService {
 
       return await saveBase64ImageToGallery(base64Data, fileName);
     } catch (e) {
-      debugPrint('❌ Error saving data URL image to gallery: $e');
+      AppLogger.info('❌ Error saving data URL image to gallery: $e');
       return false;
     }
   }
@@ -69,7 +70,7 @@ class GalleryService {
 
       return await _saveImageToGallery(response.bodyBytes, fileName);
     } catch (e) {
-      debugPrint('❌ Error saving URL image to gallery: $e');
+      AppLogger.info('❌ Error saving URL image to gallery: $e');
       return false;
     }
   }
@@ -87,7 +88,7 @@ class GalleryService {
       // Request permissions first
       final PermissionState ps = await PhotoManager.requestPermissionExtend();
       if (!ps.isAuth) {
-        debugPrint('❌ Gallery permission denied');
+        AppLogger.info('❌ Gallery permission denied');
         return false;
       }
 
@@ -111,10 +112,10 @@ class GalleryService {
       // Clean up temp file
       await tempFile.delete();
 
-      debugPrint('✅ Image saved to gallery: ${entity.id}');
+      AppLogger.info('✅ Image saved to gallery: ${entity.id}');
       return true;
     } catch (e) {
-      debugPrint('❌ Error saving image to gallery: $e');
+      AppLogger.info('❌ Error saving image to gallery: $e');
       return false;
     }
   }
@@ -129,7 +130,7 @@ class GalleryService {
       // Handle plain base64
       return dataUrl;
     } catch (e) {
-      debugPrint('❌ Error extracting base64 from data URL: $e');
+      AppLogger.info('❌ Error extracting base64 from data URL: $e');
       return null;
     }
   }
@@ -194,7 +195,7 @@ class GalleryService {
       }
       return null;
     } catch (e) {
-      debugPrint('❌ Error getting gallery directory: $e');
+      AppLogger.info('❌ Error getting gallery directory: $e');
       return null;
     }
   }
@@ -225,7 +226,7 @@ class GalleryService {
 
       return true;
     } catch (e) {
-      debugPrint('❌ Gallery access check failed: $e');
+      AppLogger.info('❌ Gallery access check failed: $e');
       return false;
     }
   }
