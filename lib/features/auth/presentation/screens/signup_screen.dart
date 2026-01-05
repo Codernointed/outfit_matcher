@@ -193,7 +193,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                        Icons.arrow_back_ios_new,
                         size: 20,
                         color: isDark ? Colors.white : Colors.black87,
                       ),

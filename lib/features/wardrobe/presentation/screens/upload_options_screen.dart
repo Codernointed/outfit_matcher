@@ -37,7 +37,8 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_ios_rounded,
+            Icons.arrow_back_ios_new,
+            size: 20,
             color: theme.colorScheme.onSurface,
           ),
           onPressed: () {

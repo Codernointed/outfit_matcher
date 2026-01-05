@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/models/profile_data.dart';
 import 'package:vestiq/core/services/analytics_service.dart';
+import 'package:vestiq/core/services/compatibility_cache_service.dart';
+import 'package:vestiq/core/services/file_based_storage_service.dart';
+import 'package:vestiq/core/services/mannequin_cache_service.dart';
 import 'package:vestiq/core/services/profile_service.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/storage_service.dart';
 import 'package:vestiq/core/services/walkthrough_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
@@ -323,15 +328,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final analytics = AnalyticsService();
         await analytics.logSignOut();
 
-        // Sign out
-        // Use full controller refresh to ensure global state update
+        AppLogger.info('🧹 Clearing ALL local user data to prevent cross-account data leakage...');
+
+        // 1. Clear local profile data
+        await _profileService.clearProfile();
+        AppLogger.info('✅ Profile cache cleared');
+
+        // 2. Clear wardrobe storage (SharedPreferences-based)
+        if (getIt.isRegistered<EnhancedWardrobeStorageService>()) {
+          await getIt<EnhancedWardrobeStorageService>().clearAllData();
+          AppLogger.info('✅ Wardrobe storage cleared');
+        }
+
+        // 3. Clear file-based storage
+        if (getIt.isRegistered<FileBasedStorageService>()) {
+          await getIt<FileBasedStorageService>().clearAllData();
+          AppLogger.info('✅ File-based storage cleared');
+        }
+
+        // 4. Clear mannequin cache
+        if (getIt.isRegistered<MannequinCacheService>()) {
+          await getIt<MannequinCacheService>().clearAllCaches();
+          AppLogger.info('✅ Mannequin cache cleared');
+        }
+
+        // 5. Clear compatibility cache (in-memory)
+        if (getIt.isRegistered<CompatibilityCacheService>()) {
+          getIt<CompatibilityCacheService>().clearCache();
+          AppLogger.info('✅ Compatibility cache cleared');
+        }
+
+        // 6. Reset onboarding/walkthrough state so new user gets fresh experience
+        await _walkthroughService.resetAllWalkthroughs();
+        AppLogger.info('✅ Walkthrough state reset');
+
+        AppLogger.info('🎉 All local caches cleared successfully');
+
+        // Sign out from Firebase
         await ref.read(authFlowControllerProvider.notifier).signOut();
 
         AppLogger.info('👋 User signed out - clearing navigation stack');
 
         if (mounted) {
           // Explicitly clear navigation stack to ensure AuthWrapper is visible
-          // This fixes the issue where the user stays on the Profile/Settings page
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } catch (e) {
@@ -423,20 +462,124 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           AppLogger.info('🗑️ Account deleted');
 
+          // Clear all local data
+          await _clearAllLocalDataForAccountDeletion();
+
           // Navigation is handled by AuthWrapper
+        } on FirebaseAuthException catch (e) {
+          AppLogger.error('❌ Account deletion error: ${e.code}', error: e);
+          if (mounted) {
+            Navigator.pop(context); // Close loading
+            await _handleDeleteAccountError(e);
+          }
         } catch (e) {
           AppLogger.error('❌ Account deletion error: $e');
           if (mounted) {
             Navigator.pop(context); // Close loading
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error deleting account: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            
+            // Check if the error message contains "requires-recent-login"
+            final errorStr = e.toString().toLowerCase();
+            if (errorStr.contains('requires-recent-login') || 
+                errorStr.contains('recent authentication') ||
+                errorStr.contains('sensitive operation')) {
+              await _showReauthenticationDialog();
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error deleting account: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           }
         }
       }
+    }
+  }
+
+  /// Handle Firebase auth errors for account deletion
+  Future<void> _handleDeleteAccountError(FirebaseAuthException e) async {
+    if (e.code == 'requires-recent-login') {
+      await _showReauthenticationDialog();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting account: ${e.message ?? e.code}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Show a user-friendly re-authentication dialog
+  Future<void> _showReauthenticationDialog() async {
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: Icon(
+          Icons.security_rounded,
+          color: Theme.of(context).colorScheme.primary,
+          size: 48,
+        ),
+        title: const Text('Sign In Required'),
+        content: const Text(
+          'For your security, Firebase requires you to sign in again before deleting your account.\n\n'
+          'This protects your account from unauthorized deletion.\n\n'
+          'Would you like to sign out now? You can then sign back in and try deleting your account again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sign Out & Re-login'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldSignOut == true && mounted) {
+      // Sign out so user can re-authenticate
+      await ref.read(authFlowControllerProvider.notifier).signOut();
+      
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please sign in again, then go to Profile > Delete Account'),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Clear all local data when account is deleted
+  Future<void> _clearAllLocalDataForAccountDeletion() async {
+    try {
+      AppLogger.info('🧹 Clearing all local data after account deletion...');
+
+      await _profileService.clearProfile();
+
+      if (getIt.isRegistered<EnhancedWardrobeStorageService>()) {
+        await getIt<EnhancedWardrobeStorageService>().clearAllData();
+      }
+      if (getIt.isRegistered<FileBasedStorageService>()) {
+        await getIt<FileBasedStorageService>().clearAllData();
+      }
+      if (getIt.isRegistered<MannequinCacheService>()) {
+        await getIt<MannequinCacheService>().clearAllCaches();
+      }
+      if (getIt.isRegistered<CompatibilityCacheService>()) {
+        getIt<CompatibilityCacheService>().clearCache();
+      }
+      await _walkthroughService.resetAllWalkthroughs();
+
+      AppLogger.info('✅ All local data cleared');
+    } catch (e) {
+      AppLogger.error('⚠️ Error clearing local data: $e');
     }
   }
 

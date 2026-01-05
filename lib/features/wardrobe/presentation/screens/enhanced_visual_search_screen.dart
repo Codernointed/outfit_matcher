@@ -499,7 +499,8 @@ class _EnhancedVisualSearchScreenState
         elevation: 0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back_ios_rounded,
+            Icons.arrow_back_ios_new,
+            size: 20,
             color: theme.colorScheme.onSurface,
           ),
           onPressed: () => Navigator.of(context).pop(),
