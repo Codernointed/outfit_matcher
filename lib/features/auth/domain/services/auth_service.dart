@@ -156,7 +156,8 @@ class AuthService {
         AppLogger.info('✅ Google Sign-In initialized');
       } catch (e) {
         AppLogger.error('❌ Google Sign-In initialization error', error: e);
-        _googleSignInInitialized = true; // Assume already initialized
+        // Continue anyway, it might be already initialized
+        _googleSignInInitialized = true;
       }
     }
   }
@@ -164,44 +165,40 @@ class AuthService {
   /// Sign in with Google
   Future<AppUser?> signInWithGoogle() async {
     try {
-      AppLogger.info('🔍 Starting Google sign-in');
+      AppLogger.info('🔍 Starting Google sign-in flow (v7)');
 
-      // Ensure Google Sign-In is initialized
+      // 1. Ensure initialized
       await _ensureGoogleSignInInitialized();
 
-      // Trigger authentication
-      await _googleSignIn.authenticate();
+      // 2. Trigger authentication
+      AppLogger.info('⏳ Awaiting Google Sign In...');
 
-      // Wait for authentication event
-      GoogleSignInAccount? googleUser;
-      await for (final event in _googleSignIn.authenticationEvents) {
-        if (event is GoogleSignInAuthenticationEventSignIn) {
-          googleUser = event.user;
-          break;
-        } else if (event is GoogleSignInAuthenticationEventSignOut) {
-          AppLogger.info('❌ User signed out during authentication');
-          return null;
-        }
-      }
+      // In v7, authenticate() returns the account directly
+      final GoogleSignInAccount? googleUser = await _googleSignIn
+          .authenticate();
 
       if (googleUser == null) {
         AppLogger.info('❌ Google sign-in cancelled by user');
         return null;
       }
 
-      // Get authorization for Firebase
-      final authorization = await googleUser.authorizationClient
-          .authorizationForScopes(const <String>[]);
+      AppLogger.info('✅ Google User selected: ${googleUser.email}');
+      AppLogger.info('⏳ Retrieving tokens...');
 
-      if (authorization == null) {
-        throw Exception('Failed to get authorization');
-      }
+      // 3. Obtain authentication details (idToken)
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      // Create Firebase credential using access token and user ID
+      // Create credential
+      // Note: We deliberately omit accessToken if we can't get it easily.
+      // Firebase usually accepts idToken alone for identity.
       final credential = GoogleAuthProvider.credential(
-        accessToken: authorization.accessToken,
-        idToken: googleUser.id, // In v7, id contains the ID token
+        idToken: googleAuth.idToken,
+        accessToken:
+            null, // Access token is for API access, idToken is for identity
       );
+
+      AppLogger.info('⏳ Signing in to Firebase with credential...');
 
       // Sign in to Firebase
       final userCredential = await _firebaseAuth.signInWithCredential(
@@ -210,15 +207,20 @@ class AuthService {
 
       final user = userCredential.user;
       if (user == null) {
-        throw Exception('Failed to sign in with Google');
+        throw Exception(
+          'Failed to sign in with Google - Firebase user is null',
+        );
       }
+
+      AppLogger.info('✅ Firebase Sign In successful: ${user.uid}');
+      AppLogger.info('⏳ Fetching/Creating user profile...');
 
       // Check if profile exists in Firestore (more reliable than isNewUser)
       AppUser? appUser = await _userProfileService.getUserProfile(user.uid);
 
       if (appUser == null) {
         // Profile doesn't exist - create it
-        AppLogger.info('✅ Creating new Google user profile: ${user.uid}');
+        AppLogger.info('🆕 Creating new Google user profile: ${user.uid}');
         appUser = await _userProfileService.createUserProfile(
           uid: user.uid,
           email: user.email ?? googleUser.email,
@@ -228,15 +230,17 @@ class AuthService {
               user.email?.split('@')[0] ??
               'user',
           displayName: user.displayName ?? googleUser.displayName,
-          photoUrl: user.photoURL ?? googleUser.photoUrl?.toString(),
+          photoUrl: user.photoURL ?? googleUser.photoUrl,
           authProvider: AuthProvider.google,
         );
+        AppLogger.info('✅ New profile created');
       } else {
         // Profile exists - just update last login
         AppLogger.info(
-          '✅ Existing Google user, updating last login: ${user.uid}',
+          '👋 Existing Google user, updating last login: ${user.uid}',
         );
         appUser = await _userProfileService.updateLastLogin(user.uid);
+        AppLogger.info('✅ Last login updated');
 
         // Mark walkthroughs as seen for returning users
         try {
@@ -255,10 +259,14 @@ class AuthService {
 
       return appUser;
     } on FirebaseAuthException catch (e) {
-      AppLogger.error('❌ Google sign-in error', error: e);
+      AppLogger.error('❌ Google sign-in error [Firebase]', error: e);
       throw _handleAuthException(e);
-    } catch (e) {
-      AppLogger.error('❌ Unexpected Google sign-in error', error: e);
+    } catch (e, stack) {
+      AppLogger.error(
+        '❌ Unexpected Google sign-in error',
+        error: e,
+        stackTrace: stack,
+      );
       rethrow;
     }
   }
@@ -417,16 +425,20 @@ class AuthService {
   /// Sign out
   Future<void> signOut() async {
     try {
-      AppLogger.info('👋 Signing out');
+      AppLogger.info('🚪 Signing out from all services...');
 
-      // Sign out from Google if signed in
+      // Attempt to sign out from Google unconditionally (no state check available)
       try {
+        AppLogger.info('🚪 Disconnecting Google Sign-In...');
+        // In v7, disconnect/signOut should handle not-signed-in states gracefully or throw
         await _googleSignIn.disconnect();
+        await _googleSignIn.signOut();
       } catch (e) {
-        // Not signed in with Google or already disconnected
+        AppLogger.warning('⚠️ Google sign out warning (ignoring): $e');
       }
 
       // Sign out from Firebase
+      AppLogger.info('🚪 Signing out from Firebase...');
       await _firebaseAuth.signOut();
 
       AppLogger.info('✅ Signed out successfully');

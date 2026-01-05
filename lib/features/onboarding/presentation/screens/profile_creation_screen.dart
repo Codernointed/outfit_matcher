@@ -295,40 +295,94 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
   }
 
   Widget _buildNamePage(ThemeData theme) {
+    final primaryColor = theme.colorScheme.primary;
+    final isDark = theme.brightness == Brightness.dark;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 40),
-          Text('👋', style: const TextStyle(fontSize: 64)),
-          const SizedBox(height: 24),
+          const SizedBox(height: 60),
+          // Emoji/Icon
+          Center(child: Text('👋', style: const TextStyle(fontSize: 64))),
+          const SizedBox(height: 32),
+
+          // Headline
           Text(
             'Let\'s get you started!',
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: TextStyle(
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+              color: primaryColor,
+              letterSpacing: -0.5,
+              fontFamily: 'Poppins',
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
             'What shall we call you?',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark ? Colors.white60 : Colors.grey.shade600,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Roboto',
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 40),
-          TextField(
+          const SizedBox(height: 48),
+
+          // Name Field
+          TextFormField(
             controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Your Name',
-              hintText: 'Enter your name',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              filled: true,
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.w500,
             ),
             textCapitalization: TextCapitalization.words,
             onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              // labelText: 'Display Name',
+              labelStyle: TextStyle(
+                color: isDark ? Colors.white70 : Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+              hintText: 'e.g. Fashionista',
+              hintStyle: TextStyle(
+                color: isDark ? Colors.white30 : Colors.grey.shade400,
+                fontWeight: FontWeight.w400,
+              ),
+              prefixIcon: Icon(
+                Icons.person_outline_rounded,
+                color: primaryColor.withValues(alpha: 0.8),
+              ),
+              filled: true,
+              fillColor: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.grey.shade100,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 18,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.15)
+                      : Colors.grey.shade200,
+                  width: 1.5,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: primaryColor, width: 2),
+              ),
+            ),
           ),
         ],
       ),

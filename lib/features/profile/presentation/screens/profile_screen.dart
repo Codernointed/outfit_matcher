@@ -14,6 +14,7 @@ import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/reset_utils.dart';
 import 'package:vestiq/features/auth/domain/models/app_user.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/generation_history_screen.dart';
 import 'package:vestiq/features/profile/presentation/providers/profile_providers.dart';
@@ -323,12 +324,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await analytics.logSignOut();
 
         // Sign out
-        final authService = ref.read(authServiceProvider);
-        await authService.signOut();
+        // Use full controller refresh to ensure global state update
+        await ref.read(authFlowControllerProvider.notifier).signOut();
 
-        AppLogger.info('👋 User signed out');
+        AppLogger.info('👋 User signed out - clearing navigation stack');
 
-        // Navigation is handled by AuthWrapper
+        if (mounted) {
+          // Explicitly clear navigation stack to ensure AuthWrapper is visible
+          // This fixes the issue where the user stays on the Profile/Settings page
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       } catch (e) {
         AppLogger.error('❌ Sign out error: $e');
         if (mounted) {
