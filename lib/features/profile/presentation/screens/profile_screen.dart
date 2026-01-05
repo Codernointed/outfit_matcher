@@ -15,6 +15,7 @@ import 'package:vestiq/core/utils/reset_utils.dart';
 import 'package:vestiq/features/auth/domain/models/app_user.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/screens/saved_looks_screen.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/generation_history_screen.dart';
 import 'package:vestiq/features/profile/presentation/providers/profile_providers.dart';
 import 'package:vestiq/features/profile/presentation/widgets/favorites_carousel.dart';
 import 'package:vestiq/features/profile/presentation/widgets/profile_header.dart';
@@ -912,6 +913,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 loading: () => const SizedBox(height: 140),
                 error: (_, __) => const SizedBox(height: 140),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Activity & Records Section
+              const ProfileSectionHeader(title: 'Activity & Records'),
+
+              ProfileSectionTile(
+                icon: Icons.history,
+                title: 'Generation History',
+                subtitle: 'View all your auto-saved generated outfits',
+                iconColor: Colors.blueAccent,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GenerationHistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+
+              ProfileSectionTile(
+                icon: Icons.calendar_today_outlined,
+                title: 'Wear History',
+                subtitle: 'Track how often you wear your items',
+                iconColor: Colors.teal,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WearHistoryScreen(),
+                    ),
+                  );
+                },
               ),
 
               // Preferences Section

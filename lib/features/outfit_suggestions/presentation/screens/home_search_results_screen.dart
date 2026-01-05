@@ -12,6 +12,7 @@ import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/providers/wardrobe_search_providers.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/filter_bottom_sheet.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/sheets/look_detail_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// Screen for displaying search results across items, looks, and inspiration
@@ -402,7 +403,8 @@ class _HomeSearchResultsScreenState
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           AppLogger.info('👆 [SEARCH] Tapped look: ${look.title}');
-          // TODO: Navigate to look detail
+          // Navigate to look detail
+          showLookDetailSheet(context, look);
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

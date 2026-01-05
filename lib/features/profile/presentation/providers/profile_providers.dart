@@ -42,7 +42,7 @@ final profileStatsProvider = FutureProvider.autoDispose<ProfileStats>((
           return ProfileStats(
             itemsCount: appUser.wardrobeItemCount,
             looksCount: appUser.savedOutfitCount,
-            totalWears: 0, // TODO: Add totalWears to AppUser model
+            totalWears: appUser.totalWears,
           );
         }
       } catch (e) {

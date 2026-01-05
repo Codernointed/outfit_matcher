@@ -1,13 +1,25 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/models/clothing_analysis.dart';
+import 'package:vestiq/features/wardrobe/data/firestore_wardrobe_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
+import 'package:uuid/uuid.dart';
+import 'package:vestiq/core/utils/logger.dart';
 
-/// Screen for adding details to a new clothing item after image selection.
+/// Screen for adding details to a new clothing item or editing an existing one.
 class AddItemScreen extends StatefulWidget {
   final String imagePath;
   final Map<String, String>? aiResults;
+  final WardrobeItem? itemToEdit;
 
-  const AddItemScreen({super.key, required this.imagePath, this.aiResults});
+  const AddItemScreen({
+    super.key,
+    required this.imagePath,
+    this.aiResults,
+    this.itemToEdit,
+  });
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
@@ -15,12 +27,15 @@ class AddItemScreen extends StatefulWidget {
 
 class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _brandController = TextEditingController();
+  final _notesController = TextEditingController();
+
   String? _itemType;
   String? _primaryColor;
   String? _patternType;
-  // TODO: Add state for other fields: Occasion, Season, Brand, Notes
+  bool _isSaving = false;
 
-  // Dummy options for dropdowns - replace with actual data/enums
+  // Options
   final List<String> _itemTypeOptions = [
     'Top',
     'Bottom',
@@ -72,20 +87,49 @@ class _AddItemScreenState extends State<AddItemScreen> {
     'All Seasons',
   ];
 
-  // For multi-select chips
   final Set<String> _selectedOccasions = {};
   final Set<String> _selectedSeasons = {};
 
   @override
   void initState() {
     super.initState();
-    // Initialize fields from AI results if available
-    if (widget.aiResults != null) {
+    _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _brandController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _initializeData() {
+    if (widget.itemToEdit != null) {
+      // Editing Mode
+      final item = widget.itemToEdit!;
+      _itemType = item.analysis.itemType;
+      _primaryColor = item.analysis.primaryColor;
+      _patternType = item.analysis.patternType;
+      _selectedOccasions.addAll(item.occasions);
+      _selectedSeasons.addAll(item.seasons);
+      _notesController.text = item.userNotes ?? '';
+      // Brand is not stored directly on WardrobeItem top-level, assume in tags or handled elsewhere.
+      // For now we just handle what we have. If brand was in tags like "Brand:Zara", parse it.
+      final brandTag = item.tags.firstWhere(
+        (t) => t.startsWith('Brand:'),
+        orElse: () => '',
+      );
+      if (brandTag.isNotEmpty) {
+        _brandController.text = brandTag.substring(6);
+      }
+    } else if (widget.aiResults != null) {
+      // New Item with AI results
       _itemType = widget.aiResults!['itemType'];
       _primaryColor = widget.aiResults!['primaryColor'];
       _patternType = widget.aiResults!['patternType'];
     }
-    // Ensure default values are part of the options list if they exist
+
+    // Ensure options exist
     if (_itemType != null && !_itemTypeOptions.contains(_itemType)) {
       _itemTypeOptions.add(_itemType!);
     }
@@ -97,11 +141,96 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
+  Future<void> _saveItem() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_itemType == null || _primaryColor == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select item type and color')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final wardrobeService = getIt<FirestoreWardrobeService>();
+      final isEditing = widget.itemToEdit != null;
+
+      // Construct Analysis
+      final analysis = ClothingAnalysis(
+        id: isEditing ? widget.itemToEdit!.analysis.id : const Uuid().v4(),
+        itemType: _itemType!,
+        primaryColor: _primaryColor!,
+        patternType: _patternType ?? 'Solid',
+        style: isEditing
+            ? widget.itemToEdit!.analysis.style
+            : 'casual', // Default or preserve
+        seasons: _selectedSeasons.toList(),
+        confidence: 1.0, // Manual entry
+        tags: [
+          if (_brandController.text.isNotEmpty)
+            'Brand:${_brandController.text}',
+          _itemType!,
+          _primaryColor!,
+          ..._selectedOccasions,
+        ],
+        brand: _brandController.text.isNotEmpty ? _brandController.text : null,
+      );
+
+      final newItem = isEditing
+          ? widget.itemToEdit!.copyWith(
+              analysis: analysis, // Update analysis
+              occasions: _selectedOccasions.toList(),
+              seasons: _selectedSeasons.toList(),
+              userNotes: _notesController.text,
+              tags: analysis.tags,
+            )
+          : WardrobeItem(
+              id: const Uuid().v4(),
+              analysis: analysis,
+              originalImagePath: widget.imagePath,
+              occasions: _selectedOccasions.toList(),
+              seasons: _selectedSeasons.toList(),
+              userNotes: _notesController.text,
+              createdAt: DateTime.now(),
+              tags: analysis.tags,
+            );
+
+      if (isEditing) {
+        await wardrobeService.updateWardrobeItem(newItem);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Item updated successfully')),
+          );
+        }
+      } else {
+        await wardrobeService.saveWardrobeItem(newItem);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Item added to wardrobe')),
+          );
+        }
+      }
+
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (e) {
+      AppLogger.error('Error saving item: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving item: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.itemToEdit != null;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tell me about this item'),
+        title: Text(isEditing ? 'Edit Item' : 'Tell me about this item'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -120,7 +249,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      // Hero Image with natural presentation
+                      // Hero Image
                       Container(
                         height: 280,
                         width: double.infinity,
@@ -142,15 +271,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
                                 Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade100,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
+                                  color: Colors.grey.shade100,
                                   child: const Center(
                                     child: Icon(
                                       Icons.image_outlined,
-                                      color: Colors.grey,
                                       size: 60,
+                                      color: Colors.grey,
                                     ),
                                   ),
                                 ),
@@ -158,7 +284,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         ),
                       ),
 
-                      // Smart suggestions with natural flow
+                      // Item Type
                       _buildSmartSuggestionSection(
                         'What type of item is this?',
                         _itemTypeOptions,
@@ -168,6 +294,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       ),
                       const SizedBox(height: 32),
 
+                      // Color
                       _buildSmartSuggestionSection(
                         'What\'s the main color?',
                         _colorOptions,
@@ -177,6 +304,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       ),
                       const SizedBox(height: 32),
 
+                      // Pattern
                       _buildSmartSuggestionSection(
                         'Any pattern or texture?',
                         _patternOptions,
@@ -186,7 +314,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Natural occasion selection
+                      // Occasion
                       _buildNaturalChipSection(
                         'When would you wear this?',
                         _occasionOptions,
@@ -195,6 +323,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       ),
                       const SizedBox(height: 32),
 
+                      // Season
                       _buildNaturalChipSection(
                         'Perfect for which seasons?',
                         _seasonOptions,
@@ -203,23 +332,24 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Optional details with natural styling
+                      // Brand
                       _buildOptionalField(
                         'Brand or store?',
                         'e.g., Zara, H&M, vintage...',
                         Icons.store_outlined,
+                        controller: _brandController,
                       ),
                       const SizedBox(height: 24),
 
+                      // Notes
                       _buildOptionalField(
                         'Any special notes?',
                         'Fit, comfort, styling tips...',
                         Icons.note_outlined,
                         maxLines: 3,
+                        controller: _notesController,
                       ),
-                      const SizedBox(
-                        height: 100,
-                      ), // Extra space for floating button
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
@@ -229,7 +359,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
@@ -242,33 +371,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
           ],
         ),
         child: ElevatedButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              _formKey.currentState!.save();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Item saved (mock)')),
-              );
-              // Navigate back to previous screen
-              Navigator.of(context).pop();
-            }
-          },
+          onPressed: _isSaving ? null : _saveItem,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size.fromHeight(56),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            textStyle: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
           ),
-          child: const Text('Save & Get Outfit Suggestions'),
+          child: _isSaving
+              ? const CircularProgressIndicator()
+              : Text(
+                  isEditing ? 'Update Item' : 'Save & Get Outfit Suggestions',
+                ),
         ),
       ),
     );
   }
 
-  // Natural suggestion section with conversational feel
   Widget _buildSmartSuggestionSection(
     String question,
     List<String> options,
@@ -337,7 +456,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
   }
 
-  // Natural chip selection with conversational feel
   Widget _buildNaturalChipSection(
     String question,
     List<String> options,
@@ -430,12 +548,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
     );
   }
 
-  // Optional field with natural styling
   Widget _buildOptionalField(
     String question,
     String hint,
     IconData icon, {
     int maxLines = 1,
+    TextEditingController? controller,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -456,6 +574,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
         const SizedBox(height: 12),
         TextFormField(
+          controller: controller,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,

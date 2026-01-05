@@ -6,6 +6,7 @@ import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// Screen for showing outfit suggestions based on a clothing item
 class OutfitSuggestionsScreen extends StatefulWidget {
@@ -68,7 +69,12 @@ class _OutfitSuggestionsScreenState extends State<OutfitSuggestionsScreen> {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () {
-              // TODO: Implement sharing functionality
+              final String text =
+                  'Check out this outfit: ${currentOutfit['name']}\n\n'
+                  'Based on my ${widget.item.color} ${widget.item.type}.\n\n'
+                  'Created with Vestiq!';
+              Share.share(text);
+              AppLogger.info('📤 Sharing outfit: ${currentOutfit['name']}');
             },
           ),
         ],

@@ -21,6 +21,7 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/pairing_sheet.dart'
 import 'package:vestiq/features/wardrobe/presentation/sheets/swipe_planner_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_quick_actions_sheet.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/add_item_screen.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
 import 'package:vestiq/core/services/analytics_service.dart'; // Import Analytics
 
@@ -1000,11 +1001,18 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     );
   }
 
-  void _editItem(WardrobeItem item) {
-    // TODO: Implement edit functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit functionality coming soon!')),
+  Future<void> _editItem(WardrobeItem item) async {
+    AppLogger.info('✏️ [CLOSET] Edit item: ${item.id}');
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            AddItemScreen(imagePath: item.originalImagePath, itemToEdit: item),
+      ),
     );
+
+    if (result == true) {
+      _handleRefresh();
+    }
   }
 
   Future<void> _deleteItem(WardrobeItem item) async {

@@ -7,7 +7,9 @@ import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/sheets/look_detail_sheet.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/generation_history_screen.dart';
 
 /// Full-screen view of all saved outfit looks with filtering and sorting
 class SavedLooksScreen extends ConsumerStatefulWidget {
@@ -105,6 +107,20 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
         title: Text('Saved Looks (${recentLooks.looks.length})'),
         elevation: 0,
         backgroundColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Generation History',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const GenerationHistoryScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -289,7 +305,8 @@ class _SavedLooksScreenState extends ConsumerState<SavedLooksScreen> {
         borderRadius: BorderRadius.circular(20),
         onTap: () {
           AppLogger.info('👆 Tapped look: ${look.title}');
-          // TODO: Navigate to LookDetailScreen
+          // Navigate to LookDetailSheet
+          showLookDetailSheet(context, look);
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

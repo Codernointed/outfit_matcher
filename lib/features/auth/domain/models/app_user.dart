@@ -29,6 +29,7 @@ class AppUser {
   final int wardrobeItemCount;
   final int savedOutfitCount;
   final int favoriteCount;
+  final int totalWears;
 
   // Subscription & limits
   final SubscriptionTier subscriptionTier;
@@ -85,6 +86,7 @@ class AppUser {
     this.wardrobeItemCount = 0,
     this.savedOutfitCount = 0,
     this.favoriteCount = 0,
+    this.totalWears = 0,
     this.subscriptionTier = SubscriptionTier.free,
     this.subscriptionExpiryDate,
     this.generationsLimit = 5,
@@ -173,6 +175,7 @@ class AppUser {
     int? wardrobeItemCount,
     int? savedOutfitCount,
     int? favoriteCount,
+    int? totalWears,
     SubscriptionTier? subscriptionTier,
     DateTime? subscriptionExpiryDate,
     int? generationsLimit,
@@ -217,6 +220,7 @@ class AppUser {
       wardrobeItemCount: wardrobeItemCount ?? this.wardrobeItemCount,
       savedOutfitCount: savedOutfitCount ?? this.savedOutfitCount,
       favoriteCount: favoriteCount ?? this.favoriteCount,
+      totalWears: totalWears ?? this.totalWears,
       subscriptionTier: subscriptionTier ?? this.subscriptionTier,
       subscriptionExpiryDate:
           subscriptionExpiryDate ?? this.subscriptionExpiryDate,
@@ -271,6 +275,7 @@ class AppUser {
       'wardrobeItemCount': wardrobeItemCount,
       'savedOutfitCount': savedOutfitCount,
       'favoriteCount': favoriteCount,
+      'totalWears': totalWears,
       'subscriptionTier': subscriptionTier.name,
       'subscriptionExpiryDate': subscriptionExpiryDate != null
           ? Timestamp.fromDate(subscriptionExpiryDate!)
@@ -330,6 +335,7 @@ class AppUser {
       wardrobeItemCount: data['wardrobeItemCount'] as int? ?? 0,
       savedOutfitCount: data['savedOutfitCount'] as int? ?? 0,
       favoriteCount: data['favoriteCount'] as int? ?? 0,
+      totalWears: data['totalWears'] as int? ?? 0,
       subscriptionTier: SubscriptionTier.values.firstWhere(
         (e) => e.name == data['subscriptionTier'],
         orElse: () => SubscriptionTier.free,

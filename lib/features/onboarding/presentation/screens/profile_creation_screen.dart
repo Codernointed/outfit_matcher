@@ -105,7 +105,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
 
       AppLogger.info('👤 Profile data: username=$username, gender=$genderStr');
 
-      // TODO: Upload mannequin photo to Firebase Storage
+      // TODO: Upload mannequin photo to Firebase Storage (Deferred)
       // For now, just save the data
       if (_mannequinPhoto != null) {
         AppLogger.info(
@@ -127,8 +127,7 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
           displayName: username,
           phoneNumber: currentUser.phoneNumber,
           gender: genderStr,
-          authProvider:
-              app_user.AuthProvider.email, // TODO: derive from providerData
+          authProvider: _determineAuthProvider(currentUser),
         );
         AppLogger.info('✅ Base user profile document created');
       } else {
@@ -184,6 +183,17 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
       default:
         return false;
     }
+  }
+
+  app_user.AuthProvider _determineAuthProvider(User user) {
+    for (final info in user.providerData) {
+      if (info.providerId == 'google.com') {
+        return app_user.AuthProvider.google;
+      } else if (info.providerId == 'apple.com') {
+        return app_user.AuthProvider.apple;
+      }
+    }
+    return app_user.AuthProvider.email;
   }
 
   @override

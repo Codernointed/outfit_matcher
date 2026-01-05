@@ -12,63 +12,40 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Users collection - users can only read/write their own profile
+    // Users collection rules
     match /users/{userId} {
-      allow read: if isOwner(userId);
+      // Allow read if owner OR if it's a public profile
+      allow read: if isOwner(userId) || 
+                   (isAuthenticated() && resource.data.isPublicProfile == true);
+                   
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+      allow update, delete: if isOwner(userId);
       
-      // Subcollections - favorite items
-      match /favorite_items/{itemId} {
-        allow read, write: if isOwner(userId);
-      }
+      // Subcollections - Private by default to the owner
+      match /favorite_items/{itemId} { allow read, write: if isOwner(userId); }
+      match /favorite_outfits/{outfitId} { allow read, write: if isOwner(userId); }
+      match /wardrobeItems/{itemId} { allow read, write: if isOwner(userId); }
+      match /wardrobe/{itemId} { allow read, write: if isOwner(userId); }
+      match /outfits/{outfitId} { allow read, write: if isOwner(userId); }
+      match /savedOutfits/{outfitId} { allow read, write: if isOwner(userId); }
+      match /looks/{lookId} { allow read, write: if isOwner(userId); }
+      match /wardrobeLooks/{lookId} { allow read, write: if isOwner(userId); }
       
-      // Subcollections - favorite outfits
-      match /favorite_outfits/{outfitId} {
-        allow read, write: if isOwner(userId);
-      }
+      // Wear History variant subcollection
+      match /wearHistory/{eventId} { allow read, write: if isOwner(userId); }
       
-      // Subcollections - wardrobe items (NEW PATH)
-      match /wardrobeItems/{itemId} {
-        allow read, write: if isOwner(userId);
-      }
+      // Generation History subcollection
+      match /generation_history/{historyId} { allow read, write: if isOwner(userId); }
       
-      // Subcollections - wardrobe items (LEGACY PATH - keep for migration)
-      match /wardrobe/{itemId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Subcollections - saved outfits
-      match /outfits/{outfitId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Subcollections - saved outfits (ALTERNATIVE PATH)
-      match /savedOutfits/{outfitId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Subcollections - wardrobe looks
-      match /looks/{lookId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Subcollections - wear history events
-      match /wearHistory/{eventId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Subcollections - user preferences
-      match /preferences/{prefsId} {
-        allow read, write: if isOwner(userId);
-      }
+      // User Preferences subcollection
+      match /preferences/{prefsId} { allow read, write: if isOwner(userId); }
     }
     
-    // Public profiles - read-only for public profiles
-    match /users/{userId} {
-      allow read: if isAuthenticated() && 
-                     get(/databases/$(database)/documents/users/$(userId)).data.isPublicProfile == true;
+    // Global Wear History (Top-level collection approach)
+    match /wear_history/{eventId} {
+      allow read, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
     }
   }
 }

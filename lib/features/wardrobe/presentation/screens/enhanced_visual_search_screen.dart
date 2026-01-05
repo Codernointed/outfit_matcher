@@ -13,10 +13,11 @@ import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/di/service_locator.dart';
-// import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/mannequin_skeleton_loader.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/services.dart';
+import 'package:vestiq/features/outfit_suggestions/data/firestore_generation_history_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {
   final List<ClothingAnalysis> analyses;
@@ -382,6 +383,20 @@ class _EnhancedVisualSearchScreenState
           _generationProgress = _mannequinOutfits.length;
           AppLogger.debug('✨ Received mannequin ${_mannequinOutfits.length}');
         });
+
+        // Auto-save to history
+        try {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            final savedOutfit = _convertToSavedOutfit(outfit);
+            getIt<FirestoreGenerationHistoryService>().saveToHistory(
+              user.uid,
+              savedOutfit,
+            );
+          }
+        } catch (e) {
+          AppLogger.warning('⚠️ Failed to auto-save to history', error: e);
+        }
       }
 
       // Cache the generated outfits
@@ -1737,5 +1752,20 @@ class _EnhancedVisualSearchScreenState
         ),
       );
     }
+  }
+
+  SavedOutfit _convertToSavedOutfit(MannequinOutfit outfit) {
+    return SavedOutfit(
+      id: outfit.id, // Keep same ID so we can match it later
+      title:
+          'AI Generated Look ${outfit.style != null ? "(${outfit.style})" : ""}',
+      items: outfit.items,
+      mannequinImages: [outfit.imageUrl],
+      notes: widget.userNotes ?? '',
+      style: outfit.style ?? 'Casual',
+      matchScore: outfit.confidence ?? 0.85,
+      createdAt: DateTime.now(),
+      isFavorite: false, // Not favorite by default, just history
+    );
   }
 }

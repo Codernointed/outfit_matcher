@@ -7,7 +7,7 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/utils/logger.dart';
-// import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
+import 'package:vestiq/features/wardrobe/presentation/screens/add_item_screen.dart';
 
 /// Quick action item data
 class QuickActionItem {
@@ -409,11 +409,13 @@ class _WardrobeQuickActionsState extends State<WardrobeQuickActions>
       '   Item: ${widget.item.analysis.primaryColor} ${widget.item.analysis.itemType}',
     );
 
-    // TODO: Navigate to edit screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Edit functionality coming soon'),
-        behavior: SnackBarBehavior.floating,
+    // Replace the quick actions dialog with the edit screen
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => AddItemScreen(
+          imagePath: widget.item.originalImagePath,
+          itemToEdit: widget.item,
+        ),
       ),
     );
   }
