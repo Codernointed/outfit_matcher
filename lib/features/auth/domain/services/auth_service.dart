@@ -3,6 +3,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/features/auth/domain/models/app_user.dart';
 import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
+import 'package:vestiq/core/services/walkthrough_service.dart';
+import 'package:vestiq/core/di/service_locator.dart';
 
 /// Service for handling Firebase authentication operations
 class AuthService {
@@ -120,6 +122,19 @@ class AuthService {
       }
 
       AppLogger.info('✅ User signed in successfully: ${user.uid}');
+
+      // Mark walkthroughs as seen for returning users
+      try {
+        if (getIt.isRegistered<WalkthroughService>()) {
+          final walkthroughService = getIt<WalkthroughService>();
+          await walkthroughService.completeHomeWalkthrough();
+          await walkthroughService.completeClosetWalkthrough();
+          AppLogger.info('✅ Marked walkthroughs as seen for returning user');
+        }
+      } catch (e) {
+        AppLogger.warning('⚠️ Failed to mark walkthroughs as seen: $e');
+      }
+
       return appUser;
     } on FirebaseAuthException catch (e) {
       AppLogger.error('❌ Sign in error', error: e);
@@ -222,6 +237,20 @@ class AuthService {
           '✅ Existing Google user, updating last login: ${user.uid}',
         );
         appUser = await _userProfileService.updateLastLogin(user.uid);
+
+        // Mark walkthroughs as seen for returning users
+        try {
+          if (getIt.isRegistered<WalkthroughService>()) {
+            final walkthroughService = getIt<WalkthroughService>();
+            await walkthroughService.completeHomeWalkthrough();
+            await walkthroughService.completeClosetWalkthrough();
+            AppLogger.info(
+              '✅ Marked walkthroughs as seen for returning Google user',
+            );
+          }
+        } catch (e) {
+          AppLogger.warning('⚠️ Failed to mark walkthroughs as seen: $e');
+        }
       }
 
       return appUser;

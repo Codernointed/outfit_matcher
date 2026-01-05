@@ -121,23 +121,18 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
             ),
           ),
         ),
-        Positioned.fill(
-          child: Column(
-            children: [
-              const SizedBox(height: 32),
-              Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: TextButton(
-                    onPressed: widget.onSkip,
-                    child: const Text('Skip'),
-                  ),
-                ),
-              ),
-              const Spacer(),
-              tooltip,
-            ],
+        // Tooltip layer - calculated margins ensure correct positioning
+        Positioned.fill(child: tooltip),
+        // Controls layer - Skip button
+        Positioned(
+          top: 32 + MediaQuery.of(context).padding.top,
+          right: 0,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextButton(
+              onPressed: widget.onSkip,
+              child: const Text('Skip', style: TextStyle(color: Colors.white)),
+            ),
           ),
         ),
       ],
@@ -158,19 +153,28 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
     switch (_step.position) {
       case TooltipPosition.above:
         anchor = Offset(target.center.dx, target.top - 12);
-        alignment = Alignment.bottomCenter;
+        // Calculate horizontal alignment to center tooltip on target
+        // taking into account the safe margins (20px each side)
+        final double safeWidth = size.width - 40;
+        final double relativeX = ((target.center.dx - 20) / safeWidth * 2) - 1;
+        alignment = Alignment(relativeX.clamp(-1.0, 1.0), 1.0);
+
         margin = EdgeInsets.only(
-          left: math.max(0, target.left - 12),
-          right: math.max(0, (size.width - target.right) - 12),
+          left: 20,
+          right: 20,
           bottom: math.max(0, size.height - target.top + 8),
         );
         break;
       case TooltipPosition.below:
         anchor = Offset(target.center.dx, target.bottom + 12);
-        alignment = Alignment.topCenter;
+        // Calculate horizontal alignment to center tooltip on target
+        final double safeWidth = size.width - 40;
+        final double relativeX = ((target.center.dx - 20) / safeWidth * 2) - 1;
+        alignment = Alignment(relativeX.clamp(-1.0, 1.0), -1.0);
+
         margin = EdgeInsets.only(
-          left: math.max(0, target.left - 12),
-          right: math.max(0, (size.width - target.right) - 12),
+          left: 20,
+          right: 20,
           top: math.max(0, target.bottom + 12),
           bottom: 80, // More bottom margin to prevent overflow
         );

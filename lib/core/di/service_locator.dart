@@ -25,6 +25,7 @@ import 'package:vestiq/features/auth/domain/services/user_profile_service.dart';
 import 'package:vestiq/features/outfit_suggestions/data/firestore_outfit_service.dart';
 import 'package:vestiq/features/wardrobe/data/firestore_wardrobe_service.dart';
 import 'package:vestiq/features/wardrobe/data/firestore_wear_history_service.dart';
+import 'package:vestiq/core/services/walkthrough_service.dart';
 
 /// Global GetIt instance for dependency injection
 final GetIt getIt = GetIt.instance;
@@ -142,6 +143,11 @@ Future<void> setupServiceLocator() async {
   // User Preferences Service
   getIt.registerLazySingleton<UserPreferencesService>(
     () => UserPreferencesService(),
+  );
+
+  // Walkthrough Service
+  getIt.registerLazySingleton<WalkthroughService>(
+    () => WalkthroughService(sharedPreferences),
   );
 
   // Controllers

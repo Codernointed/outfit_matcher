@@ -499,3 +499,6 @@ final homeThemeProvider = StateProvider<bool>(
 
 /// Provider for search history
 final homeSearchHistoryProvider = StateProvider<List<String>>((ref) => []);
+
+/// Provider for the current selected index of the BottomNavigationBar
+final bottomNavIndexProvider = StateProvider<int>((ref) => 0);

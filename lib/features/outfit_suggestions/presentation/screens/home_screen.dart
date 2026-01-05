@@ -29,9 +29,6 @@ import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_nav
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 // Subscription imports removed - premium prompts now shown via LimitReachedModal only
 
-// Provider for the current selected index of the BottomNavigationBar
-final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
-
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -95,12 +92,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           position: TooltipPosition.above,
         ),
         WalkthroughStep(
-          targetKey: _wardrobeKey,
-          title: 'Your closet preview',
-          description: 'Peek at items and jump into Closet.',
-          position: TooltipPosition.above,
-        ),
-        WalkthroughStep(
           targetKey: _bottomNavKey,
           title: 'Navigate fast',
           description: 'Home, Closet, Profile — always here.',
@@ -155,6 +146,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final ref = this.ref;
     final theme = Theme.of(context);
+
+    // Listen for tab changes to re-trigger walkthrough if needed
+    ref.listen(bottomNavIndexProvider, (previous, next) {
+      if (next == 0) {
+        _initWalkthrough();
+      }
+    });
+
     final currentIndex = ref.watch(bottomNavIndexProvider);
 
     return Stack(

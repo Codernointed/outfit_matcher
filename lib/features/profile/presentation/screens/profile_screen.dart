@@ -23,6 +23,7 @@ import 'package:vestiq/features/profile/presentation/widgets/stats_row.dart';
 import 'package:vestiq/features/subscriptions/presentation/screens/subscription_overview_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_closet_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/wear_history_screen.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 
 /// Premium profile screen with stats, favorites, preferences, and settings
@@ -280,10 +281,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (confirmed == true) {
       await _walkthroughService.resetAllWalkthroughs();
       if (mounted) {
+        // Reset navigation to Home to trigger walkthrough instantly
+        ref.read(bottomNavIndexProvider.notifier).state = 0;
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Walkthroughs reset. They will show next time.'),
-            duration: Duration(seconds: 2),
+            content: Text('Starting walkthrough...'),
+            duration: Duration(seconds: 1),
           ),
         );
       }
