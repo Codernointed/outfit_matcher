@@ -135,27 +135,21 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       _closetSteps = [
         WalkthroughStep(
           targetKey: _categoryTabsKey,
-          title: 'Filter by vibe',
-          description: 'Switch categories to narrow your closet.',
+          title: 'Filter by category',
+          description: 'Switch between All, Tops, Bottoms, Dresses, and Shoes.',
           position: TooltipPosition.below,
         ),
         WalkthroughStep(
           targetKey: _searchKey,
-          title: 'Find it fast',
-          description: 'Search by color or item name.',
+          title: 'Search your closet',
+          description: 'Find items by color, brand, or name.',
           position: TooltipPosition.below,
         ),
         WalkthroughStep(
-          targetKey: _firstItemKey,
-          title: 'Tap or press',
-          description: 'Tap to preview. Long-press for quick actions.',
-          position: TooltipPosition.above,
-        ),
-        WalkthroughStep(
           targetKey: _plannerKey,
-          title: 'Plan an outfit',
-          description: 'Let the assistant build a look.',
-          position: TooltipPosition.above,
+          title: 'Plan outfits',
+          description: 'Tap here to let AI build a complete look for you.',
+          position: TooltipPosition.below,
         ),
       ];
       _showClosetWalkthrough = true;

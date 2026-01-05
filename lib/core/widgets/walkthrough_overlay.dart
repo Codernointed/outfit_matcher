@@ -175,7 +175,7 @@ class _WalkthroughOverlayState extends State<WalkthroughOverlay>
         margin = EdgeInsets.only(
           left: 20,
           right: 20,
-          top: math.max(0, target.bottom + 12),
+          top: math.max(0, target.bottom + 30),
           bottom: 80, // More bottom margin to prevent overflow
         );
         break;
