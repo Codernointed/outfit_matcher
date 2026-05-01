@@ -14,18 +14,15 @@ import 'package:vestiq/core/services/profile_service.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 
 Future<void> showWardrobePairingSheet({
   required BuildContext context,
   required WardrobeItem heroItem,
   PairingMode mode = PairingMode.pairThisItem,
 }) {
-  return showModalBottomSheet(
+  return showGlassBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    isDismissible: true,
-    enableDrag: true,
     builder: (_) => WardrobePairingSheet(heroItem: heroItem, mode: mode),
   );
 }
@@ -166,33 +163,24 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       minChildSize: 0.75,
       maxChildSize: 0.98,
       builder: (context, controller) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                _buildHandle(theme),
-                if (_statusMessage != null)
-                  _buildStatusBanner(theme, controller),
-                Expanded(
-                  child: _loading
-                      ? _buildLoading(theme)
-                      : _pairings.isEmpty
+        return Column(
+          children: [
+            if (_statusMessage != null)
+              _buildStatusBanner(theme, controller),
+            Expanded(
+              child: _loading
+                  ? _buildLoading(theme)
+                  : _pairings.isEmpty
                       ? _buildSingleItemSuggestions(theme, controller)
                       : _buildContent(theme, controller),
-                ),
-              ],
             ),
-          ),
+          ],
         );
       },
     );
   }
 
+  // ignore: unused_element
   Widget _buildHandle(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 8),
@@ -1085,11 +1073,26 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
       String? imageUrl = pairing.mannequinImageUrl;
 
       if (imageUrl == null) {
+        final traceId = DateTime.now().millisecondsSinceEpoch.toString();
         AppLogger.info('🎨 Generating SINGLE mannequin preview for pairing');
+        AppLogger.info(
+          '🧾 [PairingPreview] Context',
+          data: {
+            'trace_id': traceId,
+            'mode': widget.mode.name,
+            'selected_index': _selectedIndex,
+            'items': pairing.items.length,
+            'has_cached_url': pairing.mannequinImageUrl != null,
+          },
+        );
 
         // Get current gender preference
         final profile = await _profileService.getProfile();
         final gender = profile.preferredGender.apiValue;
+        AppLogger.info(
+          '🧾 [PairingPreview] Gender preference',
+          data: {'trace_id': traceId, 'gender': gender},
+        );
 
         // Use the new single mannequin generation method
         imageUrl =
@@ -1113,6 +1116,11 @@ class _WardrobePairingSheetState extends State<WardrobePairingSheet> {
             _pairings[_selectedIndex] = updated;
           });
           pairing = updated;
+        } else {
+          AppLogger.warning(
+            '⚠️ [PairingPreview] Mannequin preview returned null',
+            error: {'trace_id': traceId},
+          );
         }
       }
 

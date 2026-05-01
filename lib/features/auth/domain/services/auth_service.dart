@@ -174,20 +174,15 @@ class AuthService {
       AppLogger.info('⏳ Awaiting Google Sign In...');
 
       // In v7, authenticate() returns the account directly
-      final GoogleSignInAccount? googleUser = await _googleSignIn
+      final GoogleSignInAccount googleUser = await _googleSignIn
           .authenticate();
-
-      if (googleUser == null) {
-        AppLogger.info('❌ Google sign-in cancelled by user');
-        return null;
-      }
 
       AppLogger.info('✅ Google User selected: ${googleUser.email}');
       AppLogger.info('⏳ Retrieving tokens...');
 
       // 3. Obtain authentication details (idToken)
       final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+          googleUser.authentication;
 
       // Create credential
       // Note: We deliberately omit accessToken if we can't get it easily.

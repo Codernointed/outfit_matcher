@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
+import 'package:vestiq/core/widgets/soft_glass/soft_glass.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/core/utils/logger.dart';
@@ -173,9 +175,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     final primaryColor = theme.colorScheme.primary;
     final isDark = theme.brightness == Brightness.dark;
 
+    final soft = context.vestiqSoft;
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
+      body: VestiqCanvas(
+        child: SafeArea(
         child: Column(
           children: [
             // Custom App Bar
@@ -187,15 +191,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     icon: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.grey.shade100,
+                        color: soft.surfaceContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         Icons.arrow_back_ios_new,
                         size: 20,
-                        color: isDark ? Colors.white : Colors.black87,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
@@ -434,35 +436,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       const SizedBox(height: 28),
 
                       // Sign Up Button
-                      ElevatedButton(
+                      SoftButton(
+                        label: 'Create Account',
+                        loading: _isLoading,
                         onPressed: _isLoading ? null : _handleSignup,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 2,
-                          shadowColor: primaryColor.withValues(alpha: 0.4),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 22,
-                                width: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Create Account',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
                       ),
                       const SizedBox(height: 24),
 
@@ -471,9 +448,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         children: [
                           Expanded(
                             child: Divider(
-                              color: isDark
-                                  ? Colors.white24
-                                  : Colors.grey.shade300,
+                              color: theme.colorScheme.outlineVariant,
                               thickness: 1,
                             ),
                           ),
@@ -482,19 +457,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             child: Text(
                               'or continue with',
                               style: TextStyle(
-                                color: isDark
-                                    ? Colors.white54
-                                    : Colors.grey.shade500,
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                                 fontWeight: FontWeight.w500,
                                 fontSize: 13,
+                                fontFamily: 'Roboto',
                               ),
                             ),
                           ),
                           Expanded(
                             child: Divider(
-                              color: isDark
-                                  ? Colors.white24
-                                  : Colors.grey.shade300,
+                              color: theme.colorScheme.outlineVariant,
                               thickness: 1,
                             ),
                           ),
@@ -502,37 +475,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Google Sign Up Button
-                      OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _handleGoogleSignup,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: isDark
-                              ? Colors.white
-                              : Colors.black87,
-                          backgroundColor: isDark
-                              ? Colors.white.withValues(alpha: 0.05)
-                              : Colors.white,
+                      // Google Sign Up Button (soft)
+                      AnimatedPressable(
+                        onTap: _isLoading ? null : _handleGoogleSignup,
+                        child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(
-                            color: isDark
-                                ? Colors.white24
-                                : Colors.grey.shade300,
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
                             borderRadius: BorderRadius.circular(16),
+                            boxShadow: soft.cardSoftShadow,
                           ),
-                        ),
-                        icon: Image.network(
-                          'https://www.google.com/favicon.ico',
-                          height: 22,
-                          width: 22,
-                        ),
-                        label: const Text(
-                          'Continue with Google',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                          Image(
+                            image: NetworkImage(
+                              'https://www.google.com/favicon.ico',
+                            ),
+                            height: 22,
+                            width: 22,
+                          ),
+                          SizedBox(width: 12),
+                          Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
+                            ),
+                          ),
+                            ],
                           ),
                         ),
                       ),
@@ -572,6 +544,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

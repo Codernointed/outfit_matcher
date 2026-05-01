@@ -328,7 +328,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         final analytics = AnalyticsService();
         await analytics.logSignOut();
 
-        AppLogger.info('🧹 Clearing ALL local user data to prevent cross-account data leakage...');
+        AppLogger.info(
+          '🧹 Clearing ALL local user data to prevent cross-account data leakage...',
+        );
 
         // 1. Clear local profile data
         await _profileService.clearProfile();
@@ -476,10 +478,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           AppLogger.error('❌ Account deletion error: $e');
           if (mounted) {
             Navigator.pop(context); // Close loading
-            
+
             // Check if the error message contains "requires-recent-login"
             final errorStr = e.toString().toLowerCase();
-            if (errorStr.contains('requires-recent-login') || 
+            if (errorStr.contains('requires-recent-login') ||
                 errorStr.contains('recent authentication') ||
                 errorStr.contains('sensitive operation')) {
               await _showReauthenticationDialog();
@@ -543,12 +545,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (shouldSignOut == true && mounted) {
       // Sign out so user can re-authenticate
       await ref.read(authFlowControllerProvider.notifier).signOut();
-      
+
       if (mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please sign in again, then go to Profile > Delete Account'),
+            content: Text(
+              'Please sign in again, then go to Profile > Delete Account',
+            ),
             duration: Duration(seconds: 5),
           ),
         );
@@ -786,6 +790,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final themeMode = ref.watch(appThemeModeProvider);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         onRefresh: () async {
           _refreshProfile();
@@ -841,17 +846,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         // App Bar
         SliverAppBar(
           floating: true,
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
           title: const Text('Profile'),
           centerTitle: true,
-          // actions: [
-          //   IconButton(
-          //     icon: const Icon(Icons.more_vert),
-          //     onPressed: () {
-          //       HapticFeedback.lightImpact();
-          //       // Future: show more options menu
-          //     },
-          //   ),
-          // ],
         ),
 
         SliverToBoxAdapter(

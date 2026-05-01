@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:vestiq/core/models/wardrobe_item.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 
 /// Quick actions bottom sheet for wardrobe items to reduce navigation friction
 class WardrobeQuickActionsSheet extends StatelessWidget {
@@ -24,27 +26,11 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
+    return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
             // Item preview
             Padding(
               padding: const EdgeInsets.all(16),
@@ -121,7 +107,7 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
                   _buildActionTile(
                     context,
                     icon: Icons.shuffle,
-                    iconColor: Colors.purple,
+                    iconColor: theme.colorScheme.primary,
                     title: 'Surprise Me',
                     subtitle: 'Get creative outfit suggestions',
                     onTap: () {
@@ -137,7 +123,7 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
                   _buildActionTile(
                     context,
                     icon: Icons.explore,
-                    iconColor: Colors.orange,
+                    iconColor: const Color(0xFFB26A00),
                     title: 'View Inspiration',
                     subtitle: 'See styling ideas and mannequin looks',
                     onTap: () {
@@ -160,7 +146,7 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
                     _buildActionTile(
                       context,
                       icon: Icons.edit_outlined,
-                      iconColor: theme.colorScheme.secondary,
+                      iconColor: soft.primary,
                       title: 'Edit Details',
                       subtitle: 'Update tags, notes, and occasions',
                       onTap: () {
@@ -178,7 +164,7 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
                     _buildActionTile(
                       context,
                       icon: Icons.delete_outline,
-                      iconColor: Colors.red,
+                      iconColor: theme.colorScheme.error,
                       title: 'Remove from Closet',
                       subtitle: 'Delete this item permanently',
                       onTap: () {
@@ -195,11 +181,9 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
+          const SizedBox(height: 8),
+        ],
+      );
   }
 
   Widget _buildActionTile(
@@ -269,10 +253,8 @@ class WardrobeQuickActionsSheet extends StatelessWidget {
     VoidCallback? onEdit,
     VoidCallback? onDelete,
   }) {
-    return showModalBottomSheet(
+    return showGlassBottomSheet<void>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) => WardrobeQuickActionsSheet(
         item: item,
         onPairThisItem: onPairThisItem,

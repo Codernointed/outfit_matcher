@@ -46,20 +46,20 @@ class GenerationHistoryScreen extends ConsumerWidget {
                   Icon(
                     Icons.history_toggle_off,
                     size: 64,
-                    color: theme.colorScheme.onSurface.withOpacity(0.3),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No history yet',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Generate outfits to see them here',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.4),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                 ],
@@ -103,7 +103,9 @@ class GenerationHistoryScreen extends ConsumerWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outline.withOpacity(0.1)),
+        side: BorderSide(
+          color: theme.colorScheme.outline.withValues(alpha: 0.1),
+        ),
       ),
       color: theme.colorScheme.surface,
       child: InkWell(
@@ -162,7 +164,7 @@ class GenerationHistoryScreen extends ConsumerWidget {
                     Text(
                       formattedDate,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -185,7 +187,7 @@ class GenerationHistoryScreen extends ConsumerWidget {
               // Arrow
               Icon(
                 Icons.chevron_right,
-                color: theme.colorScheme.onSurface.withOpacity(0.3),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -198,7 +200,7 @@ class GenerationHistoryScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

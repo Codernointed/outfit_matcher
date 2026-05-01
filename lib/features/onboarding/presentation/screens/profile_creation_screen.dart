@@ -257,6 +257,81 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
     }
   }
 
+  Widget _buildPhotoTips(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.tips_and_updates_outlined,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Pro Tips for Best Results',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTipRow(
+            'Stand in good lighting',
+            Icons.wb_sunny_outlined,
+            theme,
+          ),
+          const SizedBox(height: 8),
+          _buildTipRow(
+            'Wear form-fitting clothes',
+            Icons.checkroom_outlined,
+            theme,
+          ),
+          const SizedBox(height: 8),
+          _buildTipRow(
+            'Keep the background simple',
+            Icons.wallpaper_outlined,
+            theme,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipRow(String text, IconData icon, ThemeData theme) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 13,
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
   app_user.AuthProvider _determineAuthProvider(User user) {
     for (final info in user.providerData) {
       if (info.providerId == 'google.com') {
@@ -904,181 +979,165 @@ class _ProfileCreationScreenState extends ConsumerState<ProfileCreationScreen> {
                 maxHeight: constraints.maxHeight,
                 maxWidth: 560,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      const Text('📸', style: TextStyle(fontSize: 56)),
-                      const SizedBox(height: 12),
-                      Text(
-                        'One last thing...',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: primaryColor,
-                          letterSpacing: -0.5,
-                          fontFamily: 'Poppins',
-                        ),
-                        textAlign: TextAlign.center,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text('📸', style: TextStyle(fontSize: 56)),
+                    const SizedBox(height: 16),
+                    Text(
+                      'One last thing...',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: primaryColor,
+                        letterSpacing: -0.5,
+                        fontFamily: 'Poppins',
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add a full-body photo to personalize your mannequin (optional).',
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: isDark ? Colors.white60 : Colors.grey.shade600,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: 'Roboto',
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add a full-body photo to personalize your mannequin.',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: isDark ? Colors.white60 : Colors.grey.shade600,
+                        fontWeight: FontWeight.w400,
+                        fontFamily: 'Roboto',
+                        height: 1.4,
                       ),
-                    ],
-                  ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
 
-                  GestureDetector(
-                    onTap: _pickMannequinPhoto,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      height: 260,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: _mannequinPhoto != null
-                            ? Colors.black
-                            : (isDark
-                                  ? Colors.white.withValues(alpha: 0.05)
-                                  : Colors.grey.shade50),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
+                    GestureDetector(
+                      onTap: _pickMannequinPhoto,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        height: 280,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
                           color: _mannequinPhoto != null
-                              ? primaryColor
+                              ? Colors.black
                               : (isDark
-                                    ? Colors.white24
-                                    : Colors.grey.shade300),
-                          width: _mannequinPhoto != null ? 2 : 1.25,
-                        ),
-                        boxShadow: _mannequinPhoto != null
-                            ? [
-                                BoxShadow(
-                                  color: primaryColor.withValues(alpha: 0.25),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: _mannequinPhoto != null
-                            ? Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  Image.file(
-                                    _mannequinPhoto!,
-                                    fit: BoxFit.cover,
+                                    ? Colors.white.withValues(alpha: 0.05)
+                                    : Colors.grey.shade50),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: _mannequinPhoto != null
+                                ? primaryColor
+                                : (isDark
+                                      ? Colors.white24
+                                      : Colors.grey.shade300),
+                            width: _mannequinPhoto != null ? 2.5 : 1.5,
+                          ),
+                          boxShadow: _mannequinPhoto != null
+                              ? [
+                                  BoxShadow(
+                                    color: primaryColor.withValues(alpha: 0.3),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 10),
                                   ),
-                                  Container(
-                                    alignment: Alignment.bottomCenter,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Colors.transparent,
-                                          Colors.black.withValues(alpha: 0.65),
+                                ]
+                              : [],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: _mannequinPhoto != null
+                              ? Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    Image.file(
+                                      _mannequinPhoto!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Container(
+                                      alignment: Alignment.bottomCenter,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Colors.transparent,
+                                            Colors.black.withValues(alpha: 0.7),
+                                          ],
+                                        ),
+                                      ),
+                                      padding: const EdgeInsets.only(
+                                        bottom: 16,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: const [
+                                          Icon(
+                                            Icons.camera_alt_outlined,
+                                            color: Colors.white,
+                                            size: 18,
+                                          ),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Change Photo',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 14,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
-                                    padding: const EdgeInsets.only(bottom: 14),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: const [
-                                        Icon(
-                                          Icons.edit,
-                                          color: Colors.white,
-                                          size: 15,
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withValues(
+                                          alpha: 0.1,
                                         ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          'Tap to change',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(18),
-                                    decoration: BoxDecoration(
-                                      color: primaryColor.withValues(
-                                        alpha: 0.1,
+                                        shape: BoxShape.circle,
                                       ),
-                                      shape: BoxShape.circle,
+                                      child: Icon(
+                                        Icons.cloud_upload_outlined,
+                                        size: 48,
+                                        color: primaryColor,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      Icons.add_a_photo_rounded,
-                                      size: 44,
-                                      color: primaryColor,
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Upload a Photo',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: theme.colorScheme.onSurface,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Upload full-body photo',
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w700,
-                                      color: theme.colorScheme.onSurface,
-                                      fontFamily: 'Poppins',
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      'Help AI visualize you',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: isDark
+                                            ? Colors.white60
+                                            : Colors.grey.shade600,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Helps AI fit outfits better',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: isDark
-                                          ? Colors.white60
-                                          : Colors.grey.shade600,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.info_outline, color: primaryColor, size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Good lighting and fitted clothes give the best results. You can skip this now and add it later.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDark
-                                ? Colors.white70
-                                : Colors.grey.shade700,
-                            height: 1.35,
-                          ),
+                                  ],
+                                ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+
+                    const SizedBox(height: 32),
+                    _buildPhotoTips(theme),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
           );

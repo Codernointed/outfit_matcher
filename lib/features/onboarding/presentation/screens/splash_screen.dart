@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/core/utils/logger.dart';
-import 'package:vestiq/core/theme/app_theme.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 
 /// Premium animated splash screen with smooth transitions
 class SplashScreen extends ConsumerStatefulWidget {
@@ -209,20 +209,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final primaryColor = theme.colorScheme.primary;
     final isDark = theme.brightness == Brightness.dark;
 
+    final soft = context.vestiqSoft;
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: isDark
                 ? [
-                    const Color(0xFF1A1A1A),
-                    const Color(0xFF0F0F0F),
-                    const Color(0xFF000000),
+                    soft.surfaceContainer,
+                    soft.canvas,
+                    Colors.black,
                   ]
                 : [
-                    primaryColor.withValues(alpha: 0.1),
-                    AppTheme.secondaryBackgroundColor,
-                    Colors.white,
+                    soft.glassTintRose.withValues(alpha: 0.6),
+                    soft.canvas,
+                    soft.surface,
                   ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

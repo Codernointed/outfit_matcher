@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:vestiq/core/utils/ai_orchestrator.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
 /// Service for processing and enhancing clothing item images
@@ -76,7 +75,8 @@ class ImageProcessingService {
     }
   }
 
-  /// Polish image using Gemini API for premium appearance
+  /// Polish image via the AI orchestrator (races Gemini + OpenRouter).
+  /// Returns the saved file path of the polished image, or null on failure.
   static Future<String?> _polishImage(
     File imageFile,
     String itemId, {
@@ -89,92 +89,23 @@ class ImageProcessingService {
     );
 
     try {
-      final bytes = await imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
-
-      // Enhanced prompt for polishing clothing items
-      final polishingPrompt =
-          '''
-Create a premium, polished version of this clothing item for a luxury wardrobe app.
-
-Requirements:
-- Clean, professional studio lighting
-- Remove any background distractions or clutter
-- Enhance colors to be vibrant but natural
-- Smooth out wrinkles and imperfections
-- Position item attractively (flat lay or hanging)
-- Maintain the authentic look and details of the item
-- Ensure high contrast and clarity
-
-Item details:
-- Type: $itemType
-- Color: $color
-
-Generate a clean, magazine-quality image suitable for a premium fashion app.
-''';
-
-      final requestBody = {
-        "contents": [
-          {
-            "parts": [
-              {"text": polishingPrompt},
-              {
-                "inlineData": {"mimeType": "image/jpeg", "data": base64Image},
-              },
-            ],
-          },
-        ],
-        "generationConfig": {
-          "temperature": 0.2, // Low temperature for consistent results
-          "topK": 32,
-          "topP": 1.0,
-          "maxOutputTokens": 4096,
-        },
-      };
-
-      final apiKey = dotenv.env['GEMINI_API_KEY'];
-      if (apiKey == null) {
-        throw Exception('GEMINI_API_KEY not found in environment');
-      }
-
-      final url =
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=$apiKey';
-
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+      final polishedBase64 = await AiOrchestrator.polishImage(
+        imageFile: imageFile,
+        itemType: itemType,
+        color: color,
       );
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        final candidates = responseData['candidates'] as List?;
-        if (candidates != null && candidates.isNotEmpty) {
-          final parts = candidates.first['content']?['parts'] as List?;
-          if (parts != null) {
-            for (final part in parts) {
-              final inlineData = part['inlineData'];
-              if (inlineData != null && inlineData['data'] != null) {
-                final polishedBase64 = inlineData['data'] as String;
-
-                // Save polished image
-                final polishedPath = await _savePolishedImage(
-                  polishedBase64,
-                  itemId,
-                );
-                AppLogger.info(
-                  '✅ Image polished and saved',
-                  data: {'path': polishedPath},
-                );
-                return polishedPath;
-              }
-            }
-          }
-        }
+      if (polishedBase64 == null) {
+        AppLogger.warning('⚠️ All polish providers failed');
+        return null;
       }
 
-      AppLogger.warning('⚠️ No polished image returned from API');
-      return null;
+      final polishedPath = await _savePolishedImage(polishedBase64, itemId);
+      AppLogger.info(
+        '✅ Image polished and saved',
+        data: {'path': polishedPath},
+      );
+      return polishedPath;
     } catch (e, stackTrace) {
       AppLogger.error(
         '❌ Image polishing failed',

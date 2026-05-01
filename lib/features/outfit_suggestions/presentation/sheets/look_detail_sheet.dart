@@ -9,6 +9,7 @@ import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/di/service_locator.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/features/outfit_suggestions/data/firestore_generation_history_service.dart';
@@ -16,10 +17,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 /// Shows a detail sheet for a saved look
 void showLookDetailSheet(BuildContext context, SavedOutfit look) {
-  showModalBottomSheet(
+  showGlassBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => LookDetailSheet(look: look),
   );
 }
@@ -179,30 +178,14 @@ class _LookDetailSheetState extends ConsumerState<LookDetailSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-
-              // Content
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(0),
-                  children: [
+        return Column(
+          children: [
+            // Content
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(0),
+                children: [
                     // Header Image Area
                     _buildLookHeader(context, theme),
 
@@ -306,8 +289,7 @@ class _LookDetailSheetState extends ConsumerState<LookDetailSheet> {
                   ],
                 ),
               ),
-            ],
-          ),
+          ],
         );
       },
     );

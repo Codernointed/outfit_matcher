@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/utils/api_rate_limiter.dart';
+import 'package:vestiq/core/utils/ai_orchestrator.dart';
 import 'package:vestiq/core/di/service_locator.dart'; // Import DI
 import 'package:vestiq/core/services/analytics_service.dart'; // Import Analytics
 
@@ -334,6 +335,13 @@ class GeminiApiService {
     }
   }
 
+  /// Public entry point for clothing analysis.
+  ///
+  /// Handles rate-limiting, caching, and post-processing (color/style
+  /// normalization, defaults). The actual model call is delegated to
+  /// [AiOrchestrator.analyzeClothing] which races Gemini against Groq —
+  /// the first non-null result wins, so the user is never blocked by a
+  /// single provider's outage or quota.
   static Future<Map<String, dynamic>?> analyzeClothingItem(
     File imageFile,
   ) async {
@@ -347,7 +355,6 @@ class GeminiApiService {
       AppLogger.warning('🚦 API rate limit exceeded, waiting...');
       await ApiRateLimiter.instance.waitForRateLimitReset();
 
-      // Try again after waiting
       if (!await ApiRateLimiter.instance.isRequestAllowed()) {
         AppLogger.error('❌ API rate limit still exceeded after waiting');
         return null;
@@ -371,9 +378,55 @@ class GeminiApiService {
     }
 
     try {
+      // Race providers in parallel — first non-null wins.
+      final result = await AiOrchestrator.analyzeClothing(imageFile);
+      if (result == null) {
+        AppLogger.warning('❌ All analysis providers failed');
+        return null;
+      }
+
+      final processedResult = _processAnalysisResult(result);
+
+      AppLogger.info(
+        '✅ Clothing analysis complete',
+        data: {
+          'itemType': processedResult['itemType'],
+          'primaryColor': processedResult['normalizedPrimaryColor'],
+          'confidence': processedResult['confidence'],
+          'occasions': processedResult['occasions'],
+          'locations': processedResult['locations'],
+          'styleHints': processedResult['styleHints'],
+        },
+      );
+
+      ApiRateLimiter.instance.cacheResponse(
+        cacheKey,
+        jsonEncode(processedResult),
+      );
+      return processedResult;
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ Error in analyzeClothingItem',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
+  }
+
+  /// Raw Gemini-only clothing analysis call.
+  /// Used by [AiOrchestrator]; do NOT call directly from feature code.
+  /// Returns the model's raw JSON map (pre-normalization), or null on failure.
+  static Future<Map<String, dynamic>?> analyzeClothingRaw(
+    File imageFile,
+  ) async {
+    try {
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
-      AppLogger.debug('📸 Image loaded', data: {'size': bytes.lengthInBytes});
+      AppLogger.debug(
+        '📸 [Gemini] Image loaded',
+        data: {'size': bytes.lengthInBytes},
+      );
 
       final requestBody = {
         "contents": [
@@ -394,115 +447,89 @@ class GeminiApiService {
         ],
       };
 
-      AppLogger.network(_endpoint, 'POST', body: requestBody);
-
       final startTime = DateTime.now();
       final response = await _makeRequestWithRetry(_endpoint, requestBody);
       final duration = DateTime.now().difference(startTime);
       AppLogger.performance(
-        'Gemini API call',
+        'Gemini analysis call',
         duration,
         result: response.statusCode,
       );
 
-      AppLogger.network(_endpoint, 'POST', statusCode: response.statusCode);
-
-      if (response.statusCode == 200) {
-        final content = jsonDecode(response.body);
-        final text =
-            content['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
-        AppLogger.debug(
-          '📥 Gemini API response received',
-          data: {'response_length': text.length},
+      if (response.statusCode != 200) {
+        AppLogger.warning(
+          '❌ [Gemini] Analysis API error ${response.statusCode}',
         );
-
-        // Try to extract JSON from response text
-        final jsonStart = text.indexOf('{');
-        final jsonEnd = text.lastIndexOf('}');
-        if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart) {
-          final jsonString = text.substring(jsonStart, jsonEnd + 1);
-          final Map<String, dynamic> result = jsonDecode(jsonString);
-
-          final processedResult = <String, dynamic>{
-            'itemType': result['itemType'] ?? 'Unknown',
-            'primaryColor': result['primaryColor'] ?? 'Unknown',
-            'normalizedPrimaryColor': _normalizeColor(
-              result['primaryColor'] ??
-                  result['exactPrimaryColor'] ??
-                  'Unknown',
-            ),
-            'exactPrimaryColor': result['exactPrimaryColor'],
-            'colorFamily': result['colorFamily'],
-            'colorHex': result['colorHex'],
-            'colorKeywords': _extractStringList(result['colorKeywords']),
-            'patternType': result['patternType'] ?? 'solid',
-            'patternDetails': result['patternDetails'],
-            'patternKeywords': _extractStringList(result['patternKeywords']),
-            'style': _normalizeStyle(result['style'] ?? 'casual'),
-            'fit': result['fit'] ?? 'regular fit',
-            'material': result['material'] ?? 'cotton',
-            'seasons': _extractStringList(result['seasons']) ?? ['All Seasons'],
-            'formality': result['formality'] ?? 'casual',
-            'subcategory': result['subcategory'] ?? '',
-            'confidence': (result['confidence'] as num?)?.toDouble() ?? 0.8,
-            'occasions':
-                _extractStringList(result['occasions']) ??
-                _defaultOccasions(result['formality'] as String?),
-            'locations': _extractStringList(result['locations']),
-            'styleHints': _extractStringList(result['styleHints']),
-            'styleDescriptors': _extractStringList(result['styleDescriptors']),
-            // Enhanced fashion intelligence fields
-            'colorUndertone': result['colorUndertone'],
-            'complementaryColors': _extractStringList(
-              result['complementaryColors'],
-            ),
-            'colorTemperature': result['colorTemperature'],
-            'designElements': _extractStringList(result['designElements']),
-            'visualWeight': result['visualWeight'],
-            'pairingHints': _extractStringList(result['pairingHints']),
-            'stylePersonality': result['stylePersonality'],
-            'detailLevel': result['detailLevel'],
-            'garmentKeywords': _extractStringList(result['garmentKeywords']),
-            'rawAttributes': result,
-          };
-
-          AppLogger.info(
-            '✅ Clothing analysis complete',
-            data: {
-              'itemType': processedResult['itemType'],
-              'primaryColor': processedResult['normalizedPrimaryColor'],
-              'confidence': processedResult['confidence'],
-              'occasions': processedResult['occasions'],
-              'locations': processedResult['locations'],
-              'styleHints': processedResult['styleHints'],
-            },
-          );
-          // Cache the successful response
-          ApiRateLimiter.instance.cacheResponse(
-            cacheKey,
-            jsonEncode(processedResult),
-          );
-
-          return processedResult;
-        } else {
-          AppLogger.warning(
-            '❌ Failed to extract JSON from Gemini response',
-            error: text,
-          );
-          return null;
-        }
-      } else {
-        AppLogger.error('❌ Gemini API error', error: response.statusCode);
         return null;
       }
+
+      final content = jsonDecode(response.body);
+      final text =
+          content['candidates']?[0]?['content']?['parts']?[0]?['text'] ?? '';
+
+      final jsonStart = text.indexOf('{');
+      final jsonEnd = text.lastIndexOf('}');
+      if (jsonStart == -1 || jsonEnd == -1 || jsonEnd <= jsonStart) {
+        AppLogger.warning(
+          '❌ [Gemini] Failed to extract JSON from analysis response',
+        );
+        return null;
+      }
+
+      final jsonString = text.substring(jsonStart, jsonEnd + 1);
+      return jsonDecode(jsonString) as Map<String, dynamic>;
     } catch (e, stackTrace) {
       AppLogger.error(
-        '❌ Error in analyzeClothingItem',
+        '❌ [Gemini] Exception in analyzeClothingRaw',
         error: e,
         stackTrace: stackTrace,
       );
       return null;
     }
+  }
+
+  /// Apply normalization, defaults, and the `rawAttributes` passthrough to
+  /// the raw JSON returned by whichever provider won the race.
+  static Map<String, dynamic> _processAnalysisResult(
+    Map<String, dynamic> result,
+  ) {
+    return <String, dynamic>{
+      'itemType': result['itemType'] ?? 'Unknown',
+      'primaryColor': result['primaryColor'] ?? 'Unknown',
+      'normalizedPrimaryColor': _normalizeColor(
+        result['primaryColor'] ?? result['exactPrimaryColor'] ?? 'Unknown',
+      ),
+      'exactPrimaryColor': result['exactPrimaryColor'],
+      'colorFamily': result['colorFamily'],
+      'colorHex': result['colorHex'],
+      'colorKeywords': _extractStringList(result['colorKeywords']),
+      'patternType': result['patternType'] ?? 'solid',
+      'patternDetails': result['patternDetails'],
+      'patternKeywords': _extractStringList(result['patternKeywords']),
+      'style': _normalizeStyle(result['style'] ?? 'casual'),
+      'fit': result['fit'] ?? 'regular fit',
+      'material': result['material'] ?? 'cotton',
+      'seasons': _extractStringList(result['seasons']) ?? ['All Seasons'],
+      'formality': result['formality'] ?? 'casual',
+      'subcategory': result['subcategory'] ?? '',
+      'confidence': (result['confidence'] as num?)?.toDouble() ?? 0.8,
+      'occasions':
+          _extractStringList(result['occasions']) ??
+          _defaultOccasions(result['formality'] as String?),
+      'locations': _extractStringList(result['locations']),
+      'styleHints': _extractStringList(result['styleHints']),
+      'styleDescriptors': _extractStringList(result['styleDescriptors']),
+      'colorUndertone': result['colorUndertone'],
+      'complementaryColors': _extractStringList(result['complementaryColors']),
+      'colorTemperature': result['colorTemperature'],
+      'designElements': _extractStringList(result['designElements']),
+      'visualWeight': result['visualWeight'],
+      'pairingHints': _extractStringList(result['pairingHints']),
+      'stylePersonality': result['stylePersonality'],
+      'detailLevel': result['detailLevel'],
+      'garmentKeywords': _extractStringList(result['garmentKeywords']),
+      'rawAttributes': result,
+    };
   }
 
   static List<String>? _extractStringList(dynamic value) {
@@ -709,9 +736,10 @@ class GeminiApiService {
     String? userNotes,
     String gender = '', // 'male' or 'female'
   }) async {
+    final traceId = DateTime.now().millisecondsSinceEpoch.toString();
     AppLogger.info(
       '🎨 Generating SINGLE mannequin preview',
-      data: {'items': items.length, 'gender': gender},
+      data: {'trace_id': traceId, 'items': items.length, 'gender': gender},
     );
 
     if (items.isEmpty) {
@@ -738,21 +766,40 @@ class GeminiApiService {
         gender: gender,
       );
 
-      // Get the first image file
-      final imagePath = items.first.imagePath;
-      if (imagePath == null || imagePath.isEmpty) {
-        AppLogger.error('❌ No image path provided for first item');
+      // Pick the first *usable* reference image from any provided item.
+      // Pairing flows sometimes pass analyses where `imagePath` can be null even
+      // though the wardrobe item has an image on disk.
+      File? imageFile;
+      for (final item in items) {
+        final path = item.imagePath;
+        if (path == null || path.isEmpty) continue;
+        final file = File(path);
+        if (await file.exists()) {
+          imageFile = file;
+          break;
+        }
+      }
+      if (imageFile == null) {
+        AppLogger.error(
+          '❌ No usable reference image found for mannequin preview',
+          error: {
+            'trace_id': traceId,
+            'image_paths': items.map((i) => i.imagePath).toList(),
+          },
+        );
         return null;
       }
 
-      final imageFile = File(imagePath);
-      if (!await imageFile.exists()) {
-        AppLogger.error('❌ Image file not found: $imagePath');
-        return null;
-      }
+      AppLogger.info(
+        '🧩 [SinglePreview] Using reference image',
+        data: {'trace_id': traceId, 'path': imageFile.path},
+      );
 
       final imageUrl = await _callImagePreview(prompt, imageFile);
-      AppLogger.info('✅ Single mannequin preview generated successfully');
+      AppLogger.info(
+        '✅ Single mannequin preview generated successfully',
+        data: {'trace_id': traceId, 'ok': imageUrl != null},
+      );
       return imageUrl;
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -1099,71 +1146,98 @@ class GeminiApiService {
     return buffer.toString();
   }
 
+  /// Internal mannequin image-gen entry point used by all the public stream/
+  /// batch methods above. Delegates to [AiOrchestrator.generateMannequinImage]
+  /// so Gemini and OpenRouter race in parallel — first non-null wins.
   static Future<String?> _callImagePreview(
     String prompt,
     File imageFile,
   ) async {
-    final bytes = await imageFile.readAsBytes();
-    final base64Image = base64Encode(bytes);
-
-    final requestBody = {
-      'contents': [
-        {
-          'parts': [
-            {'text': prompt},
-            {
-              'inlineData': {
-                'mimeType': _getMimeType(imageFile),
-                'data': base64Image,
-              },
-            },
-          ],
-        },
-      ],
-    };
-
-    AppLogger.info(
-      '🚀 [Gemini] Calling image preview endpoint: $_imageEndpoint',
-    );
-
-    // Log prompt for debugging
     if (prompt.length > 100) {
       AppLogger.info(
-        '📝 [Gemini] Prompt start: ${prompt.substring(0, 100)}...',
+        '📝 [Orchestrator] Prompt start: ${prompt.substring(0, 100)}...',
       );
     }
 
-    final response = await _makeRequestWithRetry(_imageEndpoint, requestBody);
+    return AiOrchestrator.generateMannequinImage(
+      prompt: prompt,
+      referenceImage: imageFile,
+    );
+  }
 
-    AppLogger.network(_imageEndpoint, 'POST', statusCode: response.statusCode);
+  /// Raw Gemini-only image generation call.
+  /// Used by [AiOrchestrator]; do NOT call directly from feature code.
+  /// Returns raw base64 PNG (no `data:image/...` prefix), or null on failure.
+  static Future<String?> generateImageRaw({
+    required String prompt,
+    required File referenceImage,
+  }) async {
+    try {
+      final bytes = await referenceImage.readAsBytes();
+      final base64Image = base64Encode(bytes);
 
-    if (response.statusCode != 200) {
+      final requestBody = {
+        'contents': [
+          {
+            'parts': [
+              {'text': prompt},
+              {
+                'inlineData': {
+                  'mimeType': _getMimeType(referenceImage),
+                  'data': base64Image,
+                },
+              },
+            ],
+          },
+        ],
+      };
+
       AppLogger.info(
-        '❌ [Gemini] Image Generation Error Body: ${response.body}',
+        '🚀 [Gemini] Calling image preview endpoint: $_imageEndpoint',
       );
-      AppLogger.error('❌ Mannequin generation API error', error: response.body);
-      return null;
-    }
 
-    final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-    final candidates = responseData['candidates'] as List<dynamic>?;
+      final response = await _makeRequestWithRetry(_imageEndpoint, requestBody);
 
-    if (candidates == null || candidates.isEmpty) {
-      return null;
-    }
+      AppLogger.network(
+        _imageEndpoint,
+        'POST',
+        statusCode: response.statusCode,
+      );
 
-    for (final candidate in candidates) {
-      final parts = candidate['content']?['parts'] as List<dynamic>?;
-      if (parts == null) continue;
-      for (final part in parts) {
-        final inline = part['inlineData'];
-        if (inline != null && inline['data'] != null) {
-          return inline['data'] as String;
+      if (response.statusCode != 200) {
+        AppLogger.info(
+          '❌ [Gemini] Image Generation Error Body: ${response.body}',
+        );
+        return null;
+      }
+
+      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      final candidates = responseData['candidates'] as List<dynamic>?;
+
+      if (candidates == null || candidates.isEmpty) {
+        return null;
+      }
+
+      for (final candidate in candidates) {
+        final parts = candidate['content']?['parts'] as List<dynamic>?;
+        if (parts == null) continue;
+        for (final part in parts) {
+          final inline = part['inlineData'];
+          if (inline != null && inline['data'] != null) {
+            return inline['data'] as String;
+          }
         }
       }
-    }
 
-    return null;
+      return null;
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        '❌ [Gemini] Exception in generateImageRaw',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
   }
 
   static List<_OutfitCombination> _composeOutfitCombinations(

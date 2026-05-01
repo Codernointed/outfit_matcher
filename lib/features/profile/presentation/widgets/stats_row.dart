@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vestiq/core/models/profile_data.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
+import 'package:vestiq/core/widgets/soft_glass/animated_pressable.dart';
 
 /// Premium stats row with three animated cards
 class StatsRow extends StatelessWidget {
@@ -62,6 +64,7 @@ class StatsRow extends StatelessWidget {
     required int delay,
   }) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
 
     return Expanded(
       child: TweenAnimationBuilder<double>(
@@ -77,52 +80,45 @@ class StatsRow extends StatelessWidget {
             ),
           );
         },
-        child: GestureDetector(
+        child: AnimatedPressable(
           onTap: () {
             HapticFeedback.lightImpact();
             onTap();
           },
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 6),
-            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+            padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 12),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.surface,
-                  theme.colorScheme.primary.withValues(alpha: 0.02),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.06),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              boxShadow: soft.cardSoftShadow,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: theme.colorScheme.primary, size: 28),
-                const SizedBox(height: 8),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: soft.primarySoft,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: soft.primary, size: 22),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   value.toString(),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: theme.colorScheme.onSurface,
+                    letterSpacing: -0.01 * 20,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   label,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

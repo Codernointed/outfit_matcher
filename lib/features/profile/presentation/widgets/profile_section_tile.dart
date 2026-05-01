@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 
 /// Reusable list tile for profile sections
 class ProfileSectionTile extends StatelessWidget {
@@ -25,21 +26,22 @@ class ProfileSectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
 
     return ListTile(
       enabled: enabled,
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: (iconColor ?? theme.colorScheme.primary).withValues(
-            alpha: 0.1,
-          ),
-          borderRadius: BorderRadius.circular(12),
+          color: iconColor != null
+              ? iconColor!.withValues(alpha: 0.12)
+              : soft.primarySoft,
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Icon(
           icon,
-          color: iconColor ?? theme.colorScheme.primary,
-          size: 22,
+          color: iconColor ?? soft.primary,
+          size: 20,
         ),
       ),
       title: Text(

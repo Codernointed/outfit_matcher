@@ -18,7 +18,9 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.7.0" apply false
+    // Bump AGP to satisfy newer AndroidX metadata requirements.
+    // (Fixes :app:checkDebugAarMetadata complaining about requiring 8.9.1+)
+    id("com.android.application") version "8.9.1" apply false
     // START: FlutterFire Configuration
     id("com.google.gms.google-services") version("4.4.4") apply false
     // END: FlutterFire Configuration

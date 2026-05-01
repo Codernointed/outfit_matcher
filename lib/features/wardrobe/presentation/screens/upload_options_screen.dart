@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/soft_glass.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/item_details_screen.dart';
 
 class UploadOptionsScreen extends ConsumerStatefulWidget {
@@ -22,8 +24,9 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: soft.canvas,
       appBar: AppBar(
         title: Text(
           _selectedImages.isEmpty
@@ -65,70 +68,60 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
               ]
             : null,
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              _buildHeaderSection(context),
+      body: VestiqCanvas(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section
+                _buildHeaderSection(context),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Selected Images Preview
-              if (_selectedImages.isNotEmpty)
-                ..._buildSelectedImagesPreview(theme),
+                // Selected Images Preview
+                if (_selectedImages.isNotEmpty) ..._buildSelectedImagesPreview(theme),
 
-              // Options
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: _selectedImages.isEmpty
-                      ? MainAxisAlignment.center
-                      : MainAxisAlignment.start,
-                  children: [
-                    _buildPremiumOptionCard(
-                      context: context,
-                      icon: Icons.camera_alt_rounded,
-                      title: 'Take a Photo',
-                      subtitle: 'Capture your clothing item with camera',
-                      onPressed: _isLoading
-                          ? null
-                          : () => _pickImage(ImageSource.camera),
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.colorScheme.primary,
-                          theme.colorScheme.primary.withValues(alpha: 0.8),
-                        ],
+                // Options
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: _selectedImages.isEmpty
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                    children: [
+                      _buildPremiumOptionCard(
+                        context: context,
+                        icon: Icons.camera_alt_rounded,
+                        title: 'Take a Photo',
+                        subtitle: 'Capture your clothing item with camera',
+                        accentColor: soft.primary,
+                        onPressed: _isLoading
+                            ? null
+                            : () => _pickImage(ImageSource.camera),
                       ),
-                    ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
-                    _buildPremiumOptionCard(
-                      context: context,
-                      icon: Icons.photo_library_rounded,
-                      title: 'Choose from Gallery',
-                      subtitle: 'Select from your existing photos',
-                      onPressed: _isLoading
-                          ? null
-                          : () => _pickImage(ImageSource.gallery),
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.purple.shade400,
-                          Colors.purple.shade600,
-                        ],
+                      _buildPremiumOptionCard(
+                        context: context,
+                        icon: Icons.photo_library_rounded,
+                        title: 'Choose from Gallery',
+                        subtitle: 'Select from your existing photos',
+                        accentColor: const Color(0xFF6E56CF),
+                        onPressed: _isLoading
+                            ? null
+                            : () => _pickImage(ImageSource.gallery),
                       ),
-                    ),
-
-                    if (_selectedImages.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      _buildNextButton(theme),
+                      if (_selectedImages.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        _buildNextButton(theme),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -397,24 +390,10 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
   }
 
   Widget _buildNextButton(ThemeData theme) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _navigateToItemDetails,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-        ),
-        child: const Text(
-          'Continue to Details',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-      ),
+    return SoftButton(
+      label: 'Continue to Details',
+      icon: Icons.arrow_forward_rounded,
+      onPressed: _navigateToItemDetails,
     );
   }
 
@@ -423,102 +402,76 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color accentColor,
     required VoidCallback? onPressed,
-    required Gradient gradient,
     bool isDisabled = false,
   }) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
+    final disabled = isDisabled || onPressed == null;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: double.infinity,
-      height: _selectedImages.isNotEmpty ? 80 : 100,
-      margin: _selectedImages.isNotEmpty
-          ? const EdgeInsets.only(bottom: 12)
-          : null,
-      decoration: BoxDecoration(
-        gradient: isDisabled ? null : gradient,
-        color: isDisabled ? Colors.grey.shade200 : null,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: isDisabled
-            ? null
-            : [
-                BoxShadow(
-                  color: Theme.of(context).shadowColor.withValues(alpha: 0.1),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+    return AnimatedPressable(
+      onTap: disabled ? null : onPressed,
+      child: GlassCard(
+        strong: true,
+        borderRadius: 20,
+        tint: GlassTint.warm,
+        tintOpacity: 0.22,
+        shadow: GlassShadow.soft,
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              width: _selectedImages.isNotEmpty ? 48 : 60,
+              height: _selectedImages.isNotEmpty ? 48 : 60,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: disabled ? 0.1 : 0.16),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: accentColor.withValues(alpha: disabled ? 0.15 : 0.35),
                 ),
-              ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: isDisabled ? null : onPressed,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: _selectedImages.isNotEmpty ? 48 : 60,
-                  height: _selectedImages.isNotEmpty ? 48 : 60,
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surface.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: _selectedImages.isNotEmpty ? 24 : 28,
-                    color: isDisabled
-                        ? Colors.grey.shade600
-                        : Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: isDisabled
-                              ? Colors.grey.shade600
-                              : Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: _selectedImages.isNotEmpty ? 15 : 16,
-                        ),
-                      ),
-                      if (_selectedImages.isEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isDisabled
-                                ? Colors.grey.shade500
-                                : Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Icon(
-                  _selectedImages.isEmpty
-                      ? Icons.arrow_forward_ios_rounded
-                      : Icons.add_rounded,
-                  size: 16,
-                  color: isDisabled
-                      ? Colors.grey.shade500
-                      : Colors.white.withValues(alpha: 0.8),
-                ),
-              ],
+              ),
+              child: Icon(
+                icon,
+                size: _selectedImages.isNotEmpty ? 24 : 28,
+                color: disabled ? soft.outline : accentColor,
+              ),
             ),
-          ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: _selectedImages.isNotEmpty ? 15 : 16,
+                    ),
+                  ),
+                  if (_selectedImages.isEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.65),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              _selectedImages.isEmpty
+                  ? Icons.arrow_forward_ios_rounded
+                  : Icons.add_rounded,
+              size: 16,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ],
         ),
       ),
     );

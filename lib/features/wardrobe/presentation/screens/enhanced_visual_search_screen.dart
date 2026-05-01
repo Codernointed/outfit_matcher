@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,6 +40,8 @@ class EnhancedVisualSearchScreen extends ConsumerStatefulWidget {
   ConsumerState<EnhancedVisualSearchScreen> createState() =>
       _EnhancedVisualSearchScreenState();
 }
+
+typedef _AsyncVoidCallback = Future<void> Function();
 
 class _EnhancedVisualSearchScreenState
     extends ConsumerState<EnhancedVisualSearchScreen>
@@ -423,8 +426,20 @@ class _EnhancedVisualSearchScreenState
       if (mounted) {
         setState(() {
           _isGeneratingMannequins = false;
-          _generationStatus = '';
+          _generationStatus = _mannequinOutfits.isEmpty
+              ? 'AI generation unavailable right now'
+              : '';
         });
+        if (_mannequinOutfits.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'We couldn’t generate mannequins right now. Check your AI keys/credits and try again.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e, stackTrace) {
       final errorDuration = DateTime.now().difference(startTime);
@@ -444,41 +459,12 @@ class _EnhancedVisualSearchScreenState
           _isGeneratingMannequins = false;
           _generationStatus = 'Failed to generate mannequins';
         });
-      }
-    }
-  }
-
-  Future<void> _loadMannequinOutfits() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isGeneratingMannequins = true;
-      _generationStatus = 'Preparing mannequin generation...';
-      _generationProgress = 0;
-    });
-
-    try {
-      AppLogger.debug('ℹ️ 👤 Generating mannequin outfits');
-      final outfits = await _generateMannequinOutfits();
-
-      if (mounted) {
-        setState(() {
-          _mannequinOutfits = outfits;
-          _isGeneratingMannequins = false;
-          _generationStatus = '';
-          _generationProgress = 0;
-          AppLogger.debug(
-            '👗 Loaded ${_mannequinOutfits.length} mannequin outfits',
-          );
-        });
-      }
-    } catch (e) {
-      AppLogger.error('❌ Error generating mannequin outfits', error: e);
-      if (mounted) {
-        setState(() {
-          _isGeneratingMannequins = false;
-          _generationStatus = 'Failed to generate mannequins';
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Mannequin generation failed. Please try again.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -798,7 +784,7 @@ class _EnhancedVisualSearchScreenState
         'No mannequins yet',
         'Tap refresh to try generating new looks with your items and notes.',
         actionLabel: 'Regenerate',
-        onAction: _loadMannequinOutfits,
+        onAction: _regenerateMannequinsStreamed,
       );
     }
 
@@ -1034,7 +1020,7 @@ class _EnhancedVisualSearchScreenState
     String title,
     String message, {
     String? actionLabel,
-    VoidCallback? onAction,
+    _AsyncVoidCallback? onAction,
   }) {
     final theme = Theme.of(context);
     return Center(
@@ -1056,7 +1042,29 @@ class _EnhancedVisualSearchScreenState
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: onAction,
+              onPressed: _isGeneratingMannequins
+                  ? null
+                  : () {
+                      final traceId =
+                          DateTime.now().millisecondsSinceEpoch.toString();
+                      AppLogger.ui(
+                        'EnhancedVisualSearch',
+                        'RegenerateMannequinsPressed',
+                        data: {
+                          'trace_id': traceId,
+                          'analyses': widget.analyses.length,
+                          'has_item_images': widget.itemImages.isNotEmpty,
+                          'notes_len': widget.userNotes?.length ?? 0,
+                        },
+                      );
+                      // Ensure we see *something* in the terminal even if
+                      // developer.log is filtered.
+                      debugPrint(
+                        '[AI][$traceId] Regenerate pressed (try-on empty state)',
+                      );
+
+                      unawaited(onAction());
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.colorScheme.primary,
                 foregroundColor: Colors.white,
@@ -1068,12 +1076,38 @@ class _EnhancedVisualSearchScreenState
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(actionLabel),
+              child: _isGeneratingMannequins
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(actionLabel),
             ),
           ],
         ],
       ),
     );
+  }
+
+  Future<void> _regenerateMannequinsStreamed() async {
+    if (!mounted) return;
+    final traceId = DateTime.now().millisecondsSinceEpoch.toString();
+    debugPrint('[AI][$traceId] Starting streamed mannequin regeneration');
+    try {
+      final cacheService = getIt<MannequinCacheService>();
+      final itemIds = widget.analyses.map((a) => a.id).toList();
+      await cacheService.clearCache(itemIds);
+    } catch (_) {
+      // Best-effort cache clear; regeneration still proceeds.
+    }
+    setState(() {
+      _mannequinOutfits.clear();
+    });
+    await _loadMannequinOutfitsStreamed();
   }
 
   void _downloadMannequinImage(MannequinOutfit outfit) async {
@@ -1261,10 +1295,7 @@ class _EnhancedVisualSearchScreenState
   }
 
   void _retryMannequinGeneration() {
-    setState(() {
-      _mannequinOutfits.clear();
-    });
-    _loadMannequinOutfits();
+    _regenerateMannequinsStreamed();
   }
 
   Uint8List _dataUrlToBytes(String dataUrl) {

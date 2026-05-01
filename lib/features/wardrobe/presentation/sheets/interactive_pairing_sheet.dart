@@ -8,6 +8,7 @@ import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 
 /// Interactive pairing sheet where user manually selects items and gets AI coaching
 Future<void> showInteractivePairingSheet({
@@ -15,12 +16,8 @@ Future<void> showInteractivePairingSheet({
   required WardrobeItem heroItem,
   PairingMode mode = PairingMode.pairThisItem,
 }) {
-  return showModalBottomSheet(
+  return showGlassBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    isDismissible: true,
-    enableDrag: true,
     builder: (_) => InteractivePairingSheet(heroItem: heroItem, mode: mode),
   );
 }
@@ -271,32 +268,23 @@ class _InteractivePairingSheetState extends State<InteractivePairingSheet> {
       minChildSize: 0.75,
       maxChildSize: 0.98,
       builder: (context, controller) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              children: [
-                _buildHandle(theme),
-                _buildHeader(theme),
-                if (_selectedItems.length > 1) _buildCoachingCard(theme),
-                Expanded(
-                  child: _loading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildContent(theme, controller),
-                ),
-                _buildBottomBar(theme),
-              ],
+        return Column(
+          children: [
+            _buildHeader(theme),
+            if (_selectedItems.length > 1) _buildCoachingCard(theme),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _buildContent(theme, controller),
             ),
-          ),
+            _buildBottomBar(theme),
+          ],
         );
       },
     );
   }
 
+  // ignore: unused_element
   Widget _buildHandle(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 8),

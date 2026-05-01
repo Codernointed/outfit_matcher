@@ -14,7 +14,9 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/walkthrough_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/soft_glass.dart';
 import 'package:vestiq/core/widgets/walkthrough_overlay.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
@@ -28,6 +30,28 @@ import 'package:vestiq/features/wardrobe/presentation/screens/upload_options_scr
 import 'package:vestiq/features/wardrobe/presentation/widgets/dynamic_island_navbar.dart';
 import 'package:vestiq/main.dart' show appThemeModeProvider;
 // Subscription imports removed - premium prompts now shown via LimitReachedModal only
+
+PageRoute<T> _buildSoftPageRoute<T>(Widget child) {
+  return PageRouteBuilder<T>(
+    pageBuilder: (_, animation, __) => child,
+    transitionDuration: const Duration(milliseconds: 280),
+    reverseTransitionDuration: const Duration(milliseconds: 220),
+    transitionsBuilder: (_, animation, secondaryAnimation, page) {
+      final fade = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
+      final slide = Tween<Offset>(
+        begin: const Offset(0.02, 0),
+        end: Offset.zero,
+      ).animate(fade);
+      return FadeTransition(
+        opacity: fade,
+        child: SlideTransition(position: slide, child: page),
+      );
+    },
+  );
+}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -108,9 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _openSearch(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const HomeSearchResultsScreen()),
-    );
+    Navigator.of(context).push(_buildSoftPageRoute(const HomeSearchResultsScreen()));
   }
 
   // void _openFilters(BuildContext context) {
@@ -156,17 +178,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final currentIndex = ref.watch(bottomNavIndexProvider);
 
+    final soft = context.vestiqSoft;
+
     return Stack(
       children: [
         Scaffold(
-          appBar: AppBar(
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            title: Row(
+          backgroundColor: soft.canvas,
+          extendBodyBehindAppBar: true,
+          extendBody: true,
+          appBar: GlassAppBar(
+            titleWidget: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.checkroom, color: theme.colorScheme.primary),
+                Icon(Icons.checkroom_rounded, color: soft.primary, size: 22),
                 const SizedBox(width: 8),
-                Text('vestiq', style: theme.textTheme.titleLarge),
+                Text(
+                  'vestiq',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.01,
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -189,27 +221,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
                 tooltip: 'Toggle theme',
               ),
+              const SizedBox(width: 4),
             ],
           ),
-          body: IndexedStack(index: currentIndex, children: _mainScreens),
+          body: VestiqCanvas(
+            child: Stack(
+              fit: StackFit.expand,
+              children: List.generate(_mainScreens.length, (index) {
+                final isActive = index == currentIndex;
+                return IgnorePointer(
+                  ignoring: !isActive,
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    opacity: isActive ? 1.0 : 0.0,
+                    child: AnimatedSlide(
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOutCubic,
+                      offset: isActive ? Offset.zero : const Offset(0.015, 0),
+                      child: KeyedSubtree(
+                        key: ValueKey('tab_screen_$index'),
+                        child: _mainScreens[index],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
           bottomNavigationBar: DynamicIslandNavBar(
             key: _bottomNavKey,
             currentIndex: currentIndex,
             onTap: (index) {
               ref.read(bottomNavIndexProvider.notifier).state = index;
             },
-            items: [
+            items: const [
               DynamicIslandNavItem(
-                icon: Icons.home_rounded,
+                icon: Icons.home_outlined,
                 activeIcon: Icons.home_rounded,
                 label: 'Home',
               ),
-              const DynamicIslandNavItem(
+              DynamicIslandNavItem(
                 icon: Icons.checkroom_outlined,
                 activeIcon: Icons.checkroom,
                 label: 'Closet',
               ),
-              const DynamicIslandNavItem(
+              DynamicIslandNavItem(
                 icon: CupertinoIcons.person,
                 activeIcon: Icons.person,
                 label: 'Profile',
@@ -339,9 +396,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                 label: 'Add Items',
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleWardrobeUploadScreen(),
-                    ),
+                    _buildSoftPageRoute(const SimpleWardrobeUploadScreen()),
                   );
                 },
               ),
@@ -366,9 +421,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                 textColor: theme.colorScheme.onPrimary,
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleWardrobeUploadScreen(),
-                    ),
+                    _buildSoftPageRoute(const SimpleWardrobeUploadScreen()),
                   );
                 },
               ),
@@ -430,8 +483,8 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
         // Navigate to outfit suggestions screen
         if (mounted) {
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => _OccasionOutfitSuggestionsScreen(
+            _buildSoftPageRoute(
+              _OccasionOutfitSuggestionsScreen(
                 occasion: occasion,
                 pairings: pairings,
                 heroItem: heroItem,
@@ -513,129 +566,79 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   Widget _buildHeroSection(BuildContext context) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
 
-    return Container(
+    return Padding(
       key: widget.heroKey,
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            theme.colorScheme.primary.withValues(alpha: 0.1),
-            theme.colorScheme.secondary.withValues(alpha: 0.05),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: GlassCard(
+        borderRadius: 24,
+        padding: const EdgeInsets.all(24),
+        tint: GlassTint.rose,
+        tintOpacity: 0.32,
+        shadow: GlassShadow.soft,
+        strong: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: soft.primarySoft,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'AI Stylist',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: soft.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'What would you like to wear today?',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+                height: 1.2,
+                letterSpacing: -0.015 * 22,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create a clean, occasion-ready look in one tap.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: soft.onPrimarySoft.withValues(alpha: 0.75),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildPrimaryCTA(context),
           ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'What would you like to wear today?',
-            style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Let\'s create the perfect outfit for you',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildPrimaryCTA(context),
-        ],
       ),
     );
   }
 
   Widget _buildPrimaryCTA(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
+    return SizedBox(
       key: widget.primaryCtaKey,
       width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const UploadOptionsScreen(),
-              ),
-            );
-          },
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.camera_alt_rounded,
-                color: theme.colorScheme.onPrimary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Generate Your Outfit',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+      child: SoftButton(
+        label: 'Generate Your Outfit',
+        icon: Icons.camera_alt_rounded,
+        height: 56,
+        borderRadius: 16,
+        onPressed: () {
+          Navigator.of(context).push(_buildSoftPageRoute(const UploadOptionsScreen()));
+        },
       ),
     );
   }
 
   Widget _buildQuickActions(BuildContext context, QuickIdeasState quickIdeas) {
     final theme = Theme.of(context);
-
-    if (quickIdeas.isLoading) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Quick Outfit Ideas',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Center(child: CircularProgressIndicator()),
-          ],
-        ),
-      );
-    }
-
     final ideas = quickIdeas.ideas.isNotEmpty
         ? quickIdeas.ideas
         : _getDefaultQuickIdeas();
@@ -653,20 +656,44 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildOccasionCard(context, ideas[0])),
-              const SizedBox(width: 12),
-              Expanded(child: _buildOccasionCard(context, ideas[1])),
-            ],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: quickIdeas.isLoading
+                ? const _QuickIdeasShimmer()
+                : Column(
+                    key: const ValueKey('quick-loaded'),
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: _buildOccasionCard(context, ideas[0])),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildOccasionCard(context, ideas[1])),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(child: _buildOccasionCard(context, ideas[2])),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildOccasionCard(context, ideas[3])),
+                        ],
+                      ),
+                    ],
+                  ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(child: _buildOccasionCard(context, ideas[2])),
-              const SizedBox(width: 12),
-              Expanded(child: _buildOccasionCard(context, ideas[3])),
-            ],
+          const SizedBox(height: 2),
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: quickIdeas.isLoading ? 0.0 : 1.0,
+            child: Text(
+              'Long-press any idea to customize vibe',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.48),
+                letterSpacing: 0.2,
+              ),
+            ),
           ),
         ],
       ),
@@ -719,119 +746,126 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
 
   Widget _buildOccasionCard(BuildContext context, QuickIdeaCard idea) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    // Use distinct icons based on occasion instead of generic string mapping
+    final soft = context.vestiqSoft;
     final icon = _getDistinctIconForOccasion(idea.occasion);
 
-    // Use theme-aware color mapping based on occasion
-    Color bgColor;
+    // Each occasion gets a desaturated, on-brand accent that complements the
+    // warm canvas instead of clashing with it.
     Color iconColor;
+    Color tintBg;
     switch (idea.occasion.toLowerCase()) {
       case 'casual':
-        bgColor = isDark
-            ? Colors.blue.shade900.withValues(alpha: 0.3)
-            : Colors.blue.shade100;
-        iconColor = isDark ? Colors.blue.shade300 : Colors.blue.shade700;
+        iconColor = const Color(0xFF6E8FB3); // dusty blue
+        tintBg = const Color(0xFFE7EEF5);
         break;
       case 'work':
-        bgColor = isDark
-            ? Colors.purple.shade900.withValues(alpha: 0.3)
-            : Colors.purple.shade100;
-        iconColor = isDark ? Colors.purple.shade300 : Colors.purple.shade700;
+        iconColor = const Color(0xFF8C7AB3); // muted lavender
+        tintBg = const Color(0xFFEDE7F4);
         break;
       case 'date':
-        bgColor = isDark
-            ? Colors.pink.shade900.withValues(alpha: 0.3)
-            : Colors.pink.shade100;
-        iconColor = isDark ? Colors.pink.shade300 : Colors.pink.shade700;
+        iconColor = soft.primary;
+        tintBg = soft.primarySoft;
         break;
       case 'party':
-        bgColor = isDark
-            ? Colors.orange.shade900.withValues(alpha: 0.3)
-            : Colors.orange.shade100;
-        iconColor = isDark ? Colors.orange.shade300 : Colors.orange.shade700;
+        iconColor = const Color(0xFFC78A4E); // warm bronze
+        tintBg = const Color(0xFFF5E9D9);
         break;
       default:
-        bgColor = theme.colorScheme.primaryContainer;
-        iconColor = theme.colorScheme.primary;
+        iconColor = soft.primary;
+        tintBg = soft.primarySoft;
     }
 
-    return GestureDetector(
+    return AnimatedPressable(
+      onTap: () {
+        AppLogger.info('🎯 Tapped quick idea: ${idea.occasion}');
+        _generateOutfitSuggestions(idea.occasion);
+      },
       onLongPress: () {
         AppLogger.info('🔥 Long-pressed quick idea: ${idea.occasion}');
-        // Show customize mood sheet
         showCustomizeMoodSheet(
           context,
           occasion: idea.occasion,
           onApply: () {
             AppLogger.info('✅ Mood customized for ${idea.occasion}');
-            // Custom mood preferences are applied via the pairing service
           },
         );
       },
       child: Container(
-        height: 80,
+        height: 88,
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: iconColor.withValues(alpha: 0.2), width: 1),
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: soft.cardSoftShadow,
         ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: () {
-              AppLogger.info('🎯 Tapped quick idea: ${idea.occasion}');
-              // Generate outfit suggestions from existing wardrobe for this occasion
-              _generateOutfitSuggestions(idea.occasion);
-            },
-            child: Stack(
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Icon(icon, color: iconColor, size: 28),
-                      const SizedBox(height: 4),
-                      Text(
-                        idea.occasion,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: iconColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: tintBg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 22),
                   ),
-                ),
-                // "New" badge if hasNewSuggestions
-                if (idea.hasNewSuggestions)
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '✨ New',
-                        style: TextStyle(
-                          color: theme.colorScheme.onPrimary,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          idea.occasion,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Tap to style',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.55),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
-          ),
+            if (idea.hasNewSuggestions)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: soft.primarySoft,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'New',
+                    style: TextStyle(
+                      color: soft.onPrimarySoft,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Poppins',
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -862,9 +896,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   onPressed: () {
                     AppLogger.info('📂 View All Recent Generations tapped');
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SavedLooksScreen(),
-                      ),
+                      _buildSoftPageRoute(const SavedLooksScreen()),
                     );
                   },
                   child: Text(
@@ -1481,9 +1513,7 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
                   AppLogger.info('📂 See All Today\'s Picks tapped');
                   // Opens saved looks screen with today's picks filter
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SavedLooksScreen(),
-                    ),
+                    _buildSoftPageRoute(const SavedLooksScreen()),
                   );
                 },
                 child: Text(
@@ -1502,21 +1532,33 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
           _buildTodayTonightTabs(context, todaysPicks, theme),
           const SizedBox(height: 16),
 
-          if (todaysPicks.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else if (todaysPicks.activeTab == TodayTab.today &&
-              todaysPicks.todayPicks.isEmpty)
-            _buildEmptyTodaysPicks(context)
-          else if (todaysPicks.activeTab == TodayTab.tonight &&
-              todaysPicks.tonightPicks.isEmpty)
-            _buildEmptyTonightPicks(context)
-          else
-            _buildTodaysPicksList(context, todaysPicks, theme),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: todaysPicks.isLoading
+                ? const Padding(
+                    key: ValueKey('todays-loading'),
+                    padding: EdgeInsets.all(12),
+                    child: _TodayPicksShimmer(),
+                  )
+                : todaysPicks.activeTab == TodayTab.today &&
+                      todaysPicks.todayPicks.isEmpty
+                ? Container(
+                    key: const ValueKey('todays-empty'),
+                    child: _buildEmptyTodaysPicks(context),
+                  )
+                : todaysPicks.activeTab == TodayTab.tonight &&
+                      todaysPicks.tonightPicks.isEmpty
+                ? Container(
+                    key: const ValueKey('tonight-empty'),
+                    child: _buildEmptyTonightPicks(context),
+                  )
+                : Container(
+                    key: ValueKey('picks-${todaysPicks.activeTab.name}'),
+                    child: _buildTodaysPicksList(context, todaysPicks, theme),
+                  ),
+          ),
         ],
       ),
     );
@@ -1527,107 +1569,88 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     TodaysPicksState todaysPicks,
     ThemeData theme,
   ) {
-    return Container(
+    final isToday = todaysPicks.activeTab == TodayTab.today;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
       height: 40,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                AppLogger.info('🌅 Switched to Today tab');
-                ref
-                    .read(todaysPicksProvider.notifier)
-                    .setActiveTab(TodayTab.today);
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: todaysPicks.activeTab == TodayTab.today
-                        ? theme.colorScheme.surface
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: todaysPicks.activeTab == TodayTab.today
-                        ? [
-                            BoxShadow(
-                              color: theme.shadowColor.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Center(
-                    child: Text(
-                      'For Today',
-                      style: TextStyle(
-                        color: todaysPicks.activeTab == TodayTab.today
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                        fontWeight: todaysPicks.activeTab == TodayTab.today
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        fontSize: 14,
-                      ),
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            alignment: isToday ? Alignment.centerLeft : Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Container(
+                width: MediaQuery.sizeOf(context).width * 0.39,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor.withValues(alpha: 0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                AppLogger.info('🌙 Switched to Tonight tab');
-                ref
-                    .read(todaysPicksProvider.notifier)
-                    .setActiveTab(TodayTab.tonight);
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: todaysPicks.activeTab == TodayTab.tonight
-                        ? theme.colorScheme.surface
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: todaysPicks.activeTab == TodayTab.tonight
-                        ? [
-                            BoxShadow(
-                              color: theme.shadowColor.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
-                  ),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    AppLogger.info('🌅 Switched to Today tab');
+                    ref.read(todaysPicksProvider.notifier).setActiveTab(
+                          TodayTab.today,
+                        );
+                  },
                   child: Center(
-                    child: Text(
-                      'For Tonight',
-                      style: TextStyle(
-                        color: todaysPicks.activeTab == TodayTab.tonight
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      style: theme.textTheme.labelLarge!.copyWith(
+                        color: isToday
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                        fontWeight: todaysPicks.activeTab == TodayTab.tonight
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                        fontSize: 14,
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                        fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
                       ),
+                      child: const Text('For Today'),
                     ),
                   ),
                 ),
               ),
-            ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    AppLogger.info('🌙 Switched to Tonight tab');
+                    ref.read(todaysPicksProvider.notifier).setActiveTab(
+                          TodayTab.tonight,
+                        );
+                  },
+                  child: Center(
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeOutCubic,
+                      style: theme.textTheme.labelLarge!.copyWith(
+                        color: !isToday
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                        fontWeight: !isToday ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                      child: const Text('For Tonight'),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1957,159 +1980,171 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
     int index,
     ThemeData theme,
   ) {
-    return Container(
-      width: 180,
-      height: 194, // Updated to accommodate increased content height
-      margin: EdgeInsets.only(right: index == 4 ? 0 : 16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16), // Match Recent Generations
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 220 + (index * 60)),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 12),
+            child: child,
           ),
-        ],
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.1),
-          width: 1,
+        );
+      },
+      child: Container(
+        width: 180,
+        height: 194, // Updated to accommodate increased content height
+        margin: EdgeInsets.only(right: index == 4 ? 0 : 16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(16), // Match Recent Generations
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            width: 1,
+          ),
         ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            AppLogger.info('🎯 Tapped today\'s pick: ${pick.description}');
-            // Outfit preview can be added later if needed - current card shows all info
-          },
-          child: Stack(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Image - Fixed height to match Recent Generations
-                  SizedBox(
-                    height: 150, // Match Recent Generations exactly
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              AppLogger.info('🎯 Tapped today\'s pick: ${pick.description}');
+              // Outfit preview can be added later if needed - current card shows all info
+            },
+            child: Stack(
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Image - Fixed height to match Recent Generations
+                    SizedBox(
+                      height: 150, // Match Recent Generations exactly
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          color: theme.colorScheme.surfaceContainerHighest,
                         ),
-                        color: theme.colorScheme.surfaceContainerHighest,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(16),
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          child: _buildTodaysPickImage(pick, theme),
                         ),
-                        child: _buildTodaysPickImage(pick, theme),
                       ),
                     ),
-                  ),
 
-                  // Content - Fixed height to match Recent Generations
-                  SizedBox(
-                    height: 64, // Increased to accommodate content
-                    child: Padding(
-                      padding: const EdgeInsets.all(
-                        8,
-                      ), // Match Recent Generations
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            pick.description,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12, // Match Recent Generations
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: false,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${pick.items.length} items',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(
-                                alpha: 0.6,
+                    // Content - Fixed height to match Recent Generations
+                    SizedBox(
+                      height: 64, // Increased to accommodate content
+                      child: Padding(
+                        padding: const EdgeInsets.all(8), // Match Recent Generations
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              pick.description,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12, // Match Recent Generations
                               ),
-                              fontSize: 10,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: false,
-                          ),
-                          const Spacer(),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.auto_awesome,
-                                size: 10,
-                                color: _getScoreColor(pick.compatibilityScore),
-                              ),
-                              const SizedBox(width: 3),
-                              Expanded(
-                                child: Text(
-                                  '${(pick.compatibilityScore * 100).toInt()}%',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: _getScoreColor(
-                                      pick.compatibilityScore,
-                                    ),
-                                    fontSize: 9,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 2),
+                            Text(
+                              '${pick.items.length} items',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
                                 ),
+                                fontSize: 10,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              // Weather chip overlay
-              Positioned(
-                top: 4,
-                left: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        index.isEven
-                            ? Icons.nightlight_round
-                            : Icons.wb_sunny_rounded,
-                        size: 10,
-                        color: theme.colorScheme.surface,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        index.isEven ? 'Tonight' : '22°C',
-                        style: TextStyle(
-                          color: theme.colorScheme.surface,
-                          fontSize: 8,
-                          fontWeight: FontWeight.w500,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                            ),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.auto_awesome,
+                                  size: 10,
+                                  color: _getScoreColor(pick.compatibilityScore),
+                                ),
+                                const SizedBox(width: 3),
+                                Expanded(
+                                  child: Text(
+                                    '${(pick.compatibilityScore * 100).toInt()}%',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: _getScoreColor(
+                                        pick.compatibilityScore,
+                                      ),
+                                      fontSize: 9,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+
+                // Weather chip overlay
+                Positioned(
+                  top: 4,
+                  left: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          index.isEven
+                              ? Icons.nightlight_round
+                              : Icons.wb_sunny_rounded,
+                          size: 10,
+                          color: theme.colorScheme.surface,
+                        ),
+                        const SizedBox(width: 2),
+                        Text(
+                          index.isEven ? 'Tonight' : '22°C',
+                          style: TextStyle(
+                            color: theme.colorScheme.surface,
+                            fontSize: 8,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -2770,29 +2805,11 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
   }
 
   void _showWardrobeItemActions(BuildContext context, WardrobeItem item) {
-    final theme = Theme.of(context);
-    showModalBottomSheet(
+    showGlassBottomSheet<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
             // Title
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -2893,9 +2910,8 @@ class _MainContentHomeScreenState extends ConsumerState<MainContentHomeScreen> {
               },
             ),
 
-            const SizedBox(height: 20),
-          ],
-        ),
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
@@ -3608,5 +3624,116 @@ class _OccasionOutfitSuggestionsScreenState
     if (score >= 0.8) return Colors.green;
     if (score >= 0.6) return Colors.orange;
     return Colors.red;
+  }
+}
+
+class _QuickIdeasShimmer extends StatelessWidget {
+  const _QuickIdeasShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        Row(
+          children: [
+            Expanded(child: _ShimmerCard(height: 88)),
+            SizedBox(width: 12),
+            Expanded(child: _ShimmerCard(height: 88)),
+          ],
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: _ShimmerCard(height: 88)),
+            SizedBox(width: 12),
+            Expanded(child: _ShimmerCard(height: 88)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TodayPicksShimmer extends StatelessWidget {
+  const _TodayPicksShimmer();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 220,
+      child: Row(
+        children: const [
+          Expanded(child: _ShimmerCard(height: 210)),
+          SizedBox(width: 12),
+          Expanded(child: _ShimmerCard(height: 210)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShimmerCard extends StatefulWidget {
+  const _ShimmerCard({required this.height});
+
+  final double height;
+
+  @override
+  State<_ShimmerCard> createState() => _ShimmerCardState();
+}
+
+class _ShimmerCardState extends State<_ShimmerCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1350),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final alpha = 0.22 + (_controller.value * 0.20);
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.shadowColor.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Container(
+            height: widget.height,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: alpha),
+                  theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: alpha * 0.65),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

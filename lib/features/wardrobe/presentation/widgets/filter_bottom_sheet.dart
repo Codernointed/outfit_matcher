@@ -39,25 +39,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final availableSeasons = ref.watch(availableSeasonsProvider);
     final availableOccasions = ref.watch(availableOccasionsProvider);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
           // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
@@ -204,8 +188,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 

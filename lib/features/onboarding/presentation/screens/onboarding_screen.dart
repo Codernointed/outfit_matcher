@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
-import 'package:vestiq/core/theme/app_theme.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
+import 'package:vestiq/core/widgets/soft_glass/soft_glass.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/core/utils/logger.dart';
 
@@ -40,7 +41,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
+      body: VestiqCanvas(
+        child: SafeArea(
         child: Column(
           children: [
             // Progress indicator
@@ -110,7 +112,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.all(AppConstants.defaultSpacing),
               child: Column(
                 children: [
-                  ElevatedButton(
+                  SoftButton(
+                    label: _currentPage == 2 ? 'Get Started' : 'Continue',
                     onPressed: () {
                       if (_currentPage < 2) {
                         _pageController.nextPage(
@@ -118,11 +121,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       } else {
-                        // Complete onboarding - AuthWrapper will show LoginScreen
                         _completeOnboarding();
                       }
                     },
-                    child: Text(_currentPage == 2 ? 'Get Started' : 'Continue'),
                   ),
                   if (_currentPage < 2)
                     TextButton(
@@ -133,6 +134,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -181,8 +183,9 @@ class _OnboardingPage extends StatelessWidget {
             width: screenSize.width < 400 ? 100 : 120,
             height: screenSize.width < 400 ? 100 : 120,
             decoration: BoxDecoration(
-              color: AppTheme.secondaryBackgroundColor,
+              color: context.vestiqSoft.primarySoft,
               shape: BoxShape.circle,
+              boxShadow: context.vestiqSoft.cardSoftShadow,
             ),
             child: Icon(
               icon,
@@ -222,10 +225,11 @@ class _OnboardingPage extends StatelessWidget {
                 minHeight: 200, // Minimum height
               ),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: context.vestiqSoft.surfaceContainer,
                 borderRadius: BorderRadius.circular(
-                  AppConstants.defaultBorderRadius,
+                  AppConstants.largeBorderRadius,
                 ),
+                boxShadow: context.vestiqSoft.cardSoftShadow,
               ),
               child: Center(
                 child: ClipRRect(

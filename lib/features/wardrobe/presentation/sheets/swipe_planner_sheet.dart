@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:vestiq/core/models/swipe_closet_request.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/providers/swipe_planner_providers.dart'
     as swipe_planner_providers;
 
@@ -117,34 +118,13 @@ class _SwipePlannerSheetState extends ConsumerState<SwipePlannerSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
+        return SingleChildScrollView(
               controller: scrollController,
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Handle
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.2,
-                        ),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
                   // Title
                   Text(
                     'Plan an Outfit',
@@ -335,9 +315,7 @@ class _SwipePlannerSheetState extends ConsumerState<SwipePlannerSheet> {
                   ),
                 ],
               ),
-            ),
-          ),
-        );
+            );
       },
     );
   }
@@ -345,10 +323,8 @@ class _SwipePlannerSheetState extends ConsumerState<SwipePlannerSheet> {
 
 /// Show the swipe planner sheet
 Future<SwipeClosetRequest?> showSwipePlannerSheet(BuildContext context) {
-  return showModalBottomSheet<SwipeClosetRequest>(
+  return showGlassBottomSheet<SwipeClosetRequest>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (context) => const SwipePlannerSheet(),
   );
 }

@@ -11,7 +11,9 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/walkthrough_service.dart';
 import 'package:vestiq/core/services/wardrobe_pairing_service.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/soft_glass.dart';
 import 'package:vestiq/core/widgets/walkthrough_overlay.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/screens/simple_wardrobe_upload_screen.dart';
@@ -126,6 +128,32 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     super.dispose();
   }
 
+  Future<T?> _pushSoft<T>(Widget page) {
+    return Navigator.of(context).push<T>(
+      PageRouteBuilder<T>(
+        pageBuilder: (_, animation, __) => page,
+        transitionDuration: const Duration(milliseconds: 280),
+        reverseTransitionDuration: const Duration(milliseconds: 220),
+        transitionsBuilder: (_, animation, __, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.02, 0),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> _initWalkthrough() async {
     final prefs = getIt<SharedPreferences>();
     _walkthroughService = WalkthroughService(prefs);
@@ -173,12 +201,18 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     final filteredItemsAsync = ref.watch(filteredWardrobeItemsProvider);
     final showFavoritesOnly = ref.watch(showFavoritesOnlyProvider);
 
+    final soft = context.vestiqSoft;
+
     return Stack(
       children: [
         Scaffold(
+          backgroundColor: Colors.transparent,
           body: Column(
             children: [
-              _buildCustomHeader(theme, showFavoritesOnly),
+              SafeArea(
+                bottom: false,
+                child: _buildCustomHeader(theme, showFavoritesOnly),
+              ),
               _buildCategoryTabs(theme, selectedCategory),
               Expanded(
                 child: filteredItemsAsync.when(
@@ -212,17 +246,41 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
           ),
           floatingActionButton: filteredItemsAsync.maybeWhen(
             data: (items) => items.isNotEmpty
-                ? FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SimpleWardrobeUploadScreen(),
+                ? Padding(
+                    // Keep the FAB above the parent bottom nav.
+                    padding: const EdgeInsets.only(bottom: 86),
+                    child: AnimatedPressable(
+                      onTap: () {
+                        _pushSoft(const SimpleWardrobeUploadScreen());
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: 16,
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Item'),
+                        decoration: BoxDecoration(
+                          color: soft.primary,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: soft.primaryGlowShadow,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                            SizedBox(width: 8),
+                            Text(
+                              'Add Item',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Poppins',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   )
                 : null,
             orElse: () => null,
@@ -414,51 +472,67 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                     parameters: {'category': newCategory},
                   );
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? theme.colorScheme.primaryContainer
-                        : Colors
-                              .transparent, // Minimal: no background for unselected
-                    borderRadius: BorderRadius.circular(18),
-                    border: isSelected
-                        ? null
-                        : Border.all(
-                            color: theme.colorScheme.outline.withValues(
-                              alpha: 0.2,
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  scale: isSelected ? 1.0 : 0.97,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.primaryContainer
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(18),
+                      border: isSelected
+                          ? null
+                          : Border.all(
+                              color: theme.colorScheme.outline.withValues(
+                                alpha: 0.2,
+                              ),
                             ),
-                          ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isSelected) ...[
-                        Icon(
-                          categoryIcon,
-                          size: 16,
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                        const SizedBox(width: 6),
-                      ],
-                      Text(
-                        categoryName,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: isSelected
-                              ? theme.colorScheme.onPrimaryContainer
-                              : theme.colorScheme.onSurface.withValues(
-                                  alpha: 0.7,
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.10,
                                 ),
-                          fontWeight: isSelected
-                              ? FontWeight.w600
-                              : FontWeight.w500,
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected) ...[
+                          Icon(
+                            categoryIcon,
+                            size: 16,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          categoryName,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isSelected
+                                ? theme.colorScheme.onPrimaryContainer
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.7,
+                                  ),
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w500,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -475,7 +549,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 130),
       physics: const AlwaysScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -493,15 +567,19 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
   Widget _buildItemCard(BuildContext context, WardrobeItem item, bool isFirst) {
     final theme = Theme.of(context);
+    final soft = context.vestiqSoft;
 
-    return Card(
-      key: isFirst ? _firstItemKey : null,
-      elevation: 2,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: GestureDetector(
-        onTap: () => _showItemPreview(context, item),
-        onLongPress: () => _showQuickActions(context, item),
+    return AnimatedPressable(
+      onTap: () => _showItemPreview(context, item),
+      onLongPress: () => _showQuickActions(context, item),
+      child: Container(
+        key: isFirst ? _firstItemKey : null,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: soft.cardSoftShadow,
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -520,15 +598,15 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(12),
+                          color: soft.primarySoft,
+                          borderRadius: BorderRadius.circular(999),
                         ),
-                        child: const Icon(
-                          Icons.favorite,
-                          color: Colors.white,
-                          size: 16,
+                        child: Icon(
+                          Icons.favorite_rounded,
+                          color: soft.primary,
+                          size: 14,
                         ),
                       ),
                     ),
@@ -540,19 +618,20 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                          horizontal: 8,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.black.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
                           '${item.wearCount}x',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ),
@@ -563,14 +642,15 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
             // Item info
             Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.analysis.subcategory ?? item.analysis.itemType,
                     style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -579,29 +659,33 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   Text(
                     item.analysis.primaryColor,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
                   ),
 
                   // Occasions chips
                   if (item.occasions.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 4,
+                      runSpacing: 4,
                       children: item.occasions.take(2).map((occasion) {
                         return Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
+                            horizontal: 8,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer
-                                .withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(8),
+                            color: soft.surfaceContainer,
+                            borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             occasion,
-                            style: theme.textTheme.labelSmall,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontFamily: 'Poppins',
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.7),
+                            ),
                           ),
                         );
                       }).toList(),
@@ -744,11 +828,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleWardrobeUploadScreen(),
-                    ),
-                  );
+                  _pushSoft(const SimpleWardrobeUploadScreen());
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
@@ -904,14 +984,11 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
     AppLogger.info('🎨 Navigating to inspiration with notes: $finalNotes');
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EnhancedVisualSearchScreen(
-          analyses: [item.analysis],
-          itemImages: [item.displayImagePath],
-          userNotes: finalNotes.isEmpty ? null : finalNotes,
-        ),
+    _pushSoft(
+      EnhancedVisualSearchScreen(
+        analyses: [item.analysis],
+        itemImages: [item.displayImagePath],
+        userNotes: finalNotes.isEmpty ? null : finalNotes,
       ),
     );
   }
@@ -1003,11 +1080,8 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
 
   Future<void> _editItem(WardrobeItem item) async {
     AppLogger.info('✏️ [CLOSET] Edit item: ${item.id}');
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) =>
-            AddItemScreen(imagePath: item.originalImagePath, itemToEdit: item),
-      ),
+    final result = await _pushSoft<bool>(
+      AddItemScreen(imagePath: item.originalImagePath, itemToEdit: item),
     );
 
     if (result == true) {
@@ -1256,10 +1330,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       );
 
       // Navigate to swipe closet screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SwipeClosetScreen()),
-      );
+      _pushSoft(const SwipeClosetScreen());
     }
   }
 }

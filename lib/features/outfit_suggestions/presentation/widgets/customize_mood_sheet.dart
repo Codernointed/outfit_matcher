@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 
 /// Bottom sheet for customizing mood/style preferences for outfit suggestions
 class CustomizeMoodSheet extends StatefulWidget {
@@ -22,25 +23,10 @@ class _CustomizeMoodSheetState extends State<CustomizeMoodSheet> {
     final theme = Theme.of(context);
     final screenHeight = MediaQuery.sizeOf(context).height;
 
-    return Container(
+    return SizedBox(
       height: screenHeight * 0.6,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
       child: Column(
         children: [
-          // Handle
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
           // Title
           Padding(
             padding: const EdgeInsets.all(24),
@@ -355,10 +341,8 @@ Future<void> showCustomizeMoodSheet(
 }) async {
   AppLogger.info('📖 Opening Customize Mood sheet for: $occasion');
 
-  await showModalBottomSheet(
+  await showGlassBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (context) =>
         CustomizeMoodSheet(occasion: occasion, onApply: onApply),
   );

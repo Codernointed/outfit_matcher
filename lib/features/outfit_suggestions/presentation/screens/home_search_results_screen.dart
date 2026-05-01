@@ -9,6 +9,7 @@ import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/voice_search_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/sheets/wardrobe_item_preview_sheet.dart';
 import 'package:vestiq/features/wardrobe/presentation/providers/wardrobe_search_providers.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/filter_bottom_sheet.dart';
@@ -230,14 +231,13 @@ class _HomeSearchResultsScreenState
               IconButton(
                 icon: const Icon(Icons.filter_list),
                 onPressed: () {
-                  showModalBottomSheet(
+                  showGlassBottomSheet<void>(
                     context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
                     builder: (context) => DraggableScrollableSheet(
                       initialChildSize: 0.7,
                       minChildSize: 0.5,
                       maxChildSize: 0.9,
+                      expand: false,
                       builder: (context, scrollController) {
                         return const FilterBottomSheet();
                       },

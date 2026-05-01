@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:vestiq/core/constants/app_constants.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
+import 'package:vestiq/core/widgets/soft_glass/soft_glass.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_flow_controller.dart';
 import 'package:vestiq/features/auth/presentation/screens/signup_screen.dart';
@@ -110,18 +112,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     required bool isDark,
     Widget? suffixIcon,
   }) {
+    final soft = context.vestiqSoft;
     return InputDecoration(
       hintText: hintText,
       hintStyle: TextStyle(
-        color: isDark ? Colors.white38 : Colors.grey.shade500,
+        color: Theme.of(context)
+            .colorScheme
+            .onSurface
+            .withValues(alpha: 0.45),
         fontWeight: FontWeight.w400,
       ),
       prefixIcon: Icon(prefixIcon, color: primaryColor.withValues(alpha: 0.8)),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: isDark
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.grey.shade100,
+      fillColor: soft.surfaceContainer,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -129,12 +133,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.1)
-              : Colors.grey.shade200,
-          width: 1.5,
-        ),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -142,11 +141,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+        borderSide: BorderSide(color: soft.error, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        borderSide: BorderSide(color: soft.error, width: 2),
       ),
     );
   }
@@ -159,19 +158,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 28,
-              vertical: AppConstants.defaultSpacing,
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+      body: VestiqCanvas(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: AppConstants.defaultSpacing,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   // Lottie Animation
                   SizedBox(
                     height: 180,
@@ -287,35 +287,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 24),
 
                   // Login Button
-                  ElevatedButton(
+                  SoftButton(
+                    label: 'Sign In',
+                    loading: _isLoading,
                     onPressed: _isLoading ? null : _handleEmailLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 2,
-                      shadowColor: primaryColor.withValues(alpha: 0.4),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
                   ),
                   const SizedBox(height: 28),
 
@@ -324,7 +299,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     children: [
                       Expanded(
                         child: Divider(
-                          color: isDark ? Colors.white24 : Colors.grey.shade300,
+                          color: theme.colorScheme.outlineVariant,
                           thickness: 1,
                         ),
                       ),
@@ -333,51 +308,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Text(
                           'or continue with',
                           style: TextStyle(
-                            color: isDark
-                                ? Colors.white54
-                                : Colors.grey.shade500,
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.5),
                             fontWeight: FontWeight.w500,
                             fontSize: 13,
+                            fontFamily: 'Roboto',
                           ),
                         ),
                       ),
                       Expanded(
                         child: Divider(
-                          color: isDark ? Colors.white24 : Colors.grey.shade300,
+                          color: theme.colorScheme.outlineVariant,
                           thickness: 1,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
 
-                  // Google Sign In Button
-                  OutlinedButton.icon(
-                    onPressed: _isLoading ? null : _handleGoogleSignIn,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: isDark ? Colors.white : Colors.black87,
-                      backgroundColor: isDark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : Colors.white,
+                  // Google Sign In Button (soft)
+                  AnimatedPressable(
+                    onTap: _isLoading ? null : _handleGoogleSignIn,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(
-                        color: isDark ? Colors.white24 : Colors.grey.shade300,
-                        width: 1.5,
-                      ),
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: context.vestiqSoft.cardSoftShadow,
                       ),
-                    ),
-                    icon: Image.network(
-                      'https://www.google.com/favicon.ico',
-                      height: 22,
-                      width: 22,
-                    ),
-                    label: const Text(
-                      'Continue with Google',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.network(
+                            'https://www.google.com/favicon.ico',
+                            height: 22,
+                            width: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Continue with Google',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Poppins',
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -407,7 +384,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ],
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

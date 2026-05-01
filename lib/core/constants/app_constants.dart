@@ -9,11 +9,15 @@ class AppConstants {
   /// App version
   static const String appVersion = '1.0.0';
 
-  /// Default horizontal padding for screens
-  static const double horizontalPadding = 16.0;
+  // ---------------------------------------------------------------------------
+  // Spacing scale -- 8px rhythm with optical alignment
+  // ---------------------------------------------------------------------------
+
+  /// Default horizontal padding for screens (slightly airy for premium feel)
+  static const double horizontalPadding = 20.0;
 
   /// Default vertical padding for screens
-  static const double verticalPadding = 16.0;
+  static const double verticalPadding = 20.0;
 
   /// Default spacing between widgets
   static const double defaultSpacing = 16.0;
@@ -24,14 +28,87 @@ class AppConstants {
   /// Large spacing between widgets
   static const double largeSpacing = 24.0;
 
-  /// Default corner radius for widgets
-  static const double defaultBorderRadius = 12.0;
+  /// Section gap between distinct content groups
+  static const double sectionGap = 28.0;
 
-  /// Small corner radius for widgets
-  static const double smallBorderRadius = 8.0;
+  /// Tile gap inside dense grids
+  static const double tileGap = 12.0;
 
-  /// Large corner radius for widgets
-  static const double largeBorderRadius = 16.0;
+  // ---------------------------------------------------------------------------
+  // Border radius scale -- consistently soft / Soft Glass Hybrid
+  // ---------------------------------------------------------------------------
+
+  /// Inline chip / dense tag radius (8px). Reserved for tiny inline elements.
+  static const double tinyBorderRadius = 8.0;
+
+  /// Small radius (12px). Inline chips and small badges.
+  static const double smallBorderRadius = 12.0;
+
+  /// Default radius (16px). Buttons, inputs, small cards.
+  static const double defaultBorderRadius = 16.0;
+
+  /// Medium-large radius (20px). Cards, hero tiles.
+  static const double largeBorderRadius = 20.0;
+
+  /// Hero radius (24px). Photographic frames, large cards.
+  static const double heroBorderRadius = 24.0;
+
+  /// Sheet / nav radius (28px). Floating chrome only.
+  static const double sheetBorderRadius = 28.0;
+
+  // ---------------------------------------------------------------------------
+  // Glass tokens (Glassmorphism 2.0)
+  // ---------------------------------------------------------------------------
+
+  /// Soft frosted blur for content cards (let imagery show through).
+  static const double glassBlurSoft = 14.0;
+
+  /// Default frosted blur for sheets, nav, app bars.
+  static const double glassBlurMedium = 22.0;
+
+  /// Strong frosted blur for full-screen modals.
+  static const double glassBlurStrong = 32.0;
+
+  /// Default glass fill opacity in light mode.
+  static const double glassFillOpacityLight = 0.55;
+
+  /// Stronger glass fill opacity in light mode.
+  static const double glassFillOpacityLightStrong = 0.72;
+
+  /// Default glass fill opacity in dark mode.
+  static const double glassFillOpacityDark = 0.18;
+
+  /// Stronger glass fill opacity in dark mode.
+  static const double glassFillOpacityDarkStrong = 0.28;
+
+  /// Luminous border opacity in light mode.
+  static const double glassBorderOpacityLight = 0.65;
+
+  /// Luminous border opacity in dark mode.
+  static const double glassBorderOpacityDark = 0.10;
+
+  // ---------------------------------------------------------------------------
+  // Neumorphic tokens (used sparingly for tactile controls)
+  // ---------------------------------------------------------------------------
+
+  /// Small neumorphic depth (chips, small buttons).
+  static const double softDepthSmall = 4.0;
+
+  /// Medium neumorphic depth (buttons, toggles).
+  static const double softDepthMedium = 6.0;
+
+  /// Large neumorphic depth (cards, panels).
+  static const double softDepthLarge = 10.0;
+
+  // ---------------------------------------------------------------------------
+  // Motion tokens
+  // ---------------------------------------------------------------------------
+
+  /// Press scale-down factor for visual haptics.
+  static const double pressScale = 0.96;
+
+  /// Hover-lift scale factor for cards.
+  static const double hoverLiftScale = 1.02;
 
   /// Storage key for onboarding completion
   static const String onboardingCompletedKey = 'onboarding_completed';

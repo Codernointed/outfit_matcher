@@ -46,11 +46,27 @@ class MannequinCacheService {
           .map((json) => MannequinOutfit.fromJson(json as Map<String, dynamic>))
           .toList();
 
+      // Guard against caching placeholder/failed generations (empty imageUrl).
+      // If cache contains no usable images, treat as miss and clear it so the
+      // app regenerates instead of showing placeholders indefinitely.
+      final usable = outfits
+          .where(
+            (o) =>
+                o.imageUrl.isNotEmpty &&
+                (o.imageUrl.startsWith('data:') || o.imageUrl.startsWith('http')),
+          )
+          .toList();
+      if (usable.isEmpty) {
+        AppLogger.debug('🧹 Mannequin cache contained no usable images');
+        await _prefs.remove(cacheKey);
+        return null;
+      }
+
       AppLogger.info(
         '✅ Cache hit for mannequins',
-        data: {'count': outfits.length},
+        data: {'count': usable.length},
       );
-      return outfits;
+      return usable;
     } catch (e) {
       AppLogger.warning('⚠️ Failed to retrieve cached mannequins', error: e);
       return null;
@@ -64,13 +80,22 @@ class MannequinCacheService {
   ) async {
     try {
       final cacheKey = _generateCacheKey(itemIds);
+      final usable = outfits
+          .where(
+            (o) =>
+                o.imageUrl.isNotEmpty &&
+                (o.imageUrl.startsWith('data:') || o.imageUrl.startsWith('http')),
+          )
+          .toList();
+      if (usable.isEmpty) return;
+
       final cacheData = {
         'timestamp': DateTime.now().toIso8601String(),
-        'outfits': outfits.map((o) => o.toJson()).toList(),
+        'outfits': usable.map((o) => o.toJson()).toList(),
       };
 
       await _prefs.setString(cacheKey, jsonEncode(cacheData));
-      AppLogger.info('💾 Cached mannequins', data: {'count': outfits.length});
+      AppLogger.info('💾 Cached mannequins', data: {'count': usable.length});
     } catch (e) {
       AppLogger.warning('⚠️ Failed to cache mannequins', error: e);
     }

@@ -8,7 +8,9 @@ import 'package:vestiq/features/wardrobe/presentation/sheets/interactive_pairing
 import 'package:vestiq/features/wardrobe/presentation/screens/enhanced_visual_search_screen.dart';
 import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/core/theme/vestiq_soft_theme.dart';
 import 'package:vestiq/core/utils/logger.dart';
+import 'package:vestiq/core/widgets/soft_glass/glass_bottom_sheet.dart';
 import 'package:vestiq/features/auth/presentation/providers/auth_providers.dart';
 import 'package:vestiq/features/favorites/presentation/providers/favorites_providers.dart';
 
@@ -19,10 +21,8 @@ void showWardrobeItemPreview(
   String heroTag = 'wardrobe_item',
   VoidCallback? onInspirationTap,
 }) {
-  showModalBottomSheet(
+  showGlassBottomSheet<void>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
     builder: (_) => CleanItemPreviewSheet(
       item: item,
       heroTag: heroTag,
@@ -71,30 +71,14 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withAlpha(51),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-
-              // Content
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(0),
-                  children: [
+        return Column(
+          children: [
+            // Content
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(0),
+                children: [
                     // Hero Image
                     _buildHeroImage(context, theme),
 
@@ -127,7 +111,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
                                   theme,
                                   'Surprise Me',
                                   Icons.shuffle,
-                                  Colors.purple,
+                                  theme.colorScheme.primary,
                                   () => _navigateToSurpriseMe(context),
                                 ),
                               ),
@@ -138,7 +122,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
                                   theme,
                                   'Inspiration',
                                   Icons.explore,
-                                  Colors.orange,
+                                  const Color(0xFFB26A00),
                                   () => widget.onInspirationTap != null
                                       ? widget.onInspirationTap!()
                                       : _navigateToInspiration(context),
@@ -157,14 +141,14 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
                   ],
                 ),
               ),
-            ],
-          ),
+          ],
         );
       },
     );
   }
 
   Widget _buildHeroImage(BuildContext context, ThemeData theme) {
+    final soft = context.vestiqSoft;
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Hero(
@@ -177,9 +161,9 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: soft.softShadow.withValues(alpha: 0.22),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -364,6 +348,7 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
     Color color,
     VoidCallback onTap,
   ) {
+    final isDark = theme.brightness == Brightness.dark;
     return OutlinedButton.icon(
       onPressed: () {
         Navigator.pop(context);
@@ -372,10 +357,14 @@ class _CleanItemPreviewSheetState extends ConsumerState<CleanItemPreviewSheet> {
       icon: Icon(icon, size: 20, color: color),
       label: Padding(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Text(label, style: TextStyle(color: color)),
+        child: Text(
+          label,
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        ),
       ),
       style: OutlinedButton.styleFrom(
-        side: BorderSide(color: color.withAlpha(77)),
+        backgroundColor: color.withValues(alpha: isDark ? 0.16 : 0.12),
+        side: BorderSide(color: color.withValues(alpha: 0.45)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
