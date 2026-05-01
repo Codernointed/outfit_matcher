@@ -1276,7 +1276,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: _deleteAccount,
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 100),
             ],
           ),
         ),

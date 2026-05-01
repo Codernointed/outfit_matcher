@@ -490,22 +490,34 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tell Me About This Item'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).pop(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Complete analysis first, or finish generation and exit from that page.',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text('Tell Me About This Item'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
         ),
+        body: _isLoading
+            ? _buildLoadingState(theme)
+            : _error != null
+            ? _buildErrorState(theme)
+            : _buildContent(theme),
+        bottomNavigationBar: _isLoading ? null : _buildBottomBar(theme),
       ),
-      body: _isLoading
-          ? _buildLoadingState(theme)
-          : _error != null
-          ? _buildErrorState(theme)
-          : _buildContent(theme),
-      bottomNavigationBar: _isLoading ? null : _buildBottomBar(theme),
     );
   }
 

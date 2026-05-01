@@ -113,6 +113,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     Widget? suffixIcon,
   }) {
     final soft = context.vestiqSoft;
+    final baseFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : Colors.grey.shade100;
+    final softEdge = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : soft.softHighlight.withValues(alpha: 0.45);
     return InputDecoration(
       hintText: hintText,
       hintStyle: TextStyle(
@@ -125,7 +131,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       prefixIcon: Icon(prefixIcon, color: primaryColor.withValues(alpha: 0.8)),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: soft.surfaceContainer,
+      fillColor: baseFill,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -133,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: softEdge, width: 1.2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -208,65 +214,107 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: AppConstants.defaultSpacing),
 
                   // Email Field
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w500,
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        if (!isDark)
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            offset: const Offset(-2, -2),
+                            blurRadius: 6,
+                          ),
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.26)
+                              : context.vestiqSoft.softShadow
+                                  .withValues(alpha: 0.14),
+                          offset: const Offset(2, 3),
+                          blurRadius: 8,
+                        ),
+                      ],
                     ),
-                    decoration: _buildInputDecoration(
-                      hintText: 'Email address',
-                      prefixIcon: Icons.email_outlined,
-                      primaryColor: primaryColor,
-                      isDark: isDark,
+                    child: TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: _buildInputDecoration(
+                        hintText: 'Email address',
+                        prefixIcon: Icons.email_outlined,
+                        primaryColor: primaryColor,
+                        isDark: isDark,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Please enter a valid email';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
                   ),
                   const SizedBox(height: AppConstants.defaultSpacing),
 
                   // Password Field
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    decoration: _buildInputDecoration(
-                      hintText: 'Password',
-                      prefixIcon: Icons.lock_outline,
-                      primaryColor: primaryColor,
-                      isDark: isDark,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                          color: primaryColor.withValues(alpha: 0.7),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        if (!isDark)
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            offset: const Offset(-2, -2),
+                            blurRadius: 6,
+                          ),
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.26)
+                              : context.vestiqSoft.softShadow
+                                  .withValues(alpha: 0.14),
+                          offset: const Offset(2, 3),
+                          blurRadius: 8,
                         ),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
+                      ],
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
-                      }
-                      return null;
-                    },
+                    child: TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: _buildInputDecoration(
+                        hintText: 'Password',
+                        prefixIcon: Icons.lock_outline,
+                        primaryColor: primaryColor,
+                        isDark: isDark,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            color: primaryColor.withValues(alpha: 0.7),
+                          ),
+                          onPressed: () {
+                            setState(() => _obscurePassword = !_obscurePassword);
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
                   const SizedBox(height: 12),
 

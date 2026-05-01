@@ -6,14 +6,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:vestiq/core/models/clothing_analysis.dart';
 import 'package:vestiq/core/models/saved_outfit.dart';
+import 'package:vestiq/core/models/wardrobe_item.dart';
 import 'package:vestiq/core/services/image_api_service.dart';
 import 'package:vestiq/core/services/outfit_storage_service.dart';
 import 'package:vestiq/core/services/mannequin_cache_service.dart';
 import 'package:vestiq/core/services/profile_service.dart';
+import 'package:vestiq/core/services/enhanced_wardrobe_storage_service.dart';
 import 'package:vestiq/core/utils/gemini_api_service_new.dart';
 import 'package:vestiq/core/utils/gallery_service.dart';
 import 'package:vestiq/core/utils/logger.dart';
 import 'package:vestiq/core/di/service_locator.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/providers/home_providers.dart';
+import 'package:vestiq/features/outfit_suggestions/presentation/screens/home_screen.dart';
 import 'package:vestiq/features/wardrobe/presentation/widgets/mannequin_skeleton_loader.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:flutter/services.dart';
@@ -62,6 +66,7 @@ class _EnhancedVisualSearchScreenState
   String _generationStatus = '';
   int _generationProgress = 0;
   int _totalPoses = 6;
+  bool _isExitSaving = false;
 
   @override
   void initState() {
@@ -473,63 +478,174 @@ class _EnhancedVisualSearchScreenState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'Style Inspiration',
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: theme.colorScheme.onSurface,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-          // onPressed: () => Navigator.of(context).pushReplacement(
-          //   MaterialPageRoute(builder: (context) => HomeScreen()),
-          // ),
-        ),
-        backgroundColor: Colors.transparent,
-        actions: [
-          // Gender toggle button
-          IconButton(
-            icon: Icon(
-              _currentGender == 'male' ? Icons.man : Icons.woman,
-              color: theme.colorScheme.primary,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          _handleExitFlow();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text(
+            'Style Inspiration',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            onPressed: _toggleGender,
-            tooltip:
-                'Toggle gender (${_currentGender == 'male' ? 'Male' : 'Female'})',
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: theme.colorScheme.primary,
-          unselectedLabelColor: theme.colorScheme.onSurface.withValues(
-            alpha: 0.6,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.close_rounded,
+              size: 22,
+              color: theme.colorScheme.onSurface,
+            ),
+            onPressed: _handleExitFlow,
           ),
-          indicatorColor: theme.colorScheme.primary,
-          tabs: const [
-            Tab(icon: Icon(Icons.person_outline), text: 'Try-On'),
-            Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
-            Tab(icon: Icon(Icons.view_comfy_outlined), text: 'Flat Lay'),
+          backgroundColor: Colors.transparent,
+          actions: [
+            // Gender toggle button
+            IconButton(
+              icon: Icon(
+                _currentGender == 'male' ? Icons.man : Icons.woman,
+                color: theme.colorScheme.primary,
+              ),
+              onPressed: _toggleGender,
+              tooltip:
+                  'Toggle gender (${_currentGender == 'male' ? 'Male' : 'Female'})',
+            ),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            labelColor: theme.colorScheme.primary,
+            unselectedLabelColor: theme.colorScheme.onSurface.withValues(
+              alpha: 0.6,
+            ),
+            indicatorColor: theme.colorScheme.primary,
+            tabs: const [
+              Tab(icon: Icon(Icons.person_outline), text: 'Try-On'),
+              Tab(icon: Icon(Icons.explore_outlined), text: 'Inspiration'),
+              Tab(icon: Icon(Icons.view_comfy_outlined), text: 'Flat Lay'),
+            ],
+          ),
+        ),
+        body: Stack(
+          children: [
+            TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTryOnTab(),
+                _buildInspirationTab(),
+                _buildFlatLayTab(),
+              ],
+            ),
+            if (_isExitSaving)
+              const ColoredBox(
+                color: Color(0x66000000),
+                child: Center(child: CircularProgressIndicator()),
+              ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildTryOnTab(),
-          _buildInspirationTab(),
-          _buildFlatLayTab(),
-        ],
+    );
+  }
+
+  Future<void> _handleExitFlow() async {
+    if (_isExitSaving || !mounted) return;
+
+    final shouldSave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Exit Generation?'),
+          content: const Text(
+            'Do you want to save uploaded items (with detected metadata) to your closet before exiting?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, null),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(
+                'Exit Without Saving',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Save & Exit'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSave == null || !mounted) return;
+
+    int savedCount = 0;
+    if (shouldSave) {
+      setState(() => _isExitSaving = true);
+      try {
+        savedCount = await _saveAnalyzedItemsToCloset();
+      } finally {
+        if (mounted) setState(() => _isExitSaving = false);
+      }
+    }
+
+    if (!mounted) return;
+    ref.read(bottomNavIndexProvider.notifier).state = 1;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          shouldSave
+              ? (savedCount > 0
+                    ? 'Saved $savedCount item(s) to closet.'
+                    : 'All items were already in your closet.')
+              : 'Exited generation without saving new items.',
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (route) => false,
+    );
+  }
+
+  Future<int> _saveAnalyzedItemsToCloset() async {
+    final storage = getIt<EnhancedWardrobeStorageService>();
+    final existing = await storage.getWardrobeItems();
+    final existingPaths = existing.map((item) => item.originalImagePath).toSet();
+
+    var saved = 0;
+    for (var i = 0; i < widget.analyses.length; i++) {
+      final analysis = widget.analyses[i];
+      final imagePath = i < widget.itemImages.length
+          ? widget.itemImages[i]
+          : analysis.imagePath;
+      if (imagePath == null || imagePath.isEmpty) continue;
+      if (existingPaths.contains(imagePath)) continue;
+
+      final item = WardrobeItem.fromAnalysis(
+        id: 'upload_${DateTime.now().millisecondsSinceEpoch}_$i',
+        analysis: analysis.copyWith(imagePath: imagePath),
+        originalImagePath: imagePath,
+        userNotes: widget.userNotes,
+        tags: analysis.tags,
+      );
+      await storage.saveWardrobeItem(item);
+      existingPaths.add(imagePath);
+      saved++;
+    }
+    return saved;
   }
 
   Widget _buildLoadingIndicator(String message) {

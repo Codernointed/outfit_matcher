@@ -105,6 +105,7 @@ class EnhancedClosetScreen extends ConsumerStatefulWidget {
 
 class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _categoryScrollController = ScrollController();
   bool _isSearching = false;
   final GlobalKey _categoryTabsKey = GlobalKey();
   final GlobalKey _searchKey = GlobalKey();
@@ -125,6 +126,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _categoryScrollController.dispose();
     super.dispose();
   }
 
@@ -433,6 +435,7 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
       height: 36, // Reduced height
       margin: const EdgeInsets.only(bottom: 4),
       child: ListView.builder(
+        controller: _categoryScrollController,
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: categories.length,
@@ -466,6 +469,17 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   ref.read(selectedCategoryProvider.notifier).state =
                       newCategory;
 
+                  if (_categoryScrollController.hasClients) {
+                    _categoryScrollController.animateTo(
+                      (index * 86).toDouble().clamp(
+                        0,
+                        _categoryScrollController.position.maxScrollExtent,
+                      ),
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOutCubic,
+                    );
+                  }
+
                   // Log Filter Event
                   getIt<AnalyticsService>().logEvent(
                     name: 'wardrobe_filter',
@@ -476,62 +490,67 @@ class _EnhancedClosetScreenState extends ConsumerState<EnhancedClosetScreen> {
                   duration: const Duration(milliseconds: 220),
                   curve: Curves.easeOutCubic,
                   scale: isSelected ? 1.0 : 0.97,
-                  child: AnimatedContainer(
+                  child: AnimatedSlide(
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? theme.colorScheme.primaryContainer
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(18),
-                      border: isSelected
-                          ? null
-                          : Border.all(
-                              color: theme.colorScheme.outline.withValues(
-                                alpha: 0.2,
-                              ),
-                            ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: theme.colorScheme.primary.withValues(
-                                  alpha: 0.10,
+                    offset: isSelected ? Offset.zero : const Offset(0.02, 0),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? theme.colorScheme.primaryContainer
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                        border: isSelected
+                            ? null
+                            : Border.all(
+                                color: theme.colorScheme.outline.withValues(
+                                  alpha: 0.2,
                                 ),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
                               ),
-                            ]
-                          : null,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isSelected) ...[
-                          Icon(
-                            categoryIcon,
-                            size: 16,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        Text(
-                          categoryName,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: isSelected
-                                ? theme.colorScheme.onPrimaryContainer
-                                : theme.colorScheme.onSurface.withValues(
-                                    alpha: 0.7,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: theme.colorScheme.primary.withValues(
+                                    alpha: 0.10,
                                   ),
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isSelected) ...[
+                            Icon(
+                              categoryIcon,
+                              size: 16,
+                              color: theme.colorScheme.onPrimaryContainer,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            categoryName,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isSelected
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.colorScheme.onSurface.withValues(
+                                      alpha: 0.7,
+                                    ),
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

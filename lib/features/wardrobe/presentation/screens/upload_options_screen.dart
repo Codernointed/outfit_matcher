@@ -267,7 +267,9 @@ class _UploadOptionsScreenState extends ConsumerState<UploadOptionsScreen> {
   void _navigateToItemDetails() {
     if (_selectedImages.isEmpty) return;
 
-    Navigator.of(context).push(
+    // Replace this page so the user doesn't accidentally back into upload and
+    // re-trigger analysis flows.
+    Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (context) => ItemDetailsScreen(imagePaths: _selectedImages),
       ),
