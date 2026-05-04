@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Vestiq — Brand Animations Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Dancing+Script:wght@600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --pink-soft: #FFF0F5;
+      --pink: #FC4FCB;
+      --pink-coral: #FF6B93;
+      --burgundy: #3A0D23;
+      --ink: #1A1A2C;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Poppins', system-ui, sans-serif;
+      background: linear-gradient(180deg, #FFFAFC 0%, #FFF0F5 100%);
+      color: var(--ink);
+      padding: 48px 32px 80px;
+    }
+    header {
+      max-width: 1200px;
+      margin: 0 auto 48px;
+      text-align: center;
+    }
+    h1 {
+      font-weight: 800;
+      font-size: 44px;
+      margin: 0 0 8px;
+      letter-spacing: -1px;
+    }
+    h1 span { color: var(--pink); }
+    .sub {
+      color: #6b6b80;
+      font-size: 16px;
+      max-width: 640px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 28px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(58, 13, 35, 0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px rgba(252, 79, 203, 0.15);
+    }
+    .stage {
+      background: var(--pink-soft);
+      aspect-ratio: 9 / 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+    .stage.dark {
+      background: var(--burgundy);
+    }
+    .stage.square {
+      aspect-ratio: 1 / 1;
+    }
+    .stage.tall {
+      aspect-ratio: 4 / 5;
+    }
+    .stage object,
+    .stage embed {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    .meta {
+      padding: 20px 22px 24px;
+    }
+    .label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--pink);
+      margin-bottom: 8px;
+    }
+    .name {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .desc {
+      font-size: 13px;
+      color: #6b6b80;
+      line-height: 1.55;
+      margin: 0 0 12px;
+    }
+    .use {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .chip {
+      font-size: 11px;
+      padding: 4px 10px;
+      background: var(--pink-soft);
+      color: var(--burgundy);
+      border-radius: 100px;
+      font-weight: 500;
+    }
+    .replay {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+      padding: 8px 14px;
+      background: var(--ink);
+      color: white;
+      border: none;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .replay:hover { background: var(--pink); }
+    footer {
+      max-width: 1200px;
+      margin: 64px auto 0;
+      padding: 32px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(58, 13, 35, 0.06);
+    }
+    footer h2 {
+      font-size: 20px;
+      margin: 0 0 12px;
+    }
+    footer p {
+      color: #6b6b80;
+      font-size: 14px;
+      line-height: 1.65;
+      margin: 0 0 10px;
+    }
+    code {
+      background: var(--pink-soft);
+      color: var(--burgundy);
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Vestiq <span>Animations</span></h1>
+    <p class="sub">Six SVG animations covering splash screens, loaders, idle states, and onboarding moments. Click any card to replay.</p>
+  </header>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="stage" data-src="vestiq_splash_full.svg">
+        <object data="vestiq_splash_full.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="meta">
+        <span class="label">01 · Hero Splash</span>
+        <h3 class="name">Full Logo Reveal</h3>
+        <p class="desc">Wordmark settles in, fabric Q swirls in with overshoot, tagline finishes. Settles into a gentle sway. ~3.2s.</p>
+        <div class="use">
+          <span class="chip">App splash</span>
+          <span class="chip">Web hero</span>
+          <span class="chip">Intro video</span>
+        </div>
+        <button class="replay">↻ Replay</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage tall" data-src="vestiq_fabric_loop.svg">
+        <object data="vestiq_fabric_loop.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="meta">
+        <span class="label">02 · Loader</span>
+        <h3 class="name">Fabric Flow Loop</h3>
+        <p class="desc">Just the fabric Q, swaying with a continuous color shift. Seamless 3s loop — drop it anywhere you'd use a spinner.</p>
+        <div class="use">
+          <span class="chip">Loading state</span>
+          <span class="chip">Pull-to-refresh</span>
+          <span class="chip">Empty states</span>
+        </div>
+        <button class="replay">↻ Replay</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage square" data-src="vestiq_monogram_morph.svg">
+        <object data="vestiq_monogram_morph.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="meta">
+        <span class="label">03 · Icon Build</span>
+        <h3 class="name">VQ Monogram Draw</h3>
+        <p class="desc">V draws as a stroke, Q outline draws, fabric fills the Q from inside. ~2.5s build, then breathes.</p>
+        <div class="use">
+          <span class="chip">App icon launch</span>
+          <span class="chip">Onboarding step</span>
+          <span class="chip">Brand sting</span>
+        </div>
+        <button class="replay">↻ Replay</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage square" data-src="vestiq_breathing.svg">
+        <object data="vestiq_breathing.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="meta">
+        <span class="label">04 · Idle / Ambient</span>
+        <h3 class="name">Breathing Q Icon</h3>
+        <p class="desc">Q with a soft halo that pulses and a gentle scale breath. Forever loop, low energy. Use as ambient brand presence.</p>
+        <div class="use">
+          <span class="chip">Idle screen</span>
+          <span class="chip">AI thinking</span>
+          <span class="chip">Notification dot</span>
+        </div>
+        <button class="replay">↻ Replay</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage tall" data-src="vestiq_outfit_morph.svg">
+        <object data="vestiq_outfit_morph.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="meta">
+        <span class="label">05 · Story</span>
+        <h3 class="name">Outfit Morph</h3>
+        <p class="desc">Cross-fades through three forms — fabric Q → dress → blouse — with rotating taglines. Tells the brand story without words. 6s loop.</p>
+        <div class="use">
+          <span class="chip">Onboarding hero</span>
+          <span class="chip">Marketing site</span>
+          <span class="chip">App Store preview</span>
+        </div>
+        <button class="replay">↻ Replay</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stage" data-src="vestiq_sparkle_burst.svg">
+        <object data="vestiq_sparkle_burst.svg" type="image/svg+xml"></object>
+      </div>
+      <div class="meta">
+        <span class="label">06 · Premium Splash</span>
+        <h3 class="name">Sparkle Burst Reveal</h3>
+        <p class="desc">Sparkles fly in from the edges, burst at the Q location, the fabric materializes, then the wordmark slides in. The "AI magic" splash. ~3s.</p>
+        <div class="use">
+          <span class="chip">Premium splash</span>
+          <span class="chip">First-launch</span>
+          <span class="chip">Reveal moment</span>
+        </div>
+        <button class="replay">↻ Replay</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <h2>Using these in Flutter</h2>
+    <p>These are animated SVGs (CSS + SMIL). To get true Lottie-grade performance on mobile, you have three paths:</p>
+    <p><strong>Easiest →</strong> Drop them in via <code>flutter_svg</code> for static + a wrapping <code>AnimatedBuilder</code> for motion. Works, but the SVG's internal CSS animations won't run — you'd re-implement the motion in Flutter.</p>
+    <p><strong>Best for production →</strong> Rebuild the chosen 1-2 animations in <a href="https://rive.app">Rive</a> (free, Flutter-native, GPU-accelerated). Use the SVGs as design reference. Rive files load with the <code>rive</code> package.</p>
+    <p><strong>If your team uses Lottie →</strong> Open the SVG in After Effects (via Overlord or SVG import), animate, then export to JSON via Bodymovin. Use the <code>lottie</code> package in Flutter.</p>
+    <p>For the <strong>splash screen</strong> specifically: render a static PNG of the logo as the native launch image (so it appears instantly during boot), then play the animated version once Flutter starts.</p>
+  </footer>
+
+  <script>
+    // Click card to replay animation by re-attaching the object src
+    document.querySelectorAll('.card').forEach(card => {
+      const stage = card.querySelector('.stage');
+      const obj = stage.querySelector('object');
+      const src = stage.dataset.src;
+      const replay = () => {
+        obj.data = '';
+        requestAnimationFrame(() => { obj.data = src; });
+      };
+      stage.addEventListener('click', replay);
+      card.querySelector('.replay').addEventListener('click', e => {
+        e.stopPropagation();
+        replay();
+      });
+    });
+  </script>
+</body>
+</html>

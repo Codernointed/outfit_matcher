@@ -1,0 +1,62 @@
+<svg viewBox="0 0 220 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fgLoop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8FB3">
+        <animate attributeName="stop-color"
+                 values="#FF8FB3;#FC4FCB;#FF6B93;#FF8FB3"
+                 dur="3s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="50%" stop-color="#FC4FCB">
+        <animate attributeName="stop-color"
+                 values="#FC4FCB;#FF6B93;#FF8FB3;#FC4FCB"
+                 dur="3s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%" stop-color="#3A0D23"/>
+    </linearGradient>
+    <style><![CDATA[
+      .fabric {
+        transform-origin: 110px 200px;
+        animation: sway 3s ease-in-out infinite;
+      }
+      .fold {
+        animation: foldShift 3s ease-in-out infinite;
+      }
+      .tail {
+        transform-origin: 165px 285px;
+        animation: tailWag 3s ease-in-out infinite;
+      }
+      @keyframes sway {
+        0%, 100% { transform: rotate(-3.5deg) scale(1); }
+        50%      { transform: rotate(3.5deg)  scale(1.035); }
+      }
+      @keyframes foldShift {
+        0%, 100% { opacity: 0.4; transform: translateX(0); }
+        50%      { opacity: 0.75; transform: translateX(4px); }
+      }
+      @keyframes tailWag {
+        0%, 100% { transform: rotate(-4deg); }
+        50%      { transform: rotate(4deg); }
+      }
+    ]]></style>
+  </defs>
+
+  <g class="fabric">
+    <path d="M 85 285
+             C 50 280, 35 240, 45 195
+             C 55 150, 83 115, 115 95
+             C 150 80, 185 95, 187 130
+             C 183 165, 163 190, 140 200
+             C 165 215, 180 245, 165 275
+             C 150 295, 115 298, 100 290
+             C 93 290, 87 287, 85 285 Z"
+          fill="url(#fgLoop)"/>
+
+    <path class="fold" d="M 95 265
+             C 90 235, 103 200, 123 175
+             C 135 160, 150 152, 160 152"
+          fill="none" stroke="#FFC8DC" stroke-width="3"/>
+
+    <path class="tail" d="M 158 275 L 200 320"
+          stroke="url(#fgLoop)" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>

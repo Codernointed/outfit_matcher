@@ -1,0 +1,65 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fgBreath" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8FB3"/>
+      <stop offset="50%" stop-color="#FC4FCB"/>
+      <stop offset="100%" stop-color="#3A0D23"/>
+    </linearGradient>
+    <radialGradient id="haloGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#FC4FCB" stop-opacity="0.45"/>
+      <stop offset="55%"  stop-color="#FC4FCB" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FC4FCB" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haloGrad2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#FF8FB3" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FF8FB3" stop-opacity="0"/>
+    </radialGradient>
+    <style><![CDATA[
+      .halo-outer {
+        transform-origin: 200px 200px;
+        animation: haloPulseOut 3s ease-in-out infinite;
+      }
+      .halo-inner {
+        transform-origin: 200px 200px;
+        animation: haloPulseIn 3s ease-in-out infinite;
+      }
+      .fabric-icon {
+        transform-origin: 200px 200px;
+        animation: breathe 3s ease-in-out infinite;
+      }
+      @keyframes haloPulseOut {
+        0%, 100% { transform: scale(0.85); opacity: 0.5; }
+        50%      { transform: scale(1.18); opacity: 1; }
+      }
+      @keyframes haloPulseIn {
+        0%, 100% { transform: scale(0.95); opacity: 0.7; }
+        50%      { transform: scale(1.08); opacity: 1; }
+      }
+      @keyframes breathe {
+        0%, 100% { transform: scale(0.96); }
+        50%      { transform: scale(1.04); }
+      }
+    ]]></style>
+  </defs>
+
+  <circle class="halo-outer" cx="200" cy="200" r="180" fill="url(#haloGrad)"/>
+  <circle class="halo-inner" cx="200" cy="200" r="120" fill="url(#haloGrad2)"/>
+
+  <g class="fabric-icon">
+    <path d="M 165 295
+             C 130 290, 115 250, 125 205
+             C 135 160, 163 125, 195 105
+             C 230 90, 265 105, 267 140
+             C 263 175, 243 200, 220 210
+             C 245 225, 260 255, 245 285
+             C 230 305, 195 308, 180 300
+             C 173 300, 167 297, 165 295 Z"
+          fill="url(#fgBreath)"/>
+    <path d="M 175 270
+             C 170 245, 180 215, 195 195
+             C 205 183, 215 178, 223 178"
+          fill="none" stroke="#FFC8DC" stroke-width="2.5" opacity="0.55"/>
+    <path d="M 240 285 L 285 330"
+          stroke="url(#fgBreath)" stroke-width="16" stroke-linecap="round"/>
+  </g>
+</svg>

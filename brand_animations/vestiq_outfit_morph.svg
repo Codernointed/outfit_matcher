@@ -1,0 +1,101 @@
+<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fgMorph" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8FB3"/>
+      <stop offset="50%" stop-color="#FC4FCB"/>
+      <stop offset="100%" stop-color="#3A0D23"/>
+    </linearGradient>
+    <style><![CDATA[
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap');
+
+      .shape {
+        opacity: 0;
+        transform-origin: 200px 250px;
+      }
+      .label {
+        font-family: 'Poppins', system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 22px;
+        fill: #3A0D23;
+        text-anchor: middle;
+        opacity: 0;
+        letter-spacing: 2px;
+      }
+
+      .s1   { animation: showShape 6s ease-in-out infinite; }
+      .lbl1 { animation: showLabel 6s ease-in-out infinite; }
+
+      .s2   { animation: showShape 6s ease-in-out -2s infinite; }
+      .lbl2 { animation: showLabel 6s ease-in-out -2s infinite; }
+
+      .s3   { animation: showShape 6s ease-in-out -4s infinite; }
+      .lbl3 { animation: showLabel 6s ease-in-out -4s infinite; }
+
+      @keyframes showShape {
+        0%       { opacity: 0; transform: scale(0.85) rotate(-4deg); }
+        8%, 25%  { opacity: 1; transform: scale(1) rotate(0deg); }
+        33%, 100% { opacity: 0; transform: scale(0.85) rotate(4deg); }
+      }
+      @keyframes showLabel {
+        0%       { opacity: 0; transform: translateY(8px); }
+        12%, 24% { opacity: 0.85; transform: translateY(0); }
+        33%, 100% { opacity: 0; transform: translateY(8px); }
+      }
+    ]]></style>
+  </defs>
+
+  <!-- Shape 1: Fabric Q -->
+  <g class="shape s1">
+    <path d="M 165 380
+             C 130 375, 115 335, 125 290
+             C 135 245, 163 210, 195 190
+             C 230 175, 265 190, 267 225
+             C 263 260, 243 285, 220 295
+             C 245 310, 260 340, 245 370
+             C 230 390, 195 393, 180 385
+             C 173 385, 167 382, 165 380 Z"
+          fill="url(#fgMorph)"/>
+    <path d="M 240 370 L 285 415"
+          stroke="url(#fgMorph)" stroke-width="16" stroke-linecap="round"/>
+  </g>
+  <text class="label lbl1" x="200" y="460">Fabric. Flow. You.</text>
+
+  <!-- Shape 2: Dress silhouette -->
+  <g class="shape s2">
+    <circle cx="200" cy="140" r="28" fill="url(#fgMorph)"/>
+    <path d="M 178 175
+             L 222 175
+             L 232 215
+             L 285 380
+             L 250 395
+             L 230 350
+             L 230 400
+             L 170 400
+             L 170 350
+             L 150 395
+             L 115 380
+             L 168 215 Z"
+          fill="url(#fgMorph)"/>
+  </g>
+  <text class="label lbl2" x="200" y="460">A dress.</text>
+
+  <!-- Shape 3: Top/blouse silhouette -->
+  <g class="shape s3">
+    <path d="M 145 195
+             Q 145 155, 175 155
+             L 225 155
+             Q 255 155, 255 195
+             L 290 290
+             L 265 305
+             L 250 270
+             L 250 380
+             L 150 380
+             L 150 270
+             L 135 305
+             L 110 290 Z"
+          fill="url(#fgMorph)"/>
+    <path d="M 175 155 Q 200 175, 225 155"
+          fill="none" stroke="#FFC8DC" stroke-width="2.5" opacity="0.5"/>
+  </g>
+  <text class="label lbl3" x="200" y="460">A blouse. Anything.</text>
+</svg>

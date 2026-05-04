@@ -1906,7 +1906,7 @@ class _EnhancedVisualSearchScreenState
     return SavedOutfit(
       id: outfit.id, // Keep same ID so we can match it later
       title:
-          'AI Generated Look ${outfit.style != null ? "(${outfit.style})" : ""}',
+          'Generated Look ${outfit.style != null ? "(${outfit.style})" : ""}',
       items: outfit.items,
       mannequinImages: [outfit.imageUrl],
       notes: widget.userNotes ?? '',

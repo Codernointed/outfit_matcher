@@ -1,0 +1,80 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fgMono" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8FB3"/>
+      <stop offset="50%" stop-color="#FC4FCB"/>
+      <stop offset="100%" stop-color="#3A0D23"/>
+    </linearGradient>
+    <style><![CDATA[
+      .v-stroke {
+        fill: none;
+        stroke: #1A1A2C;
+        stroke-width: 34;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-dasharray: 600;
+        stroke-dashoffset: 600;
+        animation: drawV 0.85s cubic-bezier(0.65, 0, 0.35, 1) 0.2s forwards;
+      }
+      .q-outline {
+        fill: none;
+        stroke: #1A1A2C;
+        stroke-width: 30;
+        stroke-linecap: round;
+        stroke-dasharray: 660;
+        stroke-dashoffset: 660;
+        animation: drawQ 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.7s forwards;
+      }
+      .q-tail-stroke {
+        stroke: #1A1A2C;
+        stroke-width: 30;
+        stroke-linecap: round;
+        stroke-dasharray: 80;
+        stroke-dashoffset: 80;
+        animation: drawTail 0.35s ease-out 1.35s forwards;
+      }
+      .fabric-fill {
+        opacity: 0;
+        transform-origin: 270px 230px;
+        animation: fillFabric 0.95s cubic-bezier(0.16, 1, 0.3, 1) 1.4s forwards,
+                   monoBreathe 3.5s ease-in-out 2.6s infinite;
+      }
+      @keyframes drawV    { to { stroke-dashoffset: 0; } }
+      @keyframes drawQ    { to { stroke-dashoffset: 0; } }
+      @keyframes drawTail { to { stroke-dashoffset: 0; } }
+      @keyframes fillFabric {
+        0%   { opacity: 0; transform: scale(0.55) rotate(-110deg); }
+        65%  { opacity: 1; transform: scale(1.06) rotate(8deg); }
+        100% { opacity: 1; transform: scale(1) rotate(0deg); }
+      }
+      @keyframes monoBreathe {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50%      { transform: scale(1.04) rotate(-1.5deg); }
+      }
+    ]]></style>
+  </defs>
+
+  <!-- V letterform -->
+  <path class="v-stroke" d="M 75 95 L 165 320 L 255 95"/>
+
+  <!-- Q outline -->
+  <circle class="q-outline" cx="270" cy="220" r="80"/>
+  <line class="q-tail-stroke" x1="320" y1="270" x2="350" y2="305"/>
+
+  <!-- Fabric fill -->
+  <g class="fabric-fill">
+    <path d="M 245 305
+             C 220 300, 210 270, 220 232
+             C 230 192, 252 162, 277 148
+             C 305 135, 332 148, 332 178
+             C 329 207, 314 226, 295 233
+             C 314 245, 322 270, 312 293
+             C 302 310, 278 313, 268 308
+             C 260 308, 248 307, 245 305 Z"
+          fill="url(#fgMono)"/>
+    <path d="M 252 285
+             C 248 260, 258 230, 273 210
+             C 282 198, 293 192, 301 192"
+          fill="none" stroke="#FFC8DC" stroke-width="2.5" opacity="0.55"/>
+  </g>
+</svg>
